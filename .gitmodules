@@ -1,0 +1,9 @@
+[submodule "earendil"]
+	path = earendil
+	url = git@github.com:kanatabi/earendil.git
+[submodule "lumen"]
+	path = lumen
+	url = git@github.com:kanatabi/lumen.git
+[submodule "vortex"]
+	path = vortex
+	url = git@github.com:kanatabi/vortex.git
