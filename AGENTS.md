@@ -5,24 +5,26 @@ before structural changes; don't re-derive decisions that are already made.
 
 ## What this repo is
 
-A personal blog project + its production infrastructure blueprint. Not a single app —
-four moving parts with different toolchains:
+A personal blog superproject: three git **submodules**, each its own repo under
+[`kanatabi`](https://github.com/kanatabi) on GitHub (GitLab `arkoi/omicron*` kept as
+mirrors), plus the production infrastructure blueprint. Not a single app —
+several moving parts with different toolchains:
 
 | Path | What | Treat with |
 | :--- | :--- | :--- |
-| `sv-fzr/` | SvelteKit 3 blog frontend, SSR via `adapter-node` | normal app dev — see its README |
-| `k8s-platform-manifests/` | GitOps source of truth (Argo CD app-of-apps) | **read `k8s-platform-manifests/README.md` first**; conventions are load-bearing |
+| `earendil/` | SvelteKit 3 blog frontend, SSR via `adapter-node` | normal app dev — see its README |
+| `vortex/` | GitOps source of truth (Argo CD app-of-apps) | **read `vortex/README.md` first**; conventions are load-bearing |
 | `INFRA_ARCHITECTURE.md` | Production blueprint (K3s on 3 VPS, phases §4, secrets design §5) | the decision record — update it when you change a decision |
-| `test/local-backend/` | Placeholder Go API for k3d testing only | throwaway |
+| `lumen/` | REST backend — design docs only, no service code yet | contract mirror of earendil's `BlogApi`; Go code lands here when scaffolded |
 
 ## Commands
 
-**Frontend (`sv-fzr/`):** `npm run dev` · `npm run check` (svelte-check) ·
+**Frontend (`earendil/`):** `npm run dev` · `npm run check` (svelte-check) ·
 `npm run build` · `npm run lint` · `npm run test:unit` (vitest).
 Always run `npm run check && npm run test:unit` after touching `src/`.
 
 **Manifest validation (no cluster needed):** `kubectl kustomize <dir>` builds any
-kustomization under `k8s-platform-manifests/` — run it after ANY manifest edit.
+kustomization under `vortex/` — run it after ANY manifest edit.
 Remote-pinned resources (Argo overlay) need network on first fetch.
 
 **Local cluster rehearsal:** follow `README.md` (k3d, 1 server + 2 agents, node-pool
@@ -30,10 +32,14 @@ labels). `k3d image import` after rebuilding placeholder images.
 
 ## Workflow
 
-- `k8s-platform-manifests/` is its own git repo (master). **All changes there go on
-  branches forked from `master`** — never direct commits (the four scaffold commits are
-  the baseline exception). Conventional Commits, granular.
-- The workspace root is not a git repo; `sv-fzr/` has its own repo and history.
+- Each submodule (`earendil/`, `lumen/`, `vortex/`) is its own git repo — GitHub is the
+  primary (`git@github.com:kanatabi/<name>.git`, default branch `main`); the GitLab
+  `arkoi/omicron/<name>` remotes are kept as mirrors. Conventional Commits, granular.
+- `vortex/` extra rule: **all changes go on branches forked from `main`** — never direct
+  commits (the four scaffold commits are the baseline exception).
+- The workspace root is the submodule superproject: changes here are only pins (gitlinks),
+  `.gitmodules`, and root docs. Bump a pin after pushing the child:
+  `git add <child> && git commit`.
 
 ## Non-negotiable conventions
 
@@ -43,7 +49,7 @@ labels). `k3d image import` after rebuilding placeholder images.
    DB creds & TLS are generated in-cluster — reference them, never store them.
 2. **Exactly one public ingress: the frontend.** `lumen` and `meilisearch` are
    ClusterIP-only by design; browser→API traffic rides the SSR same-origin proxy
-   (`sv-fzr/src/routes/api/[...path]/+server.ts`). Don't "fix" a 404 on `/api/...` by
+   (`earendil/src/routes/api/[...path]/+server.ts`). Don't "fix" a 404 on `/api/...` by
    adding an API ingress — the proxy or `API_BASE` is the bug.
 3. **Placement is explicit.** Every deployment carries `node-pool` affinity
    (`platform` master / `data` worker-1 / `edge` worker-2) and hostname anti-affinity
@@ -64,7 +70,7 @@ labels). `k3d image import` after rebuilding placeholder images.
    `/metrics` on an unrouted admin port (9090) + structured stdout logs. Traces are OFF
    (no Tempo); the statsd listener exists but stays commented. See INFRA doc Phase 5.
 
-## SvelteKit-specific traps (sv-fzr)
+## SvelteKit-specific traps (earendil)
 
 - **Runtime env only.** Never use `VITE_*`/build-time-inlined env for anything that
   differs between staging/prod — one image runs everywhere. Server: `process.env.API_BASE`;
@@ -101,6 +107,6 @@ target is wired).
 
 - Production phases, unseal drills, quorum rationale: `INFRA_ARCHITECTURE.md`
 - Local end-to-end test script (placement, failover, selfHeal, proxy): `README.md` §5
-- Manifest-repo rules in short form: `k8s-platform-manifests/README.md`
-- sv-fzr's older single-node notes (`sv-fzr/ARCHITECTURE.md`, `DESIGN.md`, `PLAN.md`) are
+- Manifest-repo rules in short form: `vortex/README.md`
+- earendil's older single-node notes (`earendil/ARCHITECTURE.md`, `DESIGN.md`, `PLAN.md`) are
   pre-revision drafts — the root INFRA doc supersedes them on conflicts.

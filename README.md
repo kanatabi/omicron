@@ -1,12 +1,31 @@
-# fzr-blog — Local Run & Test Guide
+# omicron — blog stack superproject & local run guide
 
-This repo holds three things:
+This repo is a **git submodule superproject**. Each piece lives in its own repo
+under `kanatabi/` and is pinned here by commit:
 
-| Piece | Path | What it is |
+| Piece | Submodule | What it is |
 | :--- | :--- | :--- |
-| Blog frontend (SvelteKit SSR) | [`sv-fzr/`](sv-fzr/) | The site itself — dev mode standalone, or containerized via adapter-node (`Dockerfile`) for cluster deploys |
-| Infra blueprint | [`INFRA_ARCHITECTURE.md`](INFRA_ARCHITECTURE.md) | Production K3s + GitOps design (Biznet Gio VPS fleet) |
-| GitOps manifests | [`k8s-platform-manifests/`](k8s-platform-manifests/) | Scaffolded app-of-apps repo (Argo CD overlay, lumen, lumen-db) |
+| Blog frontend (SvelteKit SSR) | [`earendil/`](https://github.com/kanatabi/earendil) | The site itself — dev mode standalone, or containerized via adapter-node (`Dockerfile`) for cluster deploys |
+| REST backend (design stage) | [`lumen/`](https://github.com/kanatabi/lumen) | API contract + content pipeline design docs; no service code yet |
+| GitOps manifests | [`vortex/`](https://github.com/kanatabi/vortex) | Scaffolded app-of-apps repo (Argo CD overlay, earendil, lumen, lumen-db) |
+
+The infra blueprint lives in this repo: [`INFRA_ARCHITECTURE.md`](INFRA_ARCHITECTURE.md)
+(production K3s + GitOps design, Biznet Gio VPS fleet).
+
+### Submodule workflow
+
+```bash
+git clone --recursive git@github.com:kanatabi/omicron.git     # fresh clone
+# or, on an existing clone:
+git submodule update --init --recursive
+
+# update a pin after the child repo moved:
+git -C earendil pull origin main        # (or push from here when working on it)
+git add earendil && git commit -m "chore(earendil): bump to <sha>"
+```
+
+Edits inside a submodule are commits in **that** repo — push the child first,
+then bump the pin here.
 
 You can (and should) rehearse the whole production stack **locally with [k3d](https://k3d.io)**
 before touching a VPS. NetBird and Let's Encrypt can't run locally, so this guide
@@ -34,7 +53,7 @@ k3d version && kubectl version --client && helm version --short
 No cluster needed for day-to-day blog work:
 
 ```bash
-cd sv-fzr
+cd earendil
 npm install
 npm run dev          # http://localhost:5173
 ```
@@ -91,19 +110,22 @@ Phase 3 of `INFRA_ARCHITECTURE.md`.)
 ### 3b. Build the placeholder images and load them into the cluster
 
 ```bash
-# Backend (Go placeholder API — see test/local-backend/)
-docker build -t ghcr.io/cavadevop/fzr-backend:sha-local test/local-backend/
+# Backend: the throwaway Go placeholder (old `test/local-backend/`) was dropped in
+# the submodule restructure — lumen is design-only today. The manifests still pin
+# its placeholder tag; re-point applications/lumen to a real image once the
+# service is scaffolded.
+docker build -t ghcr.io/cavadevop/fzr-backend:sha-local <backend-source-dir>   # when it exists
 k3d image import ghcr.io/cavadevop/fzr-backend:sha-local -c fzr-blog
 
-# Frontend (real SvelteKit SSR build via sv-fzr/Dockerfile + adapter-node)
-docker build -t ghcr.io/cavadevop/earendil:sha-local sv-fzr/
+# Frontend (real SvelteKit SSR build via earendil/Dockerfile + adapter-node)
+docker build -t ghcr.io/cavadevop/earendil:sha-local earendil/
 k3d image import ghcr.io/cavadevop/earendil:sha-local -c fzr-blog
 ```
 
 ### 3c. Argo CD via the platform overlay (exactly what Phase 6 does on the VPS)
 
 ```bash
-kubectl apply -k k8s-platform-manifests/platform/argocd/
+kubectl apply -k vortex/platform/argocd/
 kubectl -n argocd wait --for=condition=Available deploy/argocd-server --timeout=300s
 
 # Dashboard: https://localhost:8080 (user: admin)
@@ -118,13 +140,13 @@ The full app-of-apps hub needs a *pushed* Git repo (Argo pulls from GitHub). For
 local-only run, sync directly with kustomize — same output, no repo needed:
 
 ```bash
-kubectl apply -k k8s-platform-manifests/applications/lumen/
-kubectl apply -k k8s-platform-manifests/applications/earendil/
+kubectl apply -k vortex/applications/lumen/
+kubectl apply -k vortex/applications/earendil/
 ```
 
-For the **real GitOps path**: create/push `k8s-platform-manifests/` to GitHub, replace
-`cavadevop` in `bootstrap/apps-hub.yaml` + `apps/*-app.yaml`, then
-`kubectl apply -f k8s-platform-manifests/bootstrap/apps-hub.yaml` and watch the hub
+For the **real GitOps path**: `vortex/` is pushed (https://github.com/kanatabi/vortex) —
+replace `cavadevop` with `kanatabi` in `bootstrap/apps-hub.yaml` + `apps/*-app.yaml`, then
+`kubectl apply -f vortex/bootstrap/apps-hub.yaml` and watch the hub
 cascade in the dashboard.
 
 Verify:
@@ -144,7 +166,7 @@ curl -s "http://ainurrofiq.com/api/search/suggest?q=a"     # proxied to lumen, o
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/v1.13.0/manifests/operator-manifests.yaml
-kubectl apply -k k8s-platform-manifests/applications/lumen-db/
+kubectl apply -k vortex/applications/lumen-db/
 
 kubectl -n db get pods -o wide      # blog-pg-0 and blog-pg-1 on DIFFERENT nodes (anti-affinity)
 kubectl -n db exec blog-pg-0 -- patronictl list
@@ -156,8 +178,8 @@ Meilisearch and the observability stack (Loki, VictoriaMetrics, Alloy DaemonSet,
 Grafana — Phases 4–5) are scaffolded in Git and sync like any other app:
 
 ```bash
-kubectl apply -k k8s-platform-manifests/applications/observability/
-kubectl apply -k k8s-platform-manifests/applications/meilisearch/
+kubectl apply -k vortex/applications/observability/
+kubectl apply -k vortex/applications/meilisearch/
 kubectl -n observability get pods -o wide   # alloy x1-per-worker; loki/vm/grafana pinned
 ```
 
@@ -179,7 +201,7 @@ until then Meilisearch runs keyless locally and backend creds come from
 | 4 | Prune | Delete a non-hub resource, sync | removed on next automated sync |
 | 5 | Ingress HA/edge pin | `kubectl -n ingress get pods -o wide` | Traefik only on the `edge` node |
 | 6 | Node loss | `docker stop k3d-fzr-blog-agent-0` | API/PG pods reschedule to surviving nodes; cluster stays up |
-| 7 | Frontend dev (no cluster) | `cd sv-fzr && npm run dev` | mock fixtures render when `API_BASE` is unset; point at the local backend with `API_BASE=http://127.0.0.1:8081` + `kubectl -n lumen port-forward svc/lumen 8081:80` |
+| 7 | Frontend dev (no cluster) | `cd earendil && npm run dev` | mock fixtures render when `API_BASE` is unset; point at the local backend with `API_BASE=http://127.0.0.1:8081` + `kubectl -n lumen port-forward svc/lumen 8081:80` |
 | 8 | Metrics contract | `kubectl -n lumen port-forward pod/… 9090:9090 && curl localhost:9090/metrics \| head` | `http_requests_total`, `go_goroutines`, `process_cpu_seconds_total` present — Alloy (once deployed) scrapes this same endpoint via the pod annotations |
 
 Cleanup: `k3d cluster delete fzr-blog`. Remember to remove the `/etc/hosts` line.
