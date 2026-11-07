@@ -7,6 +7,7 @@ under `kanatabi/` and is pinned here by commit:
 | :--- | :--- | :--- |
 | Blog frontend (SvelteKit SSR) | [`earendil/`](https://github.com/kanatabi/earendil) | The site itself — dev mode standalone, or containerized via adapter-node (`Dockerfile`) for cluster deploys |
 | REST backend (design stage) | [`lumen/`](https://github.com/kanatabi/lumen) | API contract + content pipeline design docs; no service code yet |
+| Admin portal (design stage) | `mellon/` (local — remote pending) | Private UI for content management + basic env/secret management; UI-only doctrine in `mellon/DESIGN.md` |
 | GitOps manifests | [`vortex/`](https://github.com/kanatabi/vortex) | Scaffolded app-of-apps repo (Argo CD overlay, earendil, lumen, lumen-db) |
 
 The infra blueprint lives in this repo: [`INFRA_ARCHITECTURE.md`](INFRA_ARCHITECTURE.md)

@@ -16,7 +16,7 @@
 * **Worker Node 2 (Search, Replica & Traffic):** 1x **Biznet Gio NEO Lite MS 4.2**
   * **Resources:** 2 vCPU / 4 GB RAM / 60 GB SSD
   * **Cost:** IDR 139,000 / month (~$8.80 USD)
-  * **Workloads:** Patroni PostgreSQL (Replica), Meilisearch, Grafana UI, Lumen http-server Instance 2, Earendil Instance 2, Traefik Ingress Edge Router, cert-manager, OpenBao (secrets/config store), NetBird Agent.
+  * **Workloads:** Patroni PostgreSQL (Replica), Meilisearch, Grafana UI, Lumen http-server Instance 2, Earendil Instance 2, Mellon (admin portal, 1 instance), Traefik Ingress Edge Router, cert-manager, OpenBao (secrets/config store), NetBird Agent.
 
 * **Total Monthly Investment:** **IDR 387,000 / month** (~$24–$25 USD/mo).
   *Patroni Option C* (3-instance DB, Phase 4): +1× NEO Lite MS 4.2 as worker-3 →
@@ -45,6 +45,7 @@ Memory limits must stay **below** allocatable RAM (node OS + kubelet reserve ~50
 | Lumen http-server (2 instances) | worker-1 & 2 | 100m/128Mi each | 300m/256Mi each | — |
 | Lumen worker (1 instance) | worker-1 or 2 | 100m/128Mi | 300m/256Mi | — |
 | Earendil (SvelteKit SSR, 2 instances) | worker-1 & 2 | 100m/192Mi each | 300m/384Mi each | — |
+| Mellon (admin portal SSR, 1 instance) | worker-2 | 100m/192Mi | 300m/384Mi | — |
 | OpenBao (secrets/config plane) | worker-2 | 100m/160Mi | 300m/320Mi | 1 Gi (file storage) |
 | External Secrets Operator | worker-1 | 50m/128Mi | 200m/256Mi | — |
 | Traefik + cert-manager | worker-2 | 100m/128Mi | 300m/256Mi | — |
@@ -123,6 +124,7 @@ Reading guide:
 | :--- | :--- | :--- | :--- |
 | **Blog Frontend (SvelteKit SSR)** | **Public** | `ainurrofiq.com` | HTTPS via Traefik Ingress + Let's Encrypt TLS (HTTP→HTTPS redirect enforced) |
 | **Lumen API** | **Cluster-internal only** | `http://lumen-http-server.lumen.svc.cluster.local` | No public ingress. Earendil SSR pods call it directly; the browser's single client-side call (search suggest) rides earendil's same-origin `/api/...` proxy |
+| **Mellon (admin portal)** | **Private (port-forward only)** | `kubectl port-forward svc/mellon 8080:8080` → `http://localhost:8080` | ClusterIP only — no public *or* mesh ingress (P0 doctrine, `mellon/DESIGN.md` §2). Its relay calls lumen's Admin API server-side; mellon itself holds no credentials |
 | **Argo CD Control Panel** | **Private (VPN Only)** | `localhost:8080` (Port-forwarded) / Private Ingress | Private NetBird WireGuard Overlay Mesh |
 | **Grafana / VictoriaMetrics / Loki** | **Private (VPN Only)** | Internal Mesh DNS / Local Tunnel | Private NetBird WireGuard Overlay Mesh |
 | **Meilisearch** | **Cluster-internal only** | `http://meilisearch.search.svc.cluster.local:7700` | No public or mesh ingress; API-only access |
@@ -829,6 +831,33 @@ jobs:
    nmap -p22 <master-public-ip>   # must show closed/filtered
    ```
 
+### Phase 10: Content Plane & Portal (lumen build · mellon)
+
+The design docs are settled (`lumen/DESIGN.md`, `mellon/DESIGN.md`); this phase turns
+them into workloads.
+
+1. **Lumen (Go):** scaffold in `lumen/` — read API (§1) with the earendil contract tests
+   as the acceptance gate, then Admin API (§8: post/photo/tag writes, publish = the §2
+   unit of work, media uploads per the D1 resolution, Bao passthrough with the
+   `fzr-portal` AppRole held server-side).
+2. **Mellon (SvelteKit):** scaffold per its DESIGN — relay-only, session from lumen,
+   editor + true-to-prod preview, secrets tab (CAS + history + rollback-by-pin).
+   Light/dark parity day one.
+3. **Vortex:** `applications/lumen/` + `applications/mellon/` (ESO-free bases) with
+   `overlays/{staging,production}/…` and `apps/` Application CRs; mellon gets a ClusterIP
+   service ONLY (no Ingress resource — port-forward doctrine, §2 access matrix).
+4. **Seeds:** `kv/data/lumen/{env}` + `kv/data/mellon/{env}` (API_BASE + session secret)
+   + the `fzr-portal` AppRole/policy added to the §5.6 manual bootstrap list.
+5. **Media (D1):** add `/media/*` to BOTH earendil's and mellon's relays (same-origin
+   passthrough pattern); re-run the earendil preload/relay QA recipe.
+6. **Cutover:** earendil `API_BASE` → lumen's ClusterIP (staging first, §5.4 promotion);
+   mock fixtures remain the local dev mode — the kill-switch the runtime-env doctrine
+   guarantees.
+
+**Acceptance:** publish a post through mellon → it renders on earendil (raw mermaid fence
+→ client render); a /secrets round-trip writes a Bao-audited version; mellon is
+unreachable from outside the mesh; the §5.5 CI drift check passes for every app.
+
 ---
 
 ## 5. Secrets & Config Management (OpenBao + External Secrets)
@@ -920,9 +949,9 @@ Config deploys thus get the same audit trail as image deploys: PR + KV version +
 
 ### 5.5 Portal integration (your admin UI)
 
-The portal is an **API client**, not an iframe of Bao's stock UI (framing fights auth
-realms; Bao ships `ui_csp_frame_ancestors` if ever needed as break-glass, mesh-only).
-Minimal surface the portal needs:
+The portal (**mellon**, see [`mellon/DESIGN.md`](mellon/DESIGN.md)) is an **API client**, not
+an iframe of Bao's stock UI (framing fights auth realms; Bao ships `ui_csp_frame_ancestors`
+if ever needed as break-glass, mesh-only). Minimal surface the portal needs:
 
 ```text
 GET  /v1/kv/metadata/<app>/<env>            # version list → "history" view
@@ -930,10 +959,14 @@ GET  /v1/kv/data/<app>/<env>?version=N      # read a version (diff vs current)
 PUT  /v1/kv/data/<app>/<env>  (cas=N)       # save = new version, optimistic lock
 ```
 
-- Portal authenticates with a dedicated **AppRole** (`fzr-portal` role), token TTL
+- The **AppRole (`fzr-portal`) is held by lumen's server identity, never by mellon** — the
+  portal's secrets tab calls lumen's Admin-API Bao passthrough (§8 of `lumen/DESIGN.md`),
+  so no browser-side surface ever sees Bao credentials. Token TTL
   ≤1 h with agent-based re-login, bound to worker CIDRs. Policy: `read` + `update` on
   `kv/data/+/*` (app-scoped roles preferred: `kv/data/lumen/*` for the lumen tab) — no root, no `list` on `sys/`.
 - Go client: `hashicorp/vault/api` works unmodified against OpenBao (wire-compatible).
+- Bao **audit devices are the trail**: mellon adds no secret-value logging, and lumen must
+  never log values (structured logs redact by key).
 - Same API powers the CI **drift check**: every key in each repo's `env.yaml.sample` must
   exist in the rendered ExternalSecret's data list, and vice versa (~15-line job).
 

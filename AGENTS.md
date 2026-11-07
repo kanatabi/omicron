@@ -16,6 +16,7 @@ several moving parts with different toolchains:
 | `vortex/` | GitOps source of truth (Argo CD app-of-apps) | **read `vortex/README.md` first**; conventions are load-bearing |
 | `INFRA_ARCHITECTURE.md` | Production blueprint (K3s on 3 VPS, phases §4, secrets design §5) | the decision record — update it when you change a decision |
 | `lumen/` | REST backend — design docs only, no service code yet | contract mirror of earendil's `BlogApi`; Go code lands here when scaffolded |
+| `mellon/` | Admin portal — design docs only, no service code yet (local repo; GitHub remote pending) | UI-only by doctrine: relays to lumen, holds no credentials, port-forward access only — read `mellon/DESIGN.md` §2 before any feature work |
 
 ## Commands
 
