@@ -889,6 +889,14 @@ jobs:
 The design docs are settled (`lumen/DESIGN.md`, `mellon/DESIGN.md`); this phase turns
 them into workloads.
 
+> **Status 2026-11-09:** the lumen CODE half is executed (read API incl. the
+> Meilisearch serving model + river async indexing, admin API incl. JWT sessions
+> with `tv` revocation, publish transactions, multipart media relay, the four
+> Bao operations, driftcheck, distroless image — all on `milestone/1-read-api`,
+> accepted by earendil's own contract suite against the live binary). Remaining
+> here: CI workflow wiring (Phase 8's pipeline), the vortex manifests below, the
+> seeds, and cutover (Phase C). See `mellon/PLAN.md` journal.
+
 1. **Lumen (Go):** scaffold in `lumen/` — read API (§1) with the earendil contract tests
    as the acceptance gate, then Admin API (§8: post/photo/tag writes, publish = the §2
    unit of work, media uploads per the D1 resolution, Bao passthrough with the
