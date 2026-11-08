@@ -124,7 +124,7 @@ Reading guide:
 | :--- | :--- | :--- | :--- |
 | **Blog Frontend (SvelteKit SSR)** | **Public** | `ainurrofiq.com` | HTTPS via Traefik Ingress + Let's Encrypt TLS (HTTP→HTTPS redirect enforced) |
 | **Lumen API** | **Cluster-internal only** | `http://lumen-http-server.lumen.svc.cluster.local` | No public ingress. Earendil SSR pods call it directly; the browser's single client-side call (search suggest) rides earendil's same-origin `/api/...` proxy |
-| **Mellon (admin portal)** | **Private (port-forward only)** | `kubectl port-forward svc/mellon 8080:8080` → `http://localhost:8080` | ClusterIP only — no public *or* mesh ingress (P0 doctrine, `mellon/DESIGN.md` §2). Its relay calls lumen's Admin API server-side; mellon itself holds no credentials |
+| **Mellon (admin portal)** | **Public — TLS only** (amended 2026-11-08; was port-forward-only) | `https://console.gofar.id` (Traefik, edge node) · `kubectl port-forward svc/mellon 8080:8080` remains **break-glass** | Service stays ClusterIP — only Traefik routes to it, with the console middlewares (headers/HSTS/rate-limit, Phase 3) + JWT sessions with `tv`-revocation (`mellon/DESIGN.md` §8). Go-public is **HUMAN-GATE #10**: the checklist verifies before DNS flips. Its relay still calls lumen's Admin API server-side; mellon holds no credentials in any era |
 | **Argo CD Control Panel** | **Private (VPN Only)** | `localhost:8080` (Port-forwarded) / Private Ingress | Private NetBird WireGuard Overlay Mesh |
 | **Grafana / VictoriaMetrics / Loki** | **Private (VPN Only)** | Internal Mesh DNS / Local Tunnel | Private NetBird WireGuard Overlay Mesh |
 | **Meilisearch** | **Cluster-internal only** | `http://meilisearch.search.svc.cluster.local:7700` | No public or mesh ingress; API-only access |
@@ -143,6 +143,7 @@ Reading guide:
 Managed via your external DNS provider (Cloudflare, Namecheap, Route53, etc.):
 * **A Record:** `ainurrofiq.com` ➔ `[Biznet Gio Public IP]`
 * **Wildcard CNAME / A Record:** `*.ainurrofiq.com` ➔ `[Biznet Gio Public IP]`
+* **Console (amended 2026-11-08):** `console.gofar.id` ➔ the Traefik edge node's public IP (a lone A record is enough; wildcards were never required for certificates) — resolves BEFORE first issuance, same ordering constraint below — and only AFTER GATE #10 clears
 * **Routing:** Traefik Ingress receives traffic on ports 80/443 and terminates SSL via `cert-manager` (ACME HTTP-01 challenge).
 * **Ordering constraint:** public DNS records must resolve to all node IPs (or the egress node running Traefik) **before** first certificate issuance, or HTTP-01 solvers will fail.
 
@@ -334,6 +335,14 @@ in this phase touches the VPS.
    ufw deny 6443,10250/tcp
    ```
 
+   > **Console amendment (2026-11-08):** `console.gofar.id` rides the SAME 80/443 the
+   > edge already opens for the blog — **no new listener, no changed lockdown**. The
+   > public invariant stays "HTTP(S) only; control-plane ports private on every path".
+   > What changed is what lives behind 443: two sanctioned surfaces — `gofar.id`
+   > (content, unauthenticated reads) and `console.gofar.id` (authenticated writes +
+   > the Bao plane, gated by mellon PLAN ledger #10). Phase 3 installs the edge
+   > posture that makes the second one safe to expose.
+
 5. **Label Nodes for Placement (used by GitOps overlays in later phases):**
    ```bash
    kubectl label node master-node node-pool=platform
@@ -383,7 +392,51 @@ in this phase touches the VPS.
    EOF
    ```
    > cert-manager pods get `nodeSelector: { node-pool: edge }` via the GitOps overlay.
-   > Ensure §3A DNS records already resolve, or the first HTTP-01 challenge fails.
+   > Ensure §3A DNS records already resolve, or the first HTTP-01 challenge fails —
+   > this now includes `console.gofar.id` (its certificate comes from the same
+   > ClusterIssuer; no separate cert story).
+
+3. **Console edge middlewares (amended 2026-11-08 — the portal goes public):**
+   installed with the provider now, *attached* when the console IngressRoute arrives
+   (Phase 10). `externalTrafficPolicy: Local` above is what makes the limiter's
+   source IP real:
+   ```bash
+   kubectl apply -n ingress -f - <<'EOF'
+   apiVersion: traefik.io/v1alpha1
+   kind: Middleware
+   metadata:
+     name: console-headers
+   spec:
+     headers:
+       stsSeconds: 31536000
+       stsPreload: true
+       forceSTSHeader: true
+       contentTypeNosniff: true
+       frameDeny: true
+       customResponseHeaders:
+         Referrer-Policy: same-origin
+         Permissions-Policy: camera=(), microphone=(), geolocation=()
+   ---
+   apiVersion: traefik.io/v1alpha1
+   kind: Middleware
+   metadata:
+     name: console-ratelimit
+   spec:
+     rateLimit:
+       average: 30
+       burst: 60
+       sourceCriterion:
+         ipStrategy:
+           depth: 1
+   EOF
+   ```
+   > Honest notes: (1) the limiter is a coarse edge layer — the REAL login throttle is
+   > lumen's own (per-IP + per-account backoff, `lumen/DESIGN.md` §8 rules); single
+   > user + public URL makes credential stuffing *the* attack. (2) A strict CSP is
+   > deliberately NOT shipped yet: mellon's rail hues ride inline `style=` attributes
+   > by design (Tailwind can't scan dynamic utilities) — `style-src 'unsafe-inline'`
+   > or no CSP until a custom-property refactor makes a tight one possible. Recording
+   > the tradeoff beats shipping a header that lies about protection.
 
 ---
 
@@ -844,13 +897,21 @@ them into workloads.
    editor + true-to-prod preview, secrets tab (CAS + history + rollback-by-pin).
    Light/dark parity day one.
 3. **Vortex:** `applications/lumen/` + `applications/mellon/` (ESO-free bases) with
-   `overlays/{staging,production}/…` and `apps/` Application CRs; mellon gets a ClusterIP
-   service ONLY (no Ingress resource — port-forward doctrine, §2 access matrix).
-4. **Seeds:** `kv/data/lumen/{env}` (API_BASE + session secret + **media: bucket,
-   endpoint, CDN base URL, access keys** — schema in `lumen/env.yaml.sample`, values
-   here; provider itself is an open owner call, see lumen §5) +
-   `kv/data/mellon/{env}` (API_BASE + session secret)
-   + the `fzr-portal` AppRole/policy added to the §5.6 manual bootstrap list.
+   `overlays/{staging,production}/…` and `apps/` Application CRs. Mellon gets its
+   ClusterIP service **plus an IngressRoute on Traefik** for `console.gofar.id` with the
+   Phase-3 `console-headers` + `console-ratelimit` middlewares attached (§2 amendment,
+   2026-11-08 — was "no Ingress resource, ever"; the port-forward path stays as
+   documented break-glass). DNS for the console record remains an owner action —
+   external resource + **GATE #10**, apply-sequence item.
+4. **Seeds:** `kv/data/lumen/{env}` (API_BASE + **`SESSION_JWT_SECRET`** — 32 bytes,
+   generated at bootstrap, the only session-related secret, held by lumen alone +
+   **media: bucket, endpoint, CDN base URL, access keys** — schema in
+   `lumen/env.yaml.sample`, values here; provider itself is an open owner call, see
+   lumen §5) + `kv/data/mellon/{env}` (API_BASE — the portal holds no credentials, and
+   with JWTs it no longer holds even a session secret) + the owner's `users` row seeded
+   with an argon2id `passhash` (lumen-side one-time CLI at bootstrap — credentials live
+   in the DB hashed, per lumen §6) + the `fzr-portal` AppRole/policy added to the §5.6
+   manual bootstrap list.
 5. **Media (D1, revised):** lumen relays uploads to the object store and returns
    absolute CDN URLs (lumen §5); browsers fetch media from the CDN directly —
    the previously planned `/media/*` SSR relay in earendil/mellon is **cancelled**
@@ -860,8 +921,12 @@ them into workloads.
    guarantees.
 
 **Acceptance:** publish a post through mellon → it renders on earendil (raw mermaid fence
-→ client render); a /secrets round-trip writes a Bao-audited version; mellon is
-unreachable from outside the mesh; the §5.5 CI drift check passes for every app.
+→ client render); a /secrets round-trip writes a Bao-audited version; `console.gofar.id`
+answers over public TLS with the GATE #10 checklist verified (edge middlewares live,
+lumen login throttle active, `tv`-revocation proven: logout kills an outstanding JWT
+replayed from a second client); **lumen/Meilisearch/Bao unreachable from any non-cluster
+host** (probe `:6443`, admin ports, `:9090` — the one surviving hard rule); port-forward
+break-glass still works; the §5.5 CI drift check passes for every app.
 
 ---
 

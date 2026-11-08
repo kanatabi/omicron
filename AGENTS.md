@@ -48,10 +48,13 @@ labels). `k3d image import` after rebuilding placeholder images.
    (`ExternalSecret` CRs) live in Git; values live in OpenBao. Adding a value, token, or
    domain-specific string directly to a manifest = breaking the design (INFRA doc §5).
    DB creds & TLS are generated in-cluster — reference them, never store them.
-2. **Exactly one public ingress: the frontend.** `lumen` and `meilisearch` are
-   ClusterIP-only by design; browser→API traffic rides the SSR same-origin proxy
-   (`earendil/src/routes/api/[...path]/+server.ts`). Don't "fix" a 404 on `/api/...` by
-   adding an API ingress — the proxy or `API_BASE` is the bug.
+2. **Two sanctioned public surfaces, never a public API** (owner amendment,
+   2026-11-08, INFRA §2): `gofar.id` (earendil, content) and `console.gofar.id`
+   (mellon, TLS + GATE #10 checklist). `lumen` and `meilisearch` stay ClusterIP-only
+   by design; browser→API traffic rides the SSR/portal same-origin proxies
+   (`earendil/src/routes/api/[...path]/+server.ts`, `mellon/src/routes/(app)/api/`).
+   Don't "fix" a 404 on `/api/...` by adding an API ingress — the proxy or `API_BASE`
+   is the bug.
 3. **Placement is explicit.** Every deployment carries `node-pool` affinity
    (`platform` master / `data` worker-1 / `edge` worker-2) and hostname anti-affinity
    where 2-replica. If you add a workload, update the §1 budget table too — master has
