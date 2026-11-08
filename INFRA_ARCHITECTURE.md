@@ -846,10 +846,15 @@ them into workloads.
 3. **Vortex:** `applications/lumen/` + `applications/mellon/` (ESO-free bases) with
    `overlays/{staging,production}/…` and `apps/` Application CRs; mellon gets a ClusterIP
    service ONLY (no Ingress resource — port-forward doctrine, §2 access matrix).
-4. **Seeds:** `kv/data/lumen/{env}` + `kv/data/mellon/{env}` (API_BASE + session secret)
+4. **Seeds:** `kv/data/lumen/{env}` (API_BASE + session secret + **media: bucket,
+   endpoint, CDN base URL, access keys** — schema in `lumen/env.yaml.sample`, values
+   here; provider itself is an open owner call, see lumen §5) +
+   `kv/data/mellon/{env}` (API_BASE + session secret)
    + the `fzr-portal` AppRole/policy added to the §5.6 manual bootstrap list.
-5. **Media (D1):** add `/media/*` to BOTH earendil's and mellon's relays (same-origin
-   passthrough pattern); re-run the earendil preload/relay QA recipe.
+5. **Media (D1, revised):** lumen relays uploads to the object store and returns
+   absolute CDN URLs (lumen §5); browsers fetch media from the CDN directly —
+   the previously planned `/media/*` SSR relay in earendil/mellon is **cancelled**
+   (nothing to add to the relays; earendil embeds `Photo.src` unchanged).
 6. **Cutover:** earendil `API_BASE` → lumen's ClusterIP (staging first, §5.4 promotion);
    mock fixtures remain the local dev mode — the kill-switch the runtime-env doctrine
    guarantees.
