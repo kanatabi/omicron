@@ -202,4 +202,16 @@ manual curl of every new endpoint against the live dev plane.
   pre-A server was retired; `make dev` reuses whatever serves :8080, so
   restart it after reviewing to pick merged main). Pins NOT moved: both
   children carry pending work on unmerged branches, by design.
+- 2026-11-10 — **owner add-on: palette verbs** (mellon `39a??`… see commit
+  "register control-plane verbs"): secrets verbs registered in the §7
+  command contract incl. the filter editField buffer; harness 48/48.
+  Test-harness truths journaled: palette-target-by-aria-label, cancel
+  over Escape, settle-before-count.
+- 2026-11-10 — **dev-plane collision finding (owner's "can't see the
+  value")**: lumen/dev had been purged mid-cycle — the A5/A6 integration
+  battery OWNS kv/lumen/dev (bootstrapPlane purges it at run start), so a
+  test run racing a human's browser session can show empty/gone state.
+  Plane RE-SEEDED via scripts/dev-plane.sh (values back: v1 trio). Phase C
+  candidate C5: move relay-test ownership to an `itest/` prefix so human
+  dev data and the battery never share paths.
 - — (append deltas here: contract changes, deviations, new rulings)
