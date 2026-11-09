@@ -202,8 +202,8 @@ manual curl of every new endpoint against the live dev plane.
   pre-A server was retired; `make dev` reuses whatever serves :8080, so
   restart it after reviewing to pick merged main). Pins NOT moved: both
   children carry pending work on unmerged branches, by design.
-- 2026-11-10 — **owner add-on: palette verbs** (mellon `39a??`… see commit
-  "register control-plane verbs"): secrets verbs registered in the §7
+- 2026-11-10 — **owner add-on: palette verbs** (mellon `33d0c3c` "register
+  control-plane verbs"): secrets verbs registered in the §7
   command contract incl. the filter editField buffer; harness 48/48.
   Test-harness truths journaled: palette-target-by-aria-label, cancel
   over Escape, settle-before-count.
