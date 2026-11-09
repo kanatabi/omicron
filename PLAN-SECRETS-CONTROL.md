@@ -63,7 +63,7 @@ Code to this table; if reality forces a change, record it in §8 before writing 
 (handlers + adminsvc already live there; merge order: layered → main FIRST, then this —
 see §7 risks). Validate with dev plane up: `scripts/dev-plane.sh` → `dev-plane.env`.
 
-- [ ] **A1 — pure core** `internal/adminsvc/secrets_pure.go` + `_test.go`
+- [x] **A1 — pure core** `internal/adminsvc/secrets_pure.go` + `_test.go`
       Validate `keyDelta(oldSet, newSet) → (adds, removes)`, `unionKeys(map[env][]key)`,
       slug validation, canonical-set selection. NO Bao/DB imports.
       **Accept:** table-driven unit tests pass with no network; covers empty-env,
@@ -161,4 +161,12 @@ manual curl of every new endpoint against the live dev plane.
 ## 8. Decision log (append-only)
 
 - 2026-11-09 — D1..D5 ratified by owner (chat → this doc).
+- 2026-11-09 — **A1 shipped** (`lumen@20336ee`, branch `feature/secrets-control-plane`
+  off post-merge main — the §7 merge-order risk retired). Naming deltas from the
+  sketch: functions exported (A4's package + integration tests consume them);
+  `unionKeys` implemented as `CanonicalKeySet(map[env]payload)` — takes payloads
+  directly so A3 never hand-rolls the projection; `KeySet` added as the sorted
+  projection both share. The mirror's write-gate (`ApplyDelta → changed`) is the
+  §7 two-tab-race answer: raced siblings keep their values AND skip the write
+  (no gratuitous version bump, no fake 409) — unit-proven as pure data.
 - — (append deltas here: contract changes, deviations, new rulings)
