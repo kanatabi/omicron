@@ -214,4 +214,19 @@ manual curl of every new endpoint against the live dev plane.
   Plane RE-SEEDED via scripts/dev-plane.sh (values back: v1 trio). Phase C
   candidate C5: move relay-test ownership to an `itest/` prefix so human
   dev data and the battery never share paths.
+- 2026-11-10 — **compare round shipped** (mellon `73f5d26`; design ratified
+  in chat): same-path versions ONLY (cross-env diff refused by doctrine —
+  per-env secrets side by side is a leak pattern); presentations
+  table/split/inline × content parsed/raw (raw visibly disabled in table —
+  the UI states its own rules); masking applied BEFORE serialization
+  (displayValue is the single rule, shared with the editor's reveal-all and
+  viewing panel); reveal-all display-only, never persisted; prefs persist
+  behind the primitive-flag guard (the INTERNAL-200 lesson applied
+  preventively); nav child 'compare' TRIED per owner, with longest-match
+  highlighting fixing the double-lit rows nested hrefs caused; mobile
+  header stacks (the owner screenshot), orderEnvs gives dev→staging→
+  production everywhere. Battery truths: '2 of 4' assertion was MY math
+  error — reality said 3 changed keys and the UI was right; the raw-json
+  click deadlocked on the button the UI deliberately disables — commented
+  choreography now. Harness 55/55 (+7), 71 units, visuals in shots/.
 - — (append deltas here: contract changes, deviations, new rulings)
