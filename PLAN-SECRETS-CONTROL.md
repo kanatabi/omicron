@@ -68,7 +68,7 @@ see §7 risks). Validate with dev plane up: `scripts/dev-plane.sh` → `dev-plan
       slug validation, canonical-set selection. NO Bao/DB imports.
       **Accept:** table-driven unit tests pass with no network; covers empty-env,
       remove-all, add-after-remove races as pure data.
-- [ ] **A2 — bao client** `internal/bao/bao.go`
+- [x] **A2 — bao client** `internal/bao/bao.go`
       `Meta` gains `PinnedVersion *int` (parse `custom_metadata` from
       `GET kv/metadata/{app}/{env}` — Meta op must start reading the metadata endpoint);
       `PatchMetadataCustom(ctx, app, env, map)` for pin/unpin; `CreateIfAbsent`-style
@@ -169,4 +169,13 @@ manual curl of every new endpoint against the live dev plane.
   projection both share. The mirror's write-gate (`ApplyDelta → changed`) is the
   §7 two-tab-race answer: raced siblings keep their values AND skip the write
   (no gratuitous version bump, no fake 409) — unit-proven as pure data.
+- 2026-11-09 — **A2 shipped** (`lumen@9382b75`). Bonus find by the fixture
+  test: the pre-A2 `Meta` decoder string-keyed the versions map into
+  `toNum` → EVERY VersionInfo.Version was 0 in production (mellon history
+  showed 0/0 since day one; the twin was right, live was lying). Fixed via
+  `strconv.Atoi` + skip-unparsable. New wire ops: `PinnedVersion *int`
+  (custom_metadata, D1 intent-only), `PatchMetadataCustom` (RFC 7396 —
+  unpin = null), `CreateIfAbsent` (cas=0) with `remapExists` →
+  ErrAlreadyExists for onboarding collisions. B-phase note: mellon needs NO
+  twin change — live finally matches it.
 - — (append deltas here: contract changes, deviations, new rulings)
