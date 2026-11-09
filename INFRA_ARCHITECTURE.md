@@ -3,26 +3,27 @@
 ## 1. Architecture & Cost Sourcing
 
 ### Infrastructure Topology
-* **Master Node (Control Plane):** 1x **Biznet Gio NEO Lite SS 2.2**
-  * **Resources:** 2 vCPU / 2 GB RAM / 60 GB SSD
-  * **Cost:** IDR 109,000 / month (~$7 USD)
-  * **Workloads:** K3s Control Plane (`kube-apiserver`, `etcd`/`Kine`), Argo CD Engine (all components), NetBird Agent.
 
-* **Worker Node 1 (Data & Observability Backbone):** 1x **Biznet Gio NEO Lite MS 4.2**
-  * **Resources:** 2 vCPU / 4 GB RAM / 60 GB SSD
-  * **Cost:** IDR 139,000 / month (~$8.80 USD)
-  * **Workloads:** Patroni PostgreSQL (Primary), Grafana LGTM data plane (Loki, VictoriaMetrics, Alloy), Lumen http-server Instance 1 + worker, Earendil Instance 1, External Secrets Operator, NetBird Agent.
+- **Master Node (Control Plane):** 1x **Biznet Gio NEO Lite SS 2.2**
+  - **Resources:** 2 vCPU / 2 GB RAM / 60 GB SSD
+  - **Cost:** IDR 109,000 / month (~$7 USD)
+  - **Workloads:** K3s Control Plane (`kube-apiserver`, `etcd`/`Kine`), Argo CD Engine (all components), NetBird Agent.
 
-* **Worker Node 2 (Search, Replica & Traffic):** 1x **Biznet Gio NEO Lite MS 4.2**
-  * **Resources:** 2 vCPU / 4 GB RAM / 60 GB SSD
-  * **Cost:** IDR 139,000 / month (~$8.80 USD)
-  * **Workloads:** Patroni PostgreSQL (Replica), Meilisearch, Grafana UI, Lumen http-server Instance 2, Earendil Instance 2, Mellon (admin portal, 1 instance), Traefik Ingress Edge Router, cert-manager, OpenBao (secrets/config store), NetBird Agent.
+- **Worker Node 1 (Data & Observability Backbone):** 1x **Biznet Gio NEO Lite MS 4.2**
+  - **Resources:** 2 vCPU / 4 GB RAM / 60 GB SSD
+  - **Cost:** IDR 139,000 / month (~$8.80 USD)
+  - **Workloads:** Patroni PostgreSQL (Primary), Grafana LGTM data plane (Loki, VictoriaMetrics, Alloy), Lumen http-server Instance 1 + worker, Earendil Instance 1, External Secrets Operator, NetBird Agent.
 
-* **Total Monthly Investment:** **IDR 387,000 / month** (~$24–$25 USD/mo).
-  *Patroni Option C* (3-instance DB, Phase 4): +1× NEO Lite MS 4.2 as worker-3 →
+- **Worker Node 2 (Search, Replica & Traffic):** 1x **Biznet Gio NEO Lite MS 4.2**
+  - **Resources:** 2 vCPU / 4 GB RAM / 60 GB SSD
+  - **Cost:** IDR 139,000 / month (~$8.80 USD)
+  - **Workloads:** Patroni PostgreSQL (Replica), Meilisearch, Grafana UI, Lumen http-server Instance 2, Earendil Instance 2, Mellon (admin portal, 1 instance), Traefik Ingress Edge Router, cert-manager, OpenBao (secrets/config store), NetBird Agent.
+
+- **Total Monthly Investment:** **IDR 387,000 / month** (~$24–$25 USD/mo).
+  _Patroni Option C_ (3-instance DB, Phase 4): +1× NEO Lite MS 4.2 as worker-3 →
   **IDR 526,000 / month** (~$33 USD/mo).
 
-* **Networking:** node↔node traffic rides either a **GIO VPC** (Path A, preferred — if
+- **Networking:** node↔node traffic rides either a **GIO VPC** (Path A, preferred — if
   available on NEO Lite; verify at rental per Phase 1) or the **NetBird mesh** (Path B).
   NetBird is always the admin plane. Full decision table: Phase 2.
 
@@ -31,27 +32,27 @@
 Memory limits must stay **below** allocatable RAM (node OS + kubelet reserve ~500–700 MB).
 `local-path` provisioner (K3s bundled) serves all PVCs; disk sizing below assumes 60 GB SSD.
 
-| Workload | Node | Requests | Limits | PVC (approx) |
-| :--- | :--- | :--- | :--- | :--- |
-| K3s control plane | master | system | ~500 Mi | — |
-| Argo CD (all 7 components) | master | 350m/800Mi total | 1 CPU/1.6Gi total | 2 Gi (`/tmp` repos) |
-| Patroni PostgreSQL (Primary) | worker-1 | 250m/512Mi | 1 CPU/1Gi | 10 Gi |
-| Patroni PostgreSQL (Replica) | worker-2 | 250m/512Mi | 1 CPU/1Gi | 10 Gi |
-| Loki | worker-1 | 200m/512Mi | 500m/800Mi | 15 Gi (7d retention) |
-| VictoriaMetrics | worker-1 | 200m/384Mi | 500m/512Mi | 10 Gi |
-| Grafana Alloy (DaemonSet, 1 per worker) | worker-1 & 2 | 100m/128Mi each | 300m/256Mi each | — |
-| Grafana UI | worker-2 | 100m/128Mi | 300m/256Mi | 1 Gi |
-| Meilisearch | worker-2 | 200m/384Mi | 500m/700Mi | 5 Gi |
-| Lumen http-server (2 instances) | worker-1 & 2 | 100m/128Mi each | 300m/256Mi each | — |
-| Lumen worker (1 instance) | worker-1 or 2 | 100m/128Mi | 300m/256Mi | — |
-| Earendil (SvelteKit SSR, 2 instances) | worker-1 & 2 | 100m/192Mi each | 300m/384Mi each | — |
-| Mellon (admin portal SSR, 1 instance) | worker-2 | 100m/192Mi | 300m/384Mi | — |
-| OpenBao (secrets/config plane) | worker-2 | 100m/160Mi | 300m/320Mi | 1 Gi (file storage) |
-| External Secrets Operator | worker-1 | 50m/128Mi | 200m/256Mi | — |
-| Traefik + cert-manager | worker-2 | 100m/128Mi | 300m/256Mi | — |
+| Workload                                | Node          | Requests         | Limits            | PVC (approx)         |
+| :-------------------------------------- | :------------ | :--------------- | :---------------- | :------------------- |
+| K3s control plane                       | master        | system           | ~500 Mi           | —                    |
+| Argo CD (all 7 components)              | master        | 350m/800Mi total | 1 CPU/1.6Gi total | 2 Gi (`/tmp` repos)  |
+| Patroni PostgreSQL (Primary)            | worker-1      | 250m/512Mi       | 1 CPU/1Gi         | 10 Gi                |
+| Patroni PostgreSQL (Replica)            | worker-2      | 250m/512Mi       | 1 CPU/1Gi         | 10 Gi                |
+| Loki                                    | worker-1      | 200m/512Mi       | 500m/800Mi        | 15 Gi (7d retention) |
+| VictoriaMetrics                         | worker-1      | 200m/384Mi       | 500m/512Mi        | 10 Gi                |
+| Grafana Alloy (DaemonSet, 1 per worker) | worker-1 & 2  | 100m/128Mi each  | 300m/256Mi each   | —                    |
+| Grafana UI                              | worker-2      | 100m/128Mi       | 300m/256Mi        | 1 Gi                 |
+| Meilisearch                             | worker-2      | 200m/384Mi       | 500m/700Mi        | 5 Gi                 |
+| Lumen http-server (2 instances)         | worker-1 & 2  | 100m/128Mi each  | 300m/256Mi each   | —                    |
+| Lumen worker (1 instance)               | worker-1 or 2 | 100m/128Mi       | 300m/256Mi        | —                    |
+| Earendil (SvelteKit SSR, 2 instances)   | worker-1 & 2  | 100m/192Mi each  | 300m/384Mi each   | —                    |
+| Mellon (admin portal SSR, 1 instance)   | worker-2      | 100m/192Mi       | 300m/384Mi        | —                    |
+| OpenBao (secrets/config plane)          | worker-2      | 100m/160Mi       | 300m/320Mi        | 1 Gi (file storage)  |
+| External Secrets Operator               | worker-1      | 50m/128Mi        | 200m/256Mi        | —                    |
+| Traefik + cert-manager                  | worker-2      | 100m/128Mi       | 300m/256Mi        | —                    |
 
 > Master fit: requests (~500 Mi K3s + ~800 Mi Argo ≈ 1.3 Gi) fit inside the ~1.4 Gi
-> allocatable on a 2 GB node; Argo *limits* intentionally oversubscribe (real usage is
+> allocatable on a 2 GB node; Argo _limits_ intentionally oversubscribe (real usage is
 > bursty). The 2 GB swapfile added in Phase 2 is the OOM backstop — not optional.
 >
 > **Anti-affinity rule:** Patroni Primary and Replica must never co-schedule. Zalando's
@@ -106,13 +107,13 @@ flowchart TB
   LAP -->|"portal UI → KV API (AppRole)"| BAO
 ```
 
-Reading guide:
-0. **Node network:** all traffic *between the three nodes* (API, pod overlay, replication)
-   rides the private plane chosen in Phase 2 — Path A (GIO VPC) or Path B (mesh). NetBird
-   *always* serves the laptop→cluster admin path regardless of that choice.
+Reading guide: 0. **Node network:** all traffic _between the three nodes_ (API, pod overlay, replication)
+rides the private plane chosen in Phase 2 — Path A (GIO VPC) or Path B (mesh). NetBird
+_always_ serves the laptop→cluster admin path regardless of that choice.
+
 1. **Ship code:** push app repo → CI builds image to GHCR and commits the new tag into the manifests repo.
 2. **Sync:** Argo (watching the manifests repo) applies the diff; `prune + selfHeal` keeps the cluster honest.
-3. **Config/secret render:** Argo applies `ExternalSecret` templates; ESO pulls the *values* from OpenBao (version-pinned per environment overlay) and materializes in-cluster ConfigMaps/Secrets that pods read as env.
+3. **Config/secret render:** Argo applies `ExternalSecret` templates; ESO pulls the _values_ from OpenBao (version-pinned per environment overlay) and materializes in-cluster ConfigMaps/Secrets that pods read as env.
 4. **Admin:** everything managed via the NetBird mesh — no public admin endpoints; your portal edits OpenBao through its REST API (§5).
 5. **Bootstrap exception:** Argo itself, the age/offline seeds, and OpenBao's root/unseal setup are applied manually once (§5.6, §6).
 
@@ -120,18 +121,18 @@ Reading guide:
 
 ## 2. Network Security & Access Matrix
 
-| Service | Access Level | Endpoint / Route | Protocol / Security Layer |
-| :--- | :--- | :--- | :--- |
-| **Blog Frontend (SvelteKit SSR)** | **Public** | `ainurrofiq.com` | HTTPS via Traefik Ingress + Let's Encrypt TLS (HTTP→HTTPS redirect enforced) |
-| **Lumen API** | **Cluster-internal only** | `http://lumen-http-server.lumen.svc.cluster.local` | No public ingress. Earendil SSR pods call it directly; the browser's single client-side call (search suggest) rides earendil's same-origin `/api/...` proxy |
-| **Mellon (admin portal)** | **Public — TLS only** (amended 2026-11-08; was port-forward-only) | `https://console.gofar.id` (Traefik, edge node) · `kubectl port-forward svc/mellon 8080:8080` remains **break-glass** | Service stays ClusterIP — only Traefik routes to it, with the console middlewares (headers/HSTS/rate-limit, Phase 3) + JWT sessions with `tv`-revocation (`mellon/DESIGN.md` §8). Go-public is **HUMAN-GATE #10**: the checklist verifies before DNS flips. Its relay still calls lumen's Admin API server-side; mellon holds no credentials in any era |
-| **Argo CD Control Panel** | **Private (VPN Only)** | `localhost:8080` (Port-forwarded) / Private Ingress | Private NetBird WireGuard Overlay Mesh |
-| **Grafana / VictoriaMetrics / Loki** | **Private (VPN Only)** | Internal Mesh DNS / Local Tunnel | Private NetBird WireGuard Overlay Mesh |
-| **Meilisearch** | **Cluster-internal only** | `http://meilisearch.search.svc.cluster.local:7700` | No public or mesh ingress; API-only access |
-| **OpenBao (config/secrets store)** | **Cluster-internal + admin API** | `http://bao.secrets.svc.cluster.local:8200` | AppRole/periodic tokens; built-in UI mesh-only behind Traefik private route; never public |
-| **External Secrets Operator** | **Cluster-internal only** | `eso-controller.external-secrets.svc` | Watches ExternalSecret CRs, writes rendered objects; no ingress |
-| **K3s Control Plane API (`:6443`)** | **Private (VPC + VPN mesh)** | Path A: `https://<MASTER_VPC_IP>:6443` (nodes) + `https://<MASTER_NETBIRD_IP>:6443` (laptop) · Path B: mesh only | Dual `--tls-san`; public exposure never (ufw/SG-restricted per Phase 2.4) |
-| **Node Terminal Access (SSH)** | **Private (VPN Only)** | `ssh <USER>@<NETBIRD_NODE_IP>` | NetBird mesh SSH (Port 22 closed publicly; root login disabled after mesh SSH verified) |
+| Service                              | Access Level                                                      | Endpoint / Route                                                                                                      | Protocol / Security Layer                                                                                                                                                                                                                                                                                                                               |
+| :----------------------------------- | :---------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Blog Frontend (SvelteKit SSR)**    | **Public**                                                        | `ainurrofiq.com`                                                                                                      | HTTPS via Traefik Ingress + Let's Encrypt TLS (HTTP→HTTPS redirect enforced)                                                                                                                                                                                                                                                                            |
+| **Lumen API**                        | **Cluster-internal only**                                         | `http://lumen-http-server.lumen.svc.cluster.local`                                                                    | No public ingress. Earendil SSR pods call it directly; the browser's single client-side call (search suggest) rides earendil's same-origin `/api/...` proxy                                                                                                                                                                                             |
+| **Mellon (admin portal)**            | **Public — TLS only** (amended 2026-11-08; was port-forward-only) | `https://console.gofar.id` (Traefik, edge node) · `kubectl port-forward svc/mellon 8080:8080` remains **break-glass** | Service stays ClusterIP — only Traefik routes to it, with the console middlewares (headers/HSTS/rate-limit, Phase 3) + JWT sessions with `tv`-revocation (`mellon/DESIGN.md` §8). Go-public is **HUMAN-GATE #10**: the checklist verifies before DNS flips. Its relay still calls lumen's Admin API server-side; mellon holds no credentials in any era |
+| **Argo CD Control Panel**            | **Private (VPN Only)**                                            | `localhost:8080` (Port-forwarded) / Private Ingress                                                                   | Private NetBird WireGuard Overlay Mesh                                                                                                                                                                                                                                                                                                                  |
+| **Grafana / VictoriaMetrics / Loki** | **Private (VPN Only)**                                            | Internal Mesh DNS / Local Tunnel                                                                                      | Private NetBird WireGuard Overlay Mesh                                                                                                                                                                                                                                                                                                                  |
+| **Meilisearch**                      | **Cluster-internal only**                                         | `http://meilisearch.search.svc.cluster.local:7700`                                                                    | No public or mesh ingress; API-only access                                                                                                                                                                                                                                                                                                              |
+| **OpenBao (config/secrets store)**   | **Cluster-internal + admin API**                                  | `http://bao.secrets.svc.cluster.local:8200`                                                                           | AppRole/periodic tokens; built-in UI mesh-only behind Traefik private route; never public                                                                                                                                                                                                                                                               |
+| **External Secrets Operator**        | **Cluster-internal only**                                         | `eso-controller.external-secrets.svc`                                                                                 | Watches ExternalSecret CRs, writes rendered objects; no ingress                                                                                                                                                                                                                                                                                         |
+| **K3s Control Plane API (`:6443`)**  | **Private (VPC + VPN mesh)**                                      | Path A: `https://<MASTER_VPC_IP>:6443` (nodes) + `https://<MASTER_NETBIRD_IP>:6443` (laptop) · Path B: mesh only      | Dual `--tls-san`; public exposure never (ufw/SG-restricted per Phase 2.4)                                                                                                                                                                                                                                                                               |
+| **Node Terminal Access (SSH)**       | **Private (VPN Only)**                                            | `ssh <USER>@<NETBIRD_NODE_IP>`                                                                                        | NetBird mesh SSH (Port 22 closed publicly; root login disabled after mesh SSH verified)                                                                                                                                                                                                                                                                 |
 
 > **Note on NetBird "Keyless SSO SSH":** identity-aware keyless SSH requires the **NetBird Enterprise plan or a self-hosted NetBird server with SSO configured**. On the free plan, SSH over the mesh still works with normal key authentication — the security model above (public port 22 closed, mesh-only) is unaffected.
 
@@ -140,21 +141,25 @@ Reading guide:
 ## 3. DNS Architecture Strategy
 
 ### A. Public Domain DNS (For External Users)
+
 Managed via your external DNS provider (Cloudflare, Namecheap, Route53, etc.):
-* **A Record:** `ainurrofiq.com` ➔ `[Biznet Gio Public IP]`
-* **Wildcard CNAME / A Record:** `*.ainurrofiq.com` ➔ `[Biznet Gio Public IP]`
-* **Console (amended 2026-11-08):** `console.gofar.id` ➔ the Traefik edge node's public IP (a lone A record is enough; wildcards were never required for certificates) — resolves BEFORE first issuance, same ordering constraint below — and only AFTER GATE #10 clears
-* **Routing:** Traefik Ingress receives traffic on ports 80/443 and terminates SSL via `cert-manager` (ACME HTTP-01 challenge).
-* **Ordering constraint:** public DNS records must resolve to all node IPs (or the egress node running Traefik) **before** first certificate issuance, or HTTP-01 solvers will fail.
+
+- **A Record:** `ainurrofiq.com` ➔ `[Biznet Gio Public IP]`
+- **Wildcard CNAME / A Record:** `*.ainurrofiq.com` ➔ `[Biznet Gio Public IP]`
+- **Console (amended 2026-11-08):** `console.gofar.id` ➔ the Traefik edge node's public IP (a lone A record is enough; wildcards were never required for certificates) — resolves BEFORE first issuance, same ordering constraint below — and only AFTER GATE #10 clears
+- **Routing:** Traefik Ingress receives traffic on ports 80/443 and terminates SSL via `cert-manager` (ACME HTTP-01 challenge).
+- **Ordering constraint:** public DNS records must resolve to all node IPs (or the egress node running Traefik) **before** first certificate issuance, or HTTP-01 solvers will fail.
 
 ### B. Internal Cluster DNS (Automatic via K3s)
-* Managed out-of-the-box by **CoreDNS** inside the cluster.
-* Microservices communicate dynamically using Kubernetes internal service endpoints (e.g., `lumen-pg-postgres.db.svc.cluster.local:5432` for reads/writes, `lumen-pg-repl.db.svc.cluster.local` for read-only).
+
+- Managed out-of-the-box by **CoreDNS** inside the cluster.
+- Microservices communicate dynamically using Kubernetes internal service endpoints (e.g., `lumen-pg-postgres.db.svc.cluster.local:5432` for reads/writes, `lumen-pg-repl.db.svc.cluster.local` for read-only).
 
 ### C. Private VPN Mesh DNS (Automatic via NetBird)
-* Managed by **NetBird Magic DNS**.
-* Connects your local machine and nodes seamlessly using hostname aliases (`master-node`, `worker-1`, `worker-2`) without editing local `/etc/hosts` files or running custom BIND servers.
-* **Scope note:** under Path A (Phase 2), Magic DNS is admin-plane only (laptop → cluster); node↔node name resolution uses the VPC. Hostnames still resolve everywhere a NetBird client runs.
+
+- Managed by **NetBird Magic DNS**.
+- Connects your local machine and nodes seamlessly using hostname aliases (`master-node`, `worker-1`, `worker-2`) without editing local `/etc/hosts` files or running custom BIND servers.
+- **Scope note:** under Path A (Phase 2), Magic DNS is admin-plane only (laptop → cluster); node↔node name resolution uses the VPC. Hostnames still resolve everywhere a NetBird client runs.
 
 ---
 
@@ -174,9 +179,9 @@ in this phase touches the VPS.
 > install commands below are written for both.
 
 0. **Rent the VPS instances (Biznet GIO console):**
-   * Create the three instances per §1 (Path A decision may add a 4th — see Phase 2),
+   - Create the three instances per §1 (Path A decision may add a 4th — see Phase 2),
      Ubuntu 24.04 image, upload your SSH public key, record public IPs + private (VPC) IPs.
-   * **VPC verification checklist** (do this now — it decides Phase 2's path, and it's
+   - **VPC verification checklist** (do this now — it decides Phase 2's path, and it's
      cheap to check before renting the rest):
      - [ ] VPC ("Virtual Network") available on NEO Lite SS/MS tiers? Price per attachment?
      - [ ] Attach all nodes to one VPC/subnet; confirm inter-node `ping <peer-vpc-ip>` works
@@ -185,7 +190,7 @@ in this phase touches the VPS.
      - [ ] Are VPC IPs **static per instance** (survive rebuild/reboot)? If not → Path B.
      - [ ] Routing: `ip route` — is the VPC subnet routed via the second NIC only?
      - [ ] Security Groups: can inbound 6443/10250 be allowlisted to the VPC CIDR?
-   * Lock down early via console firewall/SG or `ufw` on each node:
+   - Lock down early via console firewall/SG or `ufw` on each node:
      ```bash
      ufw default deny incoming
      ufw allow 22/tcp   # tightened to mesh-only once NetBird works (step 4)
@@ -194,16 +199,19 @@ in this phase touches the VPS.
      ```
 
 1. **Install NetBird Agent on All Nodes (Master, Worker 1, Worker 2):**
+
    ```bash
    curl -fsSL https://pkgs.netbird.io/install.sh | sh
    ```
 
 2. **Authenticate Nodes to NetBird Network:**
+
    ```bash
    sudo netbird up --setup-key <YOUR_NETBIRD_SETUP_KEY>
    ```
 
 3. **Enable SSH over the Mesh:**
+
    ```bash
    # Enterprise / self-hosted NetBird with SSO (identity-aware keyless SSH):
    sudo netbird up --ssh=true
@@ -223,15 +231,15 @@ in this phase touches the VPS.
 > **Decision — which network carries the cluster?** Both paths are supported; the
 > rent-time findings from the Phase 1 checklist choose it.
 >
-> | | **Path A — GIO VPC carries cluster traffic** (preferred if available) | **Path B — NetBird mesh carries cluster traffic** (fallback) |
-> | :--- | :--- | :--- |
-> | Node↔node: API, flannel, replication | VPC private IPs, provider-managed | `wt0` overlay IPs |
-> | Mesh role | admin plane only (laptop→cluster) | admin **and** data plane |
-> | NetBird down ⇒ | cluster unaffected (admin only) | agents crash-loop, nodes go NotReady |
-> | Latency/MTU | native VPC MTU (match flannel MTU if <1500) | tunnel-capped, +1 hop |
-> | 6443 exposure | VPC CIDR only (SG/ufw allowlist) | mesh CIDR only |
-> | Extra deps | none | systemd `Requires=netbird` ordering below |
-> | Staticity risk | VPC IP changes on rebuild ⇒ cert reissue | overlay IPs stable across rebuilds |
+> |                                      | **Path A — GIO VPC carries cluster traffic** (preferred if available) | **Path B — NetBird mesh carries cluster traffic** (fallback) |
+> | :----------------------------------- | :-------------------------------------------------------------------- | :----------------------------------------------------------- |
+> | Node↔node: API, flannel, replication | VPC private IPs, provider-managed                                     | `wt0` overlay IPs                                            |
+> | Mesh role                            | admin plane only (laptop→cluster)                                     | admin **and** data plane                                     |
+> | NetBird down ⇒                       | cluster unaffected (admin only)                                       | agents crash-loop, nodes go NotReady                         |
+> | Latency/MTU                          | native VPC MTU (match flannel MTU if <1500)                           | tunnel-capped, +1 hop                                        |
+> | 6443 exposure                        | VPC CIDR only (SG/ufw allowlist)                                      | mesh CIDR only                                               |
+> | Extra deps                           | none                                                                  | systemd `Requires=netbird` ordering below                    |
+> | Staticity risk                       | VPC IP changes on rebuild ⇒ cert reissue                              | overlay IPs stable across rebuilds                           |
 >
 > Placeholders: `<MASTER_VPC_IP>`, `<VPC_IFACE>` (from Phase 1 checklist), `<MASTER_NETBIRD_IP>`.
 > K3s accepts multiple `--tls-san` flags — **both paths pin BOTH addresses** below, so
@@ -258,7 +266,7 @@ in this phase touches the VPS.
 > traffic, workers dial the API over NetBird, and if NetBird isn't up before K3s starts
 > after a reboot, `k3s-agent` crash-loops. Apply this override on **all nodes** before
 > installing K3s. On Path A skip the `Requires=`/`After=` lines (keep `systemctl enable
-> netbird` for admin access):
+netbird` for admin access):
 >
 > ```bash
 > sudo mkdir -p /etc/systemd/system/k3s.service.d /etc/systemd/system/k3s-agent.service.d
@@ -280,6 +288,7 @@ in this phase touches the VPS.
 1. **Initialize Master Node (Control Plane):**
    SSH into the Master node (over the mesh — that works regardless of path) and run,
    **Path A (VPC)**:
+
    ```bash
    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
      --disable=traefik \
@@ -289,7 +298,9 @@ in this phase touches the VPS.
      --kubelet-arg=failSwapOn=false \
      --node-name=master-node" sh -s -
    ```
+
    **Path B (mesh)**:
+
    ```bash
    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
      --disable=traefik \
@@ -298,6 +309,7 @@ in this phase touches the VPS.
      --kubelet-arg=failSwapOn=false \
      --node-name=master-node" sh -s -
    ```
+
    > `--flannel-iface` pins the pod overlay to the chosen private interface; without it,
    > flannel can bind to the public NIC on multi-interface nodes and break pod CIDR routing.
    > Pinning both `--tls-san`s keeps kubeconfig valid over either plane (and is the
@@ -305,22 +317,26 @@ in this phase touches the VPS.
    > follows, certs already cover it).
 
 2. **Retrieve K3s Join Token:**
+
    ```bash
    sudo cat /var/lib/rancher/k3s/server/node-token
    ```
 
 3. **Join Worker Nodes:**
    Run on **Worker 1**:
+
    ```bash
    curl -sfL https://get.k3s.io | K3S_URL="https://<MASTER_API_IP>:6443" \
      K3S_TOKEN="<NODE_TOKEN_FROM_MASTER>" \
      INSTALL_K3S_EXEC="agent --node-name=worker-1 --flannel-iface=<CLUSTER_IFACE> --kubelet-arg=failSwapOn=false" sh -s -
    ```
+
    Run on **Worker 2**: same command with `--node-name=worker-2`.
    Where (per chosen path): `Path A → <MASTER_API_IP>=<MASTER_VPC_IP>, <CLUSTER_IFACE>=<VPC_IFACE>` ·
    `Path B → <MASTER_API_IP>=<MASTER_NETBIRD_IP>, <CLUSTER_IFACE>=wt0`.
 
 4. **Verify Cluster Health (and reboot-test the chosen path):**
+
    ```bash
    kubectl get nodes -o wide
    # Confirm INTERNAL-IP column shows VPC (Path A) or wt0 (Path B) addresses —
@@ -328,7 +344,9 @@ in this phase touches the VPS.
    # Reboot one worker and confirm k3s-agent comes up cleanly:
    sudo reboot
    ```
+
    Path A additionally: lock the control-plane ports to the private plane once verified:
+
    ```bash
    # on all nodes — 6443/10250 reachable only from the VPC subnet (+ mesh CIDR for laptop kubectl)
    ufw allow in on <VPC_IFACE> to any port 6443,10250 proto tcp
@@ -360,6 +378,7 @@ in this phase touches the VPS.
 > manually only for the first bring-up.
 
 1. **Install Traefik (Helm), pinned to worker-2 (`node-pool=edge`):**
+
    ```bash
    helm repo add traefik https://traefik.github.io/charts
    helm repo update
@@ -373,6 +392,7 @@ in this phase touches the VPS.
    ```
 
 2. **Install cert-manager + Let's Encrypt ClusterIssuer:**
+
    ```bash
    # Pin an exact release — `latest/download` can drift underneath a running cluster.
    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
@@ -391,13 +411,14 @@ in this phase touches the VPS.
              ingress: { class: traefik }
    EOF
    ```
+
    > cert-manager pods get `nodeSelector: { node-pool: edge }` via the GitOps overlay.
    > Ensure §3A DNS records already resolve, or the first HTTP-01 challenge fails —
    > this now includes `console.gofar.id` (its certificate comes from the same
    > ClusterIssuer; no separate cert story).
 
 3. **Console edge middlewares (amended 2026-11-08 — the portal goes public):**
-   installed with the provider now, *attached* when the console IngressRoute arrives
+   installed with the provider now, _attached_ when the console IngressRoute arrives
    (Phase 10). `externalTrafficPolicy: Local` above is what makes the limiter's
    source IP real:
    ```bash
@@ -432,7 +453,7 @@ in this phase touches the VPS.
    ```
    > Honest notes: (1) the limiter is a coarse edge layer — the REAL login throttle is
    > lumen's own (per-IP + per-account backoff, `lumen/DESIGN.md` §8 rules); single
-   > user + public URL makes credential stuffing *the* attack. (2) A strict CSP is
+   > user + public URL makes credential stuffing _the_ attack. (2) A strict CSP is
    > deliberately NOT shipped yet: mellon's rail hues ride inline `style=` attributes
    > by design (Tailwind can't scan dynamic utilities) — `style-src 'unsafe-inline'`
    > or no CSP until a custom-property refactor makes a tight one possible. Recording
@@ -448,30 +469,30 @@ in this phase touches the VPS.
 2. **Patroni PostgreSQL — DCS/quorum design (read before deploying):**
    Patroni needs an external DCS with leader-election quorum. Two designs, one trap:
 
-   * **Trap:** a 2-member etcd DCS (one peer per worker) has *no* failure tolerance —
+   - **Trap:** a 2-member etcd DCS (one peer per worker) has _no_ failure tolerance —
      losing either node loses quorum and no leader can be elected.
-   * **Recommended path (used here):** deploy **Zalando's Postgres Operator**
+   - **Recommended path (used here):** deploy **Zalando's Postgres Operator**
      (`acid.zalan.do`). Its clusters run Patroni with **Kubernetes as the DCS**
      (leader locks live in K3s itself), so there is no separate etcd to operate. The honest
      tradeoff: if the K3s control plane is down, Patroni cannot renew its lock and enters
-     *fail-safe mode* (the running primary keeps serving; no promotion until the API
+     _fail-safe mode_ (the running primary keeps serving; no promotion until the API
      recovers). Since K3s on the single master is already the cluster's biggest SPOF, this
      adds no new failure domain at blog scale.
-   * **Alternative:** self-hosted Patroni with a real 3-member etcd DCS (full peers on
+   - **Alternative:** self-hosted Patroni with a real 3-member etcd DCS (full peers on
      both workers + a voter-only peer on the master, ~128 Mi). Only worth it if you move
      the control plane to HA later.
 
    **Topology options — A (default) or C (recommended if renting a 4th instance):**
-   Election quorum comes from the K8s DCS in *both* options, so a 3rd PG instance is
+   Election quorum comes from the K8s DCS in _both_ options, so a 3rd PG instance is
    about **data durability and headroom, not about electing leaders.**
 
-   | | **A — 2 instances, 2 workers** (default, current §1) | **C — 3 instances, 3 workers** (1 per worker) |
-   | :--- | :--- | :--- |
-   | Data copies / failure domains | 2 / 2 | **3 / 3** |
-   | Ack'd writes survive losing the primary node? | only within replication-lag window (+ nightly dump) | **yes, zero-loss with `synchronous_mode: true`** |
-   | Rolling maintenance | touches the only replica | rebuild one, two stay current |
-   | Cost | — | +IDR 139k/mo (3rd NEO Lite MS 4.2) → total **526k (~$33/mo)** |
-   | RAM/disk per worker | as §1 | +512 Mi req / +10 Gi disk on worker-3 |
+   |                                               | **A — 2 instances, 2 workers** (default, current §1) | **C — 3 instances, 3 workers** (1 per worker)                 |
+   | :-------------------------------------------- | :--------------------------------------------------- | :------------------------------------------------------------ |
+   | Data copies / failure domains                 | 2 / 2                                                | **3 / 3**                                                     |
+   | Ack'd writes survive losing the primary node? | only within replication-lag window (+ nightly dump)  | **yes, zero-loss with `synchronous_mode: true`**              |
+   | Rolling maintenance                           | touches the only replica                             | rebuild one, two stay current                                 |
+   | Cost                                          | —                                                    | +IDR 139k/mo (3rd NEO Lite MS 4.2) → total **526k (~$33/mo)** |
+   | RAM/disk per worker                           | as §1                                                | +512 Mi req / +10 Gi disk on worker-3                         |
 
    **A is documented as the default** and the manifests ship it; C is a deliberate
    upgrade (or day-one choice at rental). Option "B" (3 instances packed 2+1 on two
@@ -479,35 +500,38 @@ in this phase touches the VPS.
    failure domains of A — the worst of both.
 
    Application `postgresql` CR — **Option A** (Primary/Replica split across workers):
+
    ```yaml
-   apiVersion: 'acid.zalan.do/v1'
+   apiVersion: "acid.zalan.do/v1"
    kind: postgresql
    metadata:
      name: lumen-pg
      namespace: db
    spec:
-     teamId: 'blog'
-     volume: { size: 10Gi, storageClass: 'local-path' }
+     teamId: "blog"
+     volume: { size: 10Gi, storageClass: "local-path" }
      numberOfInstances: 2
-     node_affinity:                      # keep DB pods off the 2 GB master
+     node_affinity: # keep DB pods off the 2 GB master
        matchExpressions:
          - key: node-pool
            operator: In
-           values: ['data', 'edge']
+           values: ["data", "edge"]
      patroni:
-       initdb: { encoding: 'UTF8', data-checksums: 'true' }
+       initdb: { encoding: "UTF8", data-checksums: "true" }
        ttl: 30
        loop_wait: 10
        retry_timeout: 10
-       synchronous_mode: 'false'
+       synchronous_mode: "false"
      resources:
-       requests: { cpu: '250m', memory: '512Mi' }
-       limits:   { cpu: '1000m', memory: '1Gi' }
-     databases: { lumen_staging: db_user_staging, lumen_production: db_user_production }
+       requests: { cpu: "250m", memory: "512Mi" }
+       limits: { cpu: "1000m", memory: "1Gi" }
+     databases:
+       { lumen_staging: db_user_staging, lumen_production: db_user_production }
    users:
      db_user_staging: [createdb]
      db_user_production: [createdb]
    ```
+
    > **DB-1 in one line:** one shared Patroni cluster, one database per environment,
    > distinct owner users ⇒ distinct credentials. The env a pod talks to is decided by
    > `DATABASE_URL` in its overlay's Bao path — never in the cluster spec.
@@ -530,12 +554,13 @@ in this phase touches the VPS.
       kubectl -n db exec lumen-pg-0 -- patronictl list
       ```
    4. `synchronous_mode: true` semantics: each commit waits for **one** replica's WAL
-      ack → losing any *single* worker cannot lose acknowledged data. Add
+      ack → losing any _single_ worker cannot lose acknowledged data. Add
       `synchronous_mode_strict: 'true'` if you prefer refusing writes over ever running
       without a sync replica (stricter availability trade — blog default: off).
    5. Update the §7 checklist row to the C variant (zero-loss test below).
 
    Deploy the operator first (pinned release), then the CR via GitOps:
+
    ```bash
    kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/v1.13.0/manifests/operator-manifests.yaml
    ```
@@ -543,9 +568,9 @@ in this phase touches the VPS.
 3. **Meilisearch (namespace `search`), internal-only:** scaffolded in Git —
    [`applications/meilisearch/`](k8s-platform-manifests/applications/meilisearch/), synced as the
    `meilisearch` Application.
-   * Deployment pinned `getmeili/meilisearch:v1.10.0`, `nodeSelector: { node-pool: edge }`,
+   - Deployment pinned `getmeili/meilisearch:v1.10.0`, `nodeSelector: { node-pool: edge }`,
      PVC 5 Gi, `MEILI_DB_PATH=/data`; exposes Prometheus metrics (annotated for Alloy).
-   * `Service` type `ClusterIP` only — **no IngressRoute, no NodePort**. Lumen reaches it
+   - `Service` type `ClusterIP` only — **no IngressRoute, no NodePort**. Lumen reaches it
      at `http://meilisearch.search.svc.cluster.local:7700` with the master key from a Secret
      (`meilisearch-master-key`, seeded at bootstrap → eventually via ExternalSecret, §5).
 
@@ -564,16 +589,16 @@ Scaffolded in Git: [`applications/observability/`](k8s-platform-manifests/applic
 vs ~10 sidecars, apps stay observability-agnostic, one config to manage. The master gets
 full coverage **without an agent** (2 GB has no room for ~150 Mi of Alloy):
 
-* **metrics:** each worker's Alloy remotely scrapes ALL nodes' kubelet + cAdvisor
+- **metrics:** each worker's Alloy remotely scrapes ALL nodes' kubelet + cAdvisor
   (`InternalIP:10250`, SA bearer, self-signed allowed) — including the master.
-* **logs:** master runs stock **rsyslog** forwarding (~20 Mi, already resident) into the
+- **logs:** master runs stock **rsyslog** forwarding (~20 Mi, already resident) into the
   Alloy syslog listener on worker-1:
   ```bash
   # on the master: /etc/rsyslog.d/50-loki.conf
   echo '*.* @10.<worker1-internal>:5514;RSYSLOG_SyslogProtocol23Format' | sudo tee /etc/rsyslog.d/50-loki.conf
   sudo systemctl restart rsyslog
   ```
-* **pod logs:** file-tailing `/var/log/pods` on each worker (hostPath, read-only).
+- **pod logs:** file-tailing `/var/log/pods` on each worker (hostPath, read-only).
 
 **Sinks:** Alloy `prometheus.remote_write` → VictoriaMetrics (`:8428`, 30d retention,
 worker-1); `loki.write` → Loki (`:3100`, tsdb schema, 168h retention, worker-1,
@@ -588,13 +613,14 @@ add, not a code rewrite). A **StatsD listener** is present-but-commented in the 
 config as a free door for statsd-only components someday.
 
 **Application contract (what app pods owe the pipeline):**
+
 1. Logs → stdout/stderr, structured (JSON) where practical. Zero SDK required.
 2. Metrics → Prometheus text format on a dedicated **admin port (9090)** that no Service
    routes, plus pod annotations `prometheus.io/{scrape,port,path}` — Alloy's
    annotated-pods job discovers them automatically. Go recipe (`client_golang`, RED
    middleware, runtime collectors) — keep low-cardinality labels; this, not OTLP, is the
    default metrics path.
-3. No per-app agents, sidecars, or env plumbing — the annotation *is* the contract.
+3. No per-app agents, sidecars, or env plumbing — the annotation _is_ the contract.
 
 Traefik exposes Prometheus metrics natively → enable it (`--metrics.prometheus=true`) so
 RED dashboards exist for every service even before apps instrument themselves.
@@ -608,6 +634,7 @@ RED dashboards exist for every service even before apps instrument themselves.
 > impermanent (wiped by re-apply/upgrade) and defeat the GitOps story.
 
 1. **Repository structure for Argo CD's own install:**
+
    ```text
    platform/argocd/
    ├── kustomization.yaml         # Namespace + pinned upstream install.yaml + patches
@@ -619,10 +646,12 @@ RED dashboards exist for every service even before apps instrument themselves.
                                    #   application-controller, redis, dex-server,
                                    #   notifications-controller, applicationset-controller
    ```
+
    The overlay must cover **all** components — pinning only server/repo/controller leaves
    redis, dex, notifications and applicationset floating onto worker nodes.
 
 2. **Prepare kubectl (once, on the machine you administer from):**
+
    ```bash
    # from the master over the mesh — or just work ON the master:
    scp user@<MASTER_NETBIRD_IP>:/etc/rancher/k3s/k3s.yaml ~/.kube/fzr-blog.yaml
@@ -636,6 +665,7 @@ RED dashboards exist for every service even before apps instrument themselves.
    `bootstrap/`, `apps/`, and `applications/*/kustomization.yaml` — then:
 
 4. **Apply the overlay (self-hosting bootstrap — the one manual apply):**
+
    ```bash
    kubectl apply -k platform/argocd/
    kubectl -n argocd rollout status deploy/argocd-server --timeout=5m
@@ -647,6 +677,7 @@ RED dashboards exist for every service even before apps instrument themselves.
    ```
 
 5. **Verify isolation before trusting it:**
+
    ```bash
    kubectl -n argocd get pods -o wide
    # ALL 7 workloads must show NODE=master-node; anything on a worker means the
@@ -655,6 +686,7 @@ RED dashboards exist for every service even before apps instrument themselves.
    ```
 
 6. **First login, then dispose of the seed credential:**
+
    ```bash
    kubectl -n argocd port-forward svc/argocd-server 8080:443 &   # over the mesh; self-signed cert
    PASS=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
@@ -664,10 +696,12 @@ RED dashboards exist for every service even before apps instrument themselves.
    ```
 
 7. **If the manifests repo is PRIVATE, register credentials** (public repos skip this):
+
    ```bash
    argocd repo add https://github.com/cavadevop/k8s-platform-manifests.git \
      --username cavadevop --password <fine-grained-PAT: contents:read only>
    ```
+
    Then apply the hub (`Phase 7`) — within ~2 min the dashboard shows every `apps/`
    Application auto-syncing green. Anything red: check repo-server logs first.
 
@@ -725,6 +759,7 @@ k8s-platform-manifests/
 ```
 
 `bootstrap/apps-hub.yaml`:
+
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -734,13 +769,13 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/cavadevop/k8s-platform-manifests.git'
+    repoURL: "https://github.com/cavadevop/k8s-platform-manifests.git"
     targetRevision: HEAD
     path: apps/
     directory:
       recurse: false
   destination:
-    server: 'https://kubernetes.default.svc'
+    server: "https://kubernetes.default.svc"
     namespace: argocd
   syncPolicy:
     automated:
@@ -749,6 +784,7 @@ spec:
 ```
 
 `apps/lumen-app.yaml` (example):
+
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -758,17 +794,18 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/cavadevop/k8s-platform-manifests.git'
+    repoURL: "https://github.com/cavadevop/k8s-platform-manifests.git"
     targetRevision: HEAD
     path: applications/lumen
   destination:
-    server: 'https://kubernetes.default.svc'
+    server: "https://kubernetes.default.svc"
     namespace: lumen
   syncPolicy:
     automated: { prune: true, selfHeal: true }
 ```
 
 Apply once:
+
 ```bash
 kubectl apply -f bootstrap/apps-hub.yaml
 ```
@@ -789,7 +826,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
@@ -838,7 +875,7 @@ jobs:
       - name: Checkout Manifests Repo
         uses: actions/checkout@v4
         with:
-          repository: 'cavadevop/k8s-platform-manifests'
+          repository: "cavadevop/k8s-platform-manifests"
           token: ${{ secrets.MANIFESTS_REPO_PAT }}
 
       - name: Update Image Tag via Kustomize
@@ -870,9 +907,11 @@ jobs:
 
 1. **Access Argo CD Dashboard Privately:**
    Ensure your NetBird client is connected on your laptop, then tunnel port 8080:
+
    ```bash
    kubectl port-forward svc/argocd-server -n argocd 8080:443 &
    ```
+
    Open `https://localhost:8080` in your web browser.
 
 2. **Access Virtual Machines Securely:**
@@ -902,8 +941,9 @@ them into workloads.
    unit of work, media uploads per the D1 resolution, Bao passthrough with the
    `fzr-portal` AppRole held server-side).
 2. **Mellon (SvelteKit):** scaffold per its DESIGN — relay-only, session from lumen,
-   editor + true-to-prod preview, secrets tab (CAS + history + rollback-by-pin).
-   Light/dark parity day one.
+   editor + true-to-prod preview, secrets control plane (CAS + history + pin-as-intent
+   D1 + restore-by-overlay D2 + app onboarding; PLAN-SECRETS-CONTROL.md).
+   Light/dark parity day one. DONE on branches; merges per owner review.
 3. **Vortex:** `applications/lumen/` + `applications/mellon/` (ESO-free bases) with
    `overlays/{staging,production}/…` and `apps/` Application CRs. Mellon gets its
    ClusterIP service **plus an IngressRoute on Traefik** for `console.gofar.id` with the
@@ -940,7 +980,7 @@ break-glass still works; the §5.5 CI drift check passes for every app.
 
 ## 5. Secrets & Config Management (OpenBao + External Secrets)
 
-**Decision:** config and secret *values* never live in Git — not even encrypted. The
+**Decision:** config and secret _values_ never live in Git — not even encrypted. The
 manifests repo holds **schema + templates**; **OpenBao** (open-source Vault fork, single
 instance on worker-2) is the values store; **External Secrets Operator (ESO)** renders
 values into in-cluster ConfigMaps/Secrets. A lighter SOPS+age design was considered and
@@ -953,7 +993,7 @@ real store; SOPS remains for **offline emergency seeds only** (§5.6).
   plaintext — it contains no values). Manifests repo ships `ExternalSecret` CRs (the
   templates). Real values live only in OpenBao KV-v2.
 - **Anything the cluster can generate, let it generate.** DB creds (Zalando operator),
-  TLS certs (cert-manager) are created in-cluster and *referenced*, never stored in Git
+  TLS certs (cert-manager) are created in-cluster and _referenced_, never stored in Git
   or Bao. ESO manages only genuinely external values: API keys, tokens, env config.
 - **Runtime reads only.** SvelteKit: no `VITE_*`/build-time inlining for env-dependent
   values — `API_BASE`/`PUBLIC_API_BASE`/`ORIGIN` come from `process.env` at request time
@@ -978,7 +1018,7 @@ kv/ (KV-v2 mount, max_versions=20, check-and-set enabled)
   native KV-v2 integer history (diff, rollback, soft-delete). Grouping by app reads
   better in the portal and mirrors `overlays/<env>/<app>` in Git. ExternalSecret
   `remoteRef.key` is mount-relative: `lumen/production`.
-  There are no free-form "tags" — the `env/app` path convention *is* the tag.
+  There are no free-form "tags" — the `env/app` path convention _is_ the tag.
 - Portal/admin UI integration talks to this same REST surface (§5.5).
 
 ### 5.3 The template: ExternalSecret + kustomize overlays
@@ -991,10 +1031,10 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata: { name: frontend-config, namespace: earendil }
 spec:
-  refreshInterval: 1h          # drift-pull; set "none" for immutable pin-per-deploy
+  refreshInterval: 1h # drift-pull; set "none" for immutable pin-per-deploy
   target:
-    name: app-config           # rendered object
-    template:                  # non-sensitive config → ConfigMap, not Secret
+    name: app-config # rendered object
+    template: # non-sensitive config → ConfigMap, not Secret
       data:
         ORIGIN: "{{ .ORIGIN }}"
         PUBLIC_API_BASE: "/"
@@ -1013,13 +1053,13 @@ The app's base manifests never contain env-specific values, and `kustomize edit 
 > (JSON6902 patch swaps the inline env block for the ESO-rendered `app-config` ConfigMap)
 > and [`overlays/production/lumen/`](k8s-platform-manifests/overlays/production/lumen/)
 > (needs no patch — the base already declares `envFrom` `lumen-secrets` as
-> `optional: true`, so ESO just *materializes* that Secret; k3d stays mock-friendly).
+> `optional: true`, so ESO just _materializes_ that Secret; k3d stays mock-friendly).
 > Going production = point that app's Application CR `source.path` at the overlay.
 
 ### 5.4 Promotion flow (staging → prod)
 
 1. `bao kv get -format=json kv/data/lumen/staging` → verify in staging.
-2. `bao kv put kv/data/lumen/production <same data>` → creates a *new production version* (history preserved on both sides).
+2. `bao kv put kv/data/lumen/production <same data>` → creates a _new production version_ (history preserved on both sides).
 3. One Git PR bumps the prod ExternalSecret's `version:` pin → Argo syncs → ESO re-renders → pods roll.
 
 Config deploys thus get the same audit trail as image deploys: PR + KV version + Argo history.
@@ -1032,16 +1072,24 @@ an iframe of Bao's stock UI (framing fights auth realms; Bao ships `ui_csp_frame
 if ever needed as break-glass, mesh-only). Minimal surface the portal needs:
 
 ```text
-GET  /v1/kv/metadata/<app>/<env>            # version list → "history" view
-GET  /v1/kv/data/<app>/<env>?version=N      # read a version (diff vs current)
-PUT  /v1/kv/data/<app>/<env>  (cas=N)       # save = new version, optimistic lock
+GET    /v1/kv/metadata/<app>/<env>          # version list + custom_metadata (the pin) -> "history"
+PATCH  /v1/kv/metadata/<app>/<env>          # pin/unpin - Content-Type application/merge-patch+json,
+                                            # custom_metadata is map[string]string: pinned_version "N"
+GET    /v1/kv/data/<app>/<env>?version=N    # read a version (diff vs current)
+PUT    /v1/kv/data/<app>/<env>  (cas=N)     # save = new version, optimistic lock (lumen mirrors the key set)
+PUT    /v1/kv/data/<app>/<env>  (cas=0)     # create-if-absent = onboard (trio) / add-env (union seed)
 ```
 
 - The **AppRole (`fzr-portal`) is held by lumen's server identity, never by mellon** — the
   portal's secrets tab calls lumen's Admin-API Bao passthrough (§8 of `lumen/DESIGN.md`),
   so no browser-side surface ever sees Bao credentials. Token TTL
-  ≤1 h with agent-based re-login, bound to worker CIDRs. Policy: `read` + `update` on
-  `kv/data/+/*` (app-scoped roles preferred: `kv/data/lumen/*` for the lumen tab) — no root, no `list` on `sys/`.
+  <=1 h with agent-based re-login, bound to worker CIDRs. Policy: `read` + `update` on
+  `kv/data/+/*`, plus `read`/`list`/`patch` on `kv/metadata/+/*` (the `patch` capability
+  is NEW with the secrets control plane - section 5.6 seeds and `scripts/dev-plane.sh`
+  both carry it; app-scoped roles still preferred where practical) - no root, no
+  destroy, no `sys/`. Namespaces are DATA (apps-are-data, root `PLAN-SECRETS-CONTROL.md`):
+  onboarding any app requires no policy change, only the trio default applied through
+  cas=0 creates.
 - Go client: `hashicorp/vault/api` works unmodified against OpenBao (wire-compatible).
 - Bao **audit devices are the trail**: mellon adds no secret-value logging, and lumen must
   never log values (structured logs redact by key).
@@ -1057,7 +1105,7 @@ Helm chart** on worker-1; requires one manual `kubectl create ns external-secret
 deliberately not a kustomize+helmCharts dir so repo validation stays helm-free), and
 [`applications/secrets-plane/`](k8s-platform-manifests/applications/secrets-plane/)
 (`ClusterSecretStore bao`, sync-wave 1 — self-heals via Argo retry while ESO CRDs land).
-Sequence: hub syncs openbao + external-secrets (wave 0) → *manual first-time*: init,
+Sequence: hub syncs openbao + external-secrets (wave 0) → _manual first-time_: init,
 unseal, enable `kv` v2 mount, create AppRoles/policies → seed the first values +
 `bao-approle-credentials` Secret → secrets-plane store goes green → overlays/production
 ExternalSecrets render → everything above that is Git-synced.
@@ -1084,18 +1132,18 @@ on `external_secret_ready` and `bao_unsealed` so a sealed store is loud, not sil
 
 ## 6. Backup / DR
 
-* **PostgreSQL:** nightly `pg_dump` of `lumen_production` (cronjob on worker-1, writes to a PVC,
+- **PostgreSQL:** nightly `pg_dump` of `lumen_production` (cronjob on worker-1, writes to a PVC,
   then uploads off-node — object storage or `restic` to a second location). Restore
   procedure documented and **tested once** before go-live.
-* **K3s datastore (kine/etcd):** `k3s server --snapshot` / bundled scheduled snapshots
+- **K3s datastore (kine/etcd):** `k3s server --snapshot` / bundled scheduled snapshots
   (`--etcd-snapshot-schedule-cron`) on master; store snapshots off-node.
-* **OpenBao:** file-storage dir is its whole world — include the `secrets` PVC in the
+- **OpenBao:** file-storage dir is its whole world — include the `secrets` PVC in the
   nightly `restic` set; DR runbook order: restore Bao PVC → unseal → ESO reconciles →
   then everything else. Unseal/root keys: §5.6 (never in the same backup as the data).
-* **Git state:** `k8s-platform-manifests` is the cluster's DR story — mirror it (e.g.,
+- **Git state:** `k8s-platform-manifests` is the cluster's DR story — mirror it (e.g.,
   private GitLab/github second remote). A full rebuild = Phases 1–9 + §5.6 bootstrap +
   restore dumps.
-* **NotReady triage (runbook):** mass `NotReady` right after a boot/reboot is almost
+- **NotReady triage (runbook):** mass `NotReady` right after a boot/reboot is almost
   always node-transport, not Kubernetes: Path B → `netbird status` on the affected node
   first; Path A → `ping <peer-vpc-ip>` and `ip link show <VPC_IFACE>` (MTU or
   flannel-iface mismatch is the usual suspect).

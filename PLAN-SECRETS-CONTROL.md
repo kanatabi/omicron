@@ -1,25 +1,25 @@
 # PLAN — Secrets Control Plane (apps are data)
 
-**Status:** approved design, unexecuted. **Repos:** `lumen/` (API), `mellon/` (UI), `vortex/` (deferred).
+**Status:** Phases A + B EXECUTED on `feature/secrets-control-plane` (lumen + mellon) — awaiting owner review/merge. Phase C deferred. **Repos:** `lumen/` (API), `mellon/` (UI), `vortex/` (deferred).
 **Doc owner:** this file is the contract — update task checkboxes and the Decision Log here, not in chat transcripts.
 
 ## 0. Mission
 
 `console.gofar.id` becomes the **central control surface for the whole infra**, starting with
-the secrets plane: OpenBao stores secrets for *every* service, so the portal must treat app
+the secrets plane: OpenBao stores secrets for _every_ service, so the portal must treat app
 namespaces as **data, not code** — onboard any app, edit per-env values under a global
 key-set invariant, inspect/pin/restore versions, and search within the selected env.
 `lumen` is the first tenant, not a special case.
 
 ## 1. Owner-ratified decisions (2026-11-09)
 
-| # | Topic | Ruling |
-|---|-------|--------|
-| D1 | Pin semantics | Pin = **operator intent** (badge/metadata). Reads ALWAYS serve head; any specific version is *viewable* (`?version` already exists) — pin never reroutes reads or consumers. |
-| D2 | Rollback | **Included**: restore a version's values onto the CURRENT key set, saved as a new head. Removed keys do not resurrect. |
-| D3 | Search | **Current env, client-side**: fuzzy on key names AND values. No server search surface (values never flow wider than the view you already hold). |
-| D4 | Env model | Onboard seeds the **trio default** `dev/staging/production`; `POST /bao/{app}/envs` extends an app later, seeded with the canonical key set. |
-| D5 | Destroy | App/env **destroy is out of API scope** (delete-grant is too heavy for a UI; Bao-side drills stay operator-only). |
+| #   | Topic         | Ruling                                                                                                                                                                       |
+| --- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Pin semantics | Pin = **operator intent** (badge/metadata). Reads ALWAYS serve head; any specific version is _viewable_ (`?version` already exists) — pin never reroutes reads or consumers. |
+| D2  | Rollback      | **Included**: restore a version's values onto the CURRENT key set, saved as a new head. Removed keys do not resurrect.                                                       |
+| D3  | Search        | **Current env, client-side**: fuzzy on key names AND values. No server search surface (values never flow wider than the view you already hold).                              |
+| D4  | Env model     | Onboard seeds the **trio default** `dev/staging/production`; `POST /bao/{app}/envs` extends an app later, seeded with the canonical key set.                                 |
+| D5  | Destroy       | App/env **destroy is out of API scope** (delete-grant is too heavy for a UI; Bao-side drills stay operator-only).                                                            |
 
 ## 2. Frozen design contract
 
@@ -27,16 +27,16 @@ Code to this table; if reality forces a change, record it in §8 before writing 
 
 ### 2.1 lumen — `/admin/bao/*` (admin bearer; AppRole relays to Bao)
 
-| Endpoint | Change | Semantics |
-|---|---|---|
-| `GET /bao/paths` | none | already dynamic (scans `kv/metadata/`); lists EVERY app subtree — keep it so |
-| `POST /bao/apps` | **new** | body `{app, envs?}`; slug `^[a-z][a-z0-9-]{1,31}$`, no leading `_`; default envs = trio; creates each env as empty bundle `{}`; 409 if any env of the app already exists |
-| `POST /bao/{app}/envs` | **new** | body `{env}`; seeds the new env with the app's **canonical key set** = union of sibling envs' key sets, all values `""`; 409 if the env exists |
-| `PUT /bao/{app}/{env}` | **extended** | existing CAS bundle write + **key-set mirror fan-out**: diff saved key set vs that env's PREVIOUS head; adds (`""` values) and removals applied to **all sibling envs**; values travel only for the written env; sibling writes CAS against each sibling's own head — stale ⇒ 409 `{"error":"mirror stale: <env>"}` |
-| `GET /bao/{app}/{env}` | none | head, or `?version=N` (D1 — pin never affects this) |
-| `GET /bao/{app}/{env}?meta` | **extended** | adds `pinnedVersion` (nullable), read from KV-v2 `custom_metadata` |
-| `PUT /bao/{app}/{env}/pin` | **new** | body `{version}`; validates the version exists; PATCHes `custom_metadata {"pinnedVersion":N}` on `kv/metadata/{app}/{env}` |
-| `DELETE /bao/{app}/{env}/pin` | **new** | clears `pinnedVersion` from custom_metadata |
+| Endpoint                      | Change       | Semantics                                                                                                                                                                                                                                                                                                           |
+| ----------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /bao/paths`              | none         | already dynamic (scans `kv/metadata/`); lists EVERY app subtree — keep it so                                                                                                                                                                                                                                        |
+| `POST /bao/apps`              | **new**      | body `{app, envs?}`; slug `^[a-z][a-z0-9-]{1,31}$`, no leading `_`; default envs = trio; creates each env as empty bundle `{}`; 409 if any env of the app already exists                                                                                                                                            |
+| `POST /bao/{app}/envs`        | **new**      | body `{env}`; seeds the new env with the app's **canonical key set** = union of sibling envs' key sets, all values `""`; 409 if the env exists                                                                                                                                                                      |
+| `PUT /bao/{app}/{env}`        | **extended** | existing CAS bundle write + **key-set mirror fan-out**: diff saved key set vs that env's PREVIOUS head; adds (`""` values) and removals applied to **all sibling envs**; values travel only for the written env; sibling writes CAS against each sibling's own head — stale ⇒ 409 `{"error":"mirror stale: <env>"}` |
+| `GET /bao/{app}/{env}`        | none         | head, or `?version=N` (D1 — pin never affects this)                                                                                                                                                                                                                                                                 |
+| `GET /bao/{app}/{env}?meta`   | **extended** | adds `pinnedVersion` (nullable), read from KV-v2 `custom_metadata`                                                                                                                                                                                                                                                  |
+| `PUT /bao/{app}/{env}/pin`    | **new**      | body `{version}`; validates the version exists; PATCHes `custom_metadata {"pinnedVersion":N}` on `kv/metadata/{app}/{env}`                                                                                                                                                                                          |
+| `DELETE /bao/{app}/{env}/pin` | **new**      | clears `pinnedVersion` from custom_metadata                                                                                                                                                                                                                                                                         |
 
 ### 2.2 Invariants & doctrine (binding)
 
@@ -97,26 +97,26 @@ manual curl of every new endpoint against the live dev plane.
 
 ## 4. Task breakdown — Phase B: mellon (after A4/A5 ship)
 
-- [ ] **B1 — API layer**: `src/lib/api/types.ts` + `fetch-adapter.ts` — new methods
+- [x] **B1 — API layer**: `src/lib/api/types.ts` + `fetch-adapter.ts` — new methods
       (`onboardApp`, `addEnv`, `pin`, `unpin`), `SecretMeta.pinnedVersion`, mirror-stale
       error surfacing; extend the test-only twin if AdminApi has one there (check
       `mock.ts` scope) and keep contract tests honest.
       **Accept:** unit tests for adapter (mapping, 409 shapes) pass offline.
-- [ ] **B2 — fuzzy scorer** `src/lib/fuzzy.ts` (pure) + tests: subsequence + prefix/word
+- [x] **B2 — fuzzy scorer** `src/lib/fuzzy.ts` (pure) + tests: subsequence + prefix/word
       bonus, stable ranking. **Accept:** vitest cases incl. empty query = identity order.
-- [ ] **B3 — pickers + onboarding**: app select / env tabs / `+ onboard app` dialog /
+- [x] **B3 — pickers + onboarding**: app select / env tabs / `+ onboard app` dialog /
       `+ add env`. Data-driven only — grep gate: no `'lumen'|'dev'|'staging'|'production'`
       string literals in the page logic (defaults come from the API/`POST` contract).
-- [ ] **B4 — search bar**: filter rows via B2 on key+value, n-of-m counter, escape clears.
+- [x] **B4 — search bar**: filter rows via B2 on key+value, n-of-m counter, escape clears.
       Keyboard-first.
-- [ ] **B5 — pin UI + history actions**: badge, badge→pinned-vs-head diff, per-version
+- [x] **B5 — pin UI + history actions**: badge, badge→pinned-vs-head diff, per-version
       pin/view/restore. Restore = overlay-onto-current-keys then normal dirty-save path (D2).
-- [ ] **B6 — console harness scenario**: end-to-end on throwaway `harness-app`:
+- [x] **B6 — console harness scenario**: end-to-end on throwaway `harness-app`:
       onboard → trio exists → edit dev adding KEY → switch staging → KEY present empty →
       search filters → pin v2 → badge amber after a v3 write → restore v2 → unpin.
       Teardown: none (dev plane is in-memory/re-seedable; document in the test comment).
       **Accept:** full mellon gate suite + `npm run test:console` green.
-- [ ] **B7 — docs**: `mellon/DESIGN.md` §9 rewrite (control-plane posture), journal in
+- [x] **B7 — docs**: `mellon/DESIGN.md` §9 rewrite (control-plane posture), journal in
       `mellon/PLAN.md`, root `AGENTS.md`/`INFRA_ARCHITECTURE.md` §5.6 note: prod
       `fzr-portal` policy must include `patch` on `kv/metadata/*`.
 
@@ -129,20 +129,20 @@ manual curl of every new endpoint against the live dev plane.
       data model (meta.pinnedVersion + paths) is already shaped for it.
 - [ ] C2 — `driftcheck` pin-aware (warn when head ≠ pin in CI/CLI).
 - [ ] C3 — ExternalSecret CR alignment: onboarding checklist generator (names match
-      `vortex` dirs; CRs stay GitOps-written — portal may one day *suggest* the YAML).
+      `vortex` dirs; CRs stay GitOps-written — portal may one day _suggest_ the YAML).
 - [ ] C4 — prod seeds (vortex): §5.6 policy w/ patch cap; kv seeds for new apps.
 
 ## 6. Test ledger (where each promise is enforced)
 
-| Promise | Guard |
-|---|---|
-| key-set invariant across envs | A1 unit + A5 integration + B6 harness |
-| pin never reroutes reads | A5 (read after pin == head) |
-| app-agnostic | B3 literal-grep gate + code review rule §2.2-1 |
-| no values in logs | A4 review + existing doctrine |
-| search correct + no server leak | B2 unit (pure), D3 by construction |
-| rollback keeps keys current | B5 + B6 restore leg |
-| dev plane policy patch granted | A5 (pin op fails loudly without it) |
+| Promise                         | Guard                                          |
+| ------------------------------- | ---------------------------------------------- |
+| key-set invariant across envs   | A1 unit + A5 integration + B6 harness          |
+| pin never reroutes reads        | A5 (read after pin == head)                    |
+| app-agnostic                    | B3 literal-grep gate + code review rule §2.2-1 |
+| no values in logs               | A4 review + existing doctrine                  |
+| search correct + no server leak | B2 unit (pure), D3 by construction             |
+| rollback keeps keys current     | B5 + B6 restore leg                            |
+| dev plane policy patch granted  | A5 (pin op fails loudly without it)            |
 
 ## 7. Risks & orders
 
@@ -178,4 +178,28 @@ manual curl of every new endpoint against the live dev plane.
   unpin = null), `CreateIfAbsent` (cas=0) with `remapExists` →
   ErrAlreadyExists for onboarding collisions. B-phase note: mellon needs NO
   twin change — live finally matches it.
+- 2026-11-10 — **Phase A complete** (lumen branch `feature/secrets-control-plane`:
+  A1 20336ee, A3 7fb5ba0, A4 77b8064, A5 98563b9, A6+A2). Deviations recorded:
+  ① the mirror IMPLEMENTS RECONCILE (siblings pulled toward the saved shape)
+  instead of delta-vs-previous-head — strictly stronger: an interrupted mirror
+  heals on the next write; value-only edits bump nothing (proven live in A5).
+  ② pins ride custom_metadata AS STRINGS (engine is map[string]string; numeric
+  answers 500) and the PATCH needs `application/merge-patch+json` (SDK sends
+  scim+json → 415). Both discovered by the live battery, documented in lumen §9.
+  ③ A5's own script learned to CAS-from-meta after the mirror 409'd it — the
+  invariant refusing a naive test is the invariant WORKING.
+- 2026-11-10 — **Phase B complete** (mellon same branch: B1, B2, B3-B5 5c588cc,
+  B6, B7). Twin now carries the INVARIANT (mirror/union/pin as executable
+  contract); harness 45/45 exit 0 driving the whole lifecycle UI against live
+  lumen+OpenBao (T-plane1..7). Svelte trap family extended: regex quantifiers
+  in static attributes are EATEN as interpolations; markup expressions may not
+  START with a regex literal (parses as block-close). Test truths: aria-label
+  pinning over nth selectors; no auto-travel after add-env (tab-then-visit);
+  the modal history drawer must be dismissed before header-edge clicks.
+  D5 honored: harness apps persist (run-fresh names; FORCE=1 make seed resets).
+- 2026-11-10 — **dev-box state for the morning**: lumen :8080 serves the
+  BRANCH build (`make server` from feature/secrets-control-plane, nohup — the
+  pre-A server was retired; `make dev` reuses whatever serves :8080, so
+  restart it after reviewing to pick merged main). Pins NOT moved: both
+  children carry pending work on unmerged branches, by design.
 - — (append deltas here: contract changes, deviations, new rulings)
