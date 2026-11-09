@@ -229,4 +229,15 @@ manual curl of every new endpoint against the live dev plane.
   error — reality said 3 changed keys and the UI was right; the raw-json
   click deadlocked on the button the UI deliberately disables — commented
   choreography now. Harness 55/55 (+7), 71 units, visuals in shots/.
+- 2026-11-10 — **mobile honesty sweep + sheet ruling** (mellon, this-day
+  commit): bottom-sheet rails show the PRE-DRAG view (owner): collapse-only
+  — SectionCard `reorderable` prop + `movable` snippet params on all three
+  rails; desktop unaffected. Two owned regressions fixed: the backwards
+  `max-lg:hidden` sheet trigger, and `[data-pane] contain: layout style`
+  REMOVED (stacking contexts buried sibling popovers — the re-anchor sweep
+  missed paint order; the perf it bought was marginal next to the slot
+  cache). Popover placement gained a viewport-fit FLIP (the older bug
+  containment had masked); palette right-anchored; breadcrumb truncate finally
+  bounded. Harness 64/64 (+7), lessons folded into DESIGN §6.1-adjacent
+  journal. C5 (itest prefix isolation) still open.
 - — (append deltas here: contract changes, deviations, new rulings)
