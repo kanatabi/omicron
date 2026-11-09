@@ -15,8 +15,8 @@ several moving parts with different toolchains:
 | `earendil/` | SvelteKit 3 blog frontend, SSR via `adapter-node` | normal app dev — see its README |
 | `vortex/` | GitOps source of truth (Argo CD app-of-apps) | **read `vortex/README.md` first**; conventions are load-bearing |
 | `INFRA_ARCHITECTURE.md` | Production blueprint (K3s on 3 VPS, phases §4, secrets design §5) | the decision record — update it when you change a decision |
-| `lumen/` | REST backend — design docs only, no service code yet | contract mirror of earendil's `BlogApi`; Go code lands here when scaffolded |
-| `mellon/` | Admin portal — design docs only, no service code yet (local repo; GitHub remote pending) | UI-only by doctrine: relays to lumen, holds no credentials, port-forward access only — read `mellon/DESIGN.md` §2 before any feature work |
+| `lumen/` | REST backend — **live code** (M1–M6 merged to `main` 2026-11-09: read API on Meilisearch, admin API, media relay, Bao passthrough) | contract mirror of earendil's `BlogApi`; `lumen/DESIGN.md` mirrors §1/§8 |
+| `mellon/` | Admin portal — **live code** (`kanatabi/mellon` remote real; UI + lumen fetch-adapter on `feature/lumen-cutover`) | UI-only by doctrine: relays to lumen, holds no credentials — read `mellon/DESIGN.md` §2 before any feature work |
 
 ## Commands
 
@@ -83,8 +83,10 @@ labels). `k3d image import` after rebuilding placeholder images.
   breaks the client build. That's why server loads use `#lib/api/server.ts` while
   components use `#lib/api/index.ts`.
 - `#lib/*` is a package.json `imports` alias — don't rewrite to `$lib` and vice versa.
-- `createApi(undefined)` → mock fixtures (no backend). Keep mock coverage: `npm run test:unit`
-  and dev-mode must work without the cluster.
+- **Real-by-default** (owner ruling 2026-11-09, supersedes "mock-first"): the runtime always
+  fetches lumen (unset env = dev fallback `http://localhost:8080`). `mock.ts` is TEST-ONLY
+  (twin semantics + contract baseline) — the runtime import graph must never touch it;
+  `npm run test:unit` still works with no cluster (direct twin imports).
 - Search suggest is the ONLY client-side API call. Everything else lives in `+page.server.ts`.
 
 ## Kubernetes/kustomize gotchas
