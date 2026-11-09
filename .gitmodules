@@ -7,3 +7,6 @@
 [submodule "vortex"]
 	path = vortex
 	url = git@github.com:kanatabi/vortex.git
+[submodule "mellon"]
+	path = mellon
+	url = git@github.com:kanatabi/mellon.git
