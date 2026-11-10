@@ -125,13 +125,13 @@ manual curl of every new endpoint against the live dev plane.
 
 ## 5. Task breakdown — Phase C: deferred (explicitly NOT in this round)
 
-- [ ] C1 — apps×envs **overview matrix** pane (head/pin/empty-key drift per app) — the
+- [x] C1 — apps×envs **overview matrix** pane (head/pin/empty-key drift per app) — the
       data model (meta.pinnedVersion + paths) is already shaped for it.
 - [ ] C2 — `driftcheck` pin-aware (warn when head ≠ pin in CI/CLI).
 - [ ] C3 — ExternalSecret CR alignment: onboarding checklist generator (names match
       `vortex` dirs; CRs stay GitOps-written — portal may one day _suggest_ the YAML).
 - [ ] C4 — prod seeds (vortex): §5.6 policy w/ patch cap; kv seeds for new apps.
-- [ ] C5 — integration-path isolation: the battery must OWN an `itest/`
+- [x] C5 — integration-path isolation: the battery must OWN an `itest/`
       prefix (relay test currently purges/reseeds `kv/lumen/dev` — the same
       path a HUMAN browses; an old-worker + shared-queue incident proved the
       collision class). Move relay-test ownership to `itest/*` paths.
@@ -272,4 +272,9 @@ manual curl of every new endpoint against the live dev plane.
   bumped at root. Gates at both merge tips green (lumen 7/7 live battery,
   mellon 79/79 console harness). Phase C + C5 (itest prefix isolation)
   remain open by design.
+- 2026-11-10 — **estate round executed** (branch `feature/estate-round` both
+  repos, unmerged for review): C5 (battery owns itest/relay — proven by a
+  plane restart mid-round) and C1 (summary sweep + matrix page + twin + 6
+  harness asserts, 85/85). Gate discipline repaired mid-flight after two
+  tail-masked-exit slips: every gate now records its exit code explicitly.
 - — (append deltas here: contract changes, deviations, new rulings)
