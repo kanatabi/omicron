@@ -263,4 +263,9 @@ manual curl of every new endpoint against the live dev plane.
   restart the running `lumen` (an old worker binary rejected index_tag jobs
   sharing the dev queue), and pgrep/pkill patterns self-match the invoking
   shell — filter by /proc/comm before killing.
+- 2026-11-10 — tag-desk round MERGED to main (lumen 7b744cb + hygiene fix
+  ed23dc3 purging .vite junk an `add -A` swept in; mellon ff1d135) and pins
+  bumped at root. Gates at both merge tips green (lumen 7/7 live battery,
+  mellon 79/79 console harness). Phase C + C5 (itest prefix isolation)
+  remain open by design.
 - — (append deltas here: contract changes, deviations, new rulings)
