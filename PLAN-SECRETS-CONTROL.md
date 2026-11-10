@@ -240,4 +240,27 @@ manual curl of every new endpoint against the live dev plane.
   containment had masked); palette right-anchored; breadcrumb truncate finally
   bounded. Harness 64/64 (+7), lessons folded into DESIGN §6.1-adjacent
   journal. C5 (itest prefix isolation) still open.
+- 2026-11-10 — **tag desk round** (branch `feature/tag-desk` in lumen+mellon,
+  owner-ratified design): ① migration 0006 tags.created_at/updated_at (any
+  desk touch stamps updated_at; recency true from today, not retroactive —
+  said in the SQL itself); ② cloud→featured ② tag MATCHING moves to
+  MEILISEARCH ({id,name} docs, counts/featured hydrate from Postgres —
+  superseded doctrine recorded honestly: "a name, not a document" held only
+  while prefix lookup was the engine's best offer; typo tolerance is now ONE
+  story across posts/photos/tags); ③ desk list doors (/admin/posts,
+  /admin/photos) accept ?q → engine route with facets; photos date windows
+  CANNOT ride (PhotoDoc lacks day) → chips visibly pause during search;
+  ④ featured is MANUAL promotion only (owner ruling), public widget =
+  featured AND posts > 0 ("a featured tag at zero is ready, not display-
+  worthy") — earendil untouched, contract shape preserved; ⑤ the /tags desk
+  page: lean rows (checkbox/name/posts/featured-pill), row→dialog (rename/
+  feature/used-by roster/timestamps/delete-with-count), bulk feature via one
+  tx (updated = ACTUAL changes), engine search bar + pager on the URL;
+  ⑥ dashboard becomes an append-ready card grid (posts/photos/tiles/tags,
+  Traffic slot contract commented). Orchestration: 2 recon + 3 implementation
+  subagents over disjoint file ownership; main held the convergence gates.
+  Runtime discipline learned the hard way twice: queue-affecting deploys MUST
+  restart the running `lumen` (an old worker binary rejected index_tag jobs
+  sharing the dev queue), and pgrep/pkill patterns self-match the invoking
+  shell — filter by /proc/comm before killing.
 - — (append deltas here: contract changes, deviations, new rulings)
