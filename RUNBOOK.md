@@ -93,10 +93,14 @@ reclaim is how rehearsals teach bad habits.
 ```bash
 helm repo add traefik https://traefik.github.io/charts && helm repo update
 helm install traefik traefik/traefik --version 42.3.2 -n ingress --create-namespace \
-  --set service.type=NodePort \
-  --set ports.web.nodePort=30080 \
+  --set service.spec.type=NodePort \
+  --set 'ports.web.nodePort=30080' \
   --set providers.kubernetesCRD.enabled=true \
-  --set additionalArguments[0]="--metrics.prometheus"
+  --set 'additionalArguments[0]=--metrics.prometheus'
+
+# WALK-PROVEN (2026-11-10): chart 42.x moved Service knobs under service.spec
+# (bare service.type = schema-rejected); quote the bracket args — zsh globs
+# [0]. Verified render: NodePort 80:30080/443:<random>, class name traefik.
 ```
 
 No `redirectTo`/tls here: the local chain uses `components/selfsigned` (TLS
@@ -115,9 +119,15 @@ k3d placeholder flow, now with real images):
 cd omicron
 for app in lumen earendil mellon; do
   docker build -t $app ./$app
-  minikube image load $app:latest
+  minikube -p minikube image load docker.io/library/$app:latest
 done
 ```
+
+WALK-PROVEN gotcha: load with the FULLY-QUALIFIED name. `minikube image load
+lumen:latest` exits 0 but the image lands where the kubelet's containerd (k8s.io
+namespace) cannot find it; `docker.io/library/lumen:latest` is what the runtime
+resolves `image: lumen` to. Verify with:
+`docker exec minikube ctr -n k8s.io images ls -q | grep library/lumen`.
 
 Verified on this machine (2026-11-10): all three Dockerfiles build clean;
 earendil serves real lumen content, mellon serves the authed dashboard against
@@ -126,13 +136,28 @@ the dev plane. Images ~35 MB (distroless Go) / ~260 MB (node SSR) each.
 ### A5. Manual platform pieces (before the hub)
 
 ```bash
-# 1. ESO's namespace (the OCI chart won't self-create it — accepted manual exception)
-kubectl --context minikube create namespace external-secrets
+# 1. ESO's namespace is NO LONGER manual — the kustomize wrapper owns it (2026-11-10
+#    restructure; see applications/external-secrets/. Nothing to do here.)
 
-# 2. Zalando operator (pinned; the lumen-db CR needs it present before it can go green)
-kubectl --context minikube apply -f \
-  https://raw.githubusercontent.com/zalando/postgres-operator/v1.13.0/manifests/operator-manifests.yaml
-kubectl --context minikube -n postgres-operator wait --for=condition=Available \
+# 2. Zalando operator: v2.0.3 (the v1.13.0 single-file URL in the old scaffold
+#    404s — no such artifact ever shipped in that shape). CRDs cluster-scoped,
+#    the rest namespace-scoped (default is the upstream shape; the operator
+#    config MUST carry watched_namespace '*' to reach the db namespace):
+Z=https://raw.githubusercontent.com/zalando/postgres-operator/v2.0.3/manifests
+cd /tmp && mkdir zal && cd zal
+for f in postgresql.crd.yaml operatorconfiguration.crd.yaml configmap.yaml \
+         operator-service-account-rbac.yaml postgres-operator.yaml api-service.yaml; do
+  curl -sfO $Z/$f
+done
+kubectl --context minikube apply -f postgresql.crd.yaml -f operatorconfiguration.crd.yaml
+kubectl --context minikube apply -f operator-service-account-rbac.yaml -f configmap.yaml \
+  -f postgres-operator.yaml -f api-service.yaml
+kubectl --context minikube get cm postgres-operator -o jsonpath='{.data.watched_namespace}'; echo
+# expect '*' — if empty, the operator only sees `default` and lumen-pg (ns db)
+# will never be created:
+#   kubectl -n default patch cm postgres-operator --type=merge -p '{"data":{"watched_namespace":"*"}}'
+#   kubectl -n default rollout restart deploy/postgres-operator
+kubectl --context minikube -n default wait --for=condition=Available \
   deploy/postgres-operator --timeout=180s
 
 # 3. Meilisearch master key — generate ONCE, reuse in A8's seed (they must match)
@@ -142,11 +167,18 @@ kubectl --context minikube create namespace search --dry-run=client -o yaml |
 kubectl --context minikube -n search create secret generic meilisearch-master-key \
   --from-literal=master-key=$MEILI_KEY
 
-# 4. Argo CD itself (pinned install + the master-pinning overlay; owns its namespace)
+# 4. Argo CD (pinned v3.6.1 — raised from v2.13.2 on walk evidence, see
+#    platform/argocd/kustomization.yaml header; --server-side is MANDATORY:
+#    Argo's CRDs exceed the 256KiB last-applied-configuration ceiling in BOTH
+#    kubectl and Argo client-side paths)
 cd vortex
-kubectl --context minikube apply -k platform/argocd/
+kubectl --context minikube apply -k platform/argocd/ --server-side --force-conflicts
 kubectl --context minikube -n argocd wait --for=condition=Available \
   deploy/argocd-server --timeout=300s
+# NOTE: application-controller is a STATEFULSET (argocd-application-controller) —
+# waiting on deploy/ for it fails. argocd-cm now carries kustomize.buildOptions:
+# --enable-helm (in the overlay) — required for the ESO chart wrapper; after
+# CHANGING that config: kubectl -n argocd rollout restart deploy/argocd-repo-server.
 # UI: port-forward + initial admin password
 kubectl --context minikube -n argocd port-forward svc/argocd-server 8080:443 &
 echo "argocd admin: $(kubectl --context minikube -n argocd get secret \
@@ -165,17 +197,32 @@ lumen/earendil/mellon **wave 2, which cannot sync until the `bao`
 ClusterSecretStore is Ready — and it won't be Ready until A7–A8 seed Bao.**
 If wave-2 apps sit OutOfSync/Progressing: that's the design working, not a bug.
 
+WALK NOTES on propagation (2026-11-10): (1) repo-server manifest caching is
+stubborn — after pushing a fix that a stuck app won't pick up, the proven
+sequence is `rollout restart deploy/argocd-repo-server` + `refresh":"hard"` on
+the app (one app even needed its child Application deleted to shake a wedged
+operation — hub selfHeal recreates it). (2) CRDs first applied CLIENT-side
+carry a huge `kubectl.kubernetes.io/last-applied-configuration` annotation the
+SSA sync now fights; one-time purge:
+`kubectl annotate crd clustersecretstores.external-secrets.io secretstores.external-secrets.io kubectl.kubernetes.io/last-applied-configuration-`.
+
 ### A7. OpenBao bootstrap (the §5.6 manual one-time — init, unseal, mount, roles)
 
 Follow the header checklist in `applications/openbao/openbao.yaml`; concretely:
 
 ```bash
-B="kubectl --context minikube -n secrets exec deploy/openbao -- bao"
-INIT=$($B operator init -key-shares=1 -key-threshold=1 -format=json)
+# WALK-PROVEN CLI shape: the bao binary insists on VAULT_ADDR (defaults to
+# https; our listener is tls_disable) and heredocs need `exec -i`. Define:
+X() { kubectl --context minikube -n secrets exec -i deploy/openbao -- \
+  sh -c "export VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=$${VAULT_TOKEN:-}; $1"; }
+B="X bao"   # every call below goes through X()
+INIT=$(X 'bao operator init -key-shares=1 -key-threshold=1 -format=json')
 echo "$INIT" | python3 -c "import sys,json; d=json.load(sys.stdin); print('UNSEAL='+d['unseal_keys_b64'][0]); print('ROOT='+d['root_token'])"
 # >>> COPY BOTH LINES OUT NOW — the unseal key lives OFFLINE (password manager /
 #     printed paper). Losing it = losing every value in the estate, DR doc §5.6. <<<
-$B operator unseal <UNSEAL_KEY>
+# extract with sed, NOT cut -d= : base64 keys CONTAIN '=' padding (cut truncates!)
+K=$(sed -n 's/^UNSEAL=//p' keys.txt); R=$(sed -n 's/^ROOT=//p' keys.txt)
+$B operator unseal "$K"
 export VAULT_ADDR=http://127.0.0.1:8200
 kubectl --context minikube -n secrets port-forward svc/bao 8200:8200 &   # for the curl steps below
 ROOT=<root token>; UNSEAL=<unseal key>
@@ -208,6 +255,15 @@ CB=(curl -sS -H "X-Vault-Token: $ROOT" -H 'Content-Type: application/json')
 > revert Secret contents it doesn't track). For the rehearsal: set
 > `secret_id_ttl` to `0` (never) and note the prod hardening in GATE #10.
 
+Role creation notes from the walk: `bao write auth/approle/role/...` succeeds
+SILENTLY re role_id — read it back with `-field=role_id`; secret-ids need
+`bao write -force -format=json -field=secret_id auth/approle/role/<r>/secret-id`
+(-force: empty K=V body is otherwise rejected). NEVER extract pretty-JSON with
+`sed s/.*"token":"..."/` over MULTILINE output — pipe the value through
+tr -d '\r\n' and VERIFY length==36 (a mangled UUID became a Secret of garbage
+and a lost sync cycle); prove each pair by actually logging in:
+`bao write -format=json -field=token auth/approle/login role_id=.. secret_id=..`
+
 Now hand the credentials to the two consumers — NOTHING of this touches Git
 (commit 897812f removed the last Git-side literal):
 
@@ -235,8 +291,13 @@ Write `kv/data/{app}/dev` with EXACTLY the keys each ExternalSecret declares
 passwords first (Zalando creates one Secret per user — discover the names):
 
 ```bash
-kubectl --context minikube -n db get secrets | grep -i user     # e.g. lumen-pg-db-user-staging style
-STAGING_PW=$(kubectl --context minikube -n db get secret <staging-user-secret> -o jsonpath='{.data.password}' | base64 -d)
+# WALK-PROVEN v2.0.3 naming: secrets are `{user}.{cluster}.credentials.postgresql.acid.zalan.do`
+# (dots IN the name); the Patroni master Service is `{cluster}.{namespace}.svc` —
+# lumen-pg.db.svc, NOT the old lumen-pg-postgres the scaffold comments claimed.
+kubectl --context minikube -n db get secrets --no-headers | awk '{print $1}' | grep credentials
+STAGING_PW=$(kubectl --context minikube -n db get secret \
+  'db-user-staging.lumen-pg.credentials.postgresql.acid.zalan.do' \
+  -o 'jsonpath={.data.password}' | base64 -d)
 JWT=$(openssl rand -hex 32)
 
 curl -sS -X PUT -H "X-Vault-Token: $ROOT" -H 'Content-Type: application/json' \
@@ -256,7 +317,19 @@ curl -sS -X PUT -H "X-Vault-Token: $ROOT" -H 'Content-Type: application/json' \
 ```
 
 (local note: dev reuses the staging DB user — the CRs' `lumen/dev` path is the
-rehearsal axis; prod would seed `lumen/production` with `db_user_production`.)
+rehearsal axis; prod would seed `lumen/production` with `db_user_production`.
+CLI gotcha: `bao kv put` REPLACES the whole map — write ALL keys of one path in
+SINGLE invocation (a mid-list failure silently stripped the rest; verify with
+`bao kv get -format=json kv/<path>` and diff the key list against the CR.)
+
+MATERIALIZE TIMING (walk-proven, matters): ExternalSecrets created BEFORE the
+kv seed (the normal first-boot order — waves gate creation, ESO syncs
+immediately, finds nothing, schedules its next try at refreshInterval = 1h
+away) look Ready-but-empty. Force the refresh honestly: `kubectl delete
+externalsecret -n <ns> <name>` — Argo selfHeal recreates it within seconds and
+the fresh object reconciles on creation. Then `kubectl rollout restart
+deploy/...` in every consumer namespace: envFrom binds ONLY at container start,
+so pods that booted blind must be recycled once the Secret/ConfigMap exists.
 
 ### A9. Watch it come up (the waves should fall like dominoes)
 
@@ -407,9 +480,30 @@ When worker-2/3 arrive:
 
 ---
 
-## 5. Known-unverified (this doc will get honest footnotes as Phase A runs)
+## 5. Walk ledger — what the live rehearsal has proven / still open
 
-- Argo `v2.13.2` against k3s v1.37 (client-go compat) — check on first A5 apply.
-- Traefik 42.3.2 `ports.web.nodePort` + hostNetwork key names — verify at install time.
-- Zalando secret naming for generated user creds — discover via `get secrets` (A8).
-- Everything else above is asserted from files/commits in the repos at these pins.
+PROVEN on minikube 2026-11-10 (each entry was a §5 unknown until it ran):
+- Argo v3.6.1 on k3s v1.37 healthy (v2.13.2 ROLLED OUT FINE TOO but cannot do
+  OCI charts: wrong helm args; the pin bump was about capability, not compat).
+- kustomize helmCharts path: ESO 2.15.0 renders 25 CRDs + controller/webhook/
+  cert-controller all Ready through the repo-server's helm binary — while BOTH
+  of Argo's own OCI paths 403 against ghcr's anonymous policy. The policy nuance
+  (which clients the token endpoint admits) belongs to ghcr day-to-day, but the
+  architecture no longer cares.
+- fat-CRD SSA requirement (kubectl AND Argo paths, identical 256KiB wall).
+- Traefik 42.3.2 values shape (service.spec.type, quoted nodePort args).
+- Zalando v2.0.3: file set, watched_namespace '*', typed Patroni fields,
+  required spec.postgresql(+version), secrets naming, lumen-pg.db.svc.
+- ESO CRD strictness: vault.version lowercase enum; template.type is a NO-OP
+  (target.type is the materialization switch — apiserver prunes the unknown);
+  webhook spec-defaults (creationPolicy etc.) require ignoreDifferences or
+  selfHeal thrashes (patched into the hub CRs).
+- OpenBao liveness must be tcpSocket (exec-probe killed sealed pods; the
+  unseal drill needs a live sealed pod).
+- AppRole extraction pitfalls (sed-not-cut, -field, -force, login-proof).
+
+OPEN (untested at walk time):
+- mellon/earendil pods going Ready end-to-end through Traefik (in flight).
+- minikube tunnel/NodePort over HTTPS (we run http-only via selfsigned comp).
+- Part B (VPS) ordering — inherits every A lesson but has not run yet.
+- observability overlays on the single node (excluded from the hub by design).
