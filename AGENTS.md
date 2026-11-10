@@ -103,8 +103,12 @@ labels). `k3d image import` after rebuilding placeholder images.
 
 ## Placeholders — what's real vs still open
 
-`cavadevop` (all repoURLs) and `ainurrofiq.com` / `staging.ainurrofiq.com` (hosts,
-ORIGIN) are REAL — do not revert them to placeholders. Still open: `REPLACE_AT_BOOTSTRAP`
+`ainurrofiq.com` / `staging.ainurrofiq.com` (hosts) are REAL — do not revert them to
+placeholders. `repoURL`s are REAL too as of 2026-11-10 — repointed to
+`https://github.com/kanatabi/vortex.git` when the manifests repo moved org+name (the
+old `cavadevop/k8s-platform-manifests` was the last cluster-breaking placeholder).
+The `ORIGIN` env is DEAD (2026-11-10 ruling: no reader anywhere; dropped from base
+env + ExternalSecrets — re-add only WITH its consumer). Still open: `REPLACE_AT_BOOTSTRAP`
 (roleId in applications/secrets-plane), Bao kv seeds (`lumen/{env}`, `earendil/{env}`
 values), and the staging Application CRs (overlay dirs exist; CRs land when a staging
 target is wired).

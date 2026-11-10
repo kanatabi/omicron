@@ -285,4 +285,19 @@ manual curl of every new endpoint against the live dev plane.
   all CRs already on stable external-secrets.io/v1. First-sync checklist now rides the CR
   comment (kubeVersion vs k3s, helm show values key audit, store-Ready order); verified
   during k3d rehearsal, not at prod. INFRA §5.6 + tree line updated to match.
+- 2026-11-10 — **gitops alignment round** (vortex branch `chore/gitops-repo-and-es-keys`
+  + `chore/container-hygiene` on all three children; estate-round merges pinned at root):
+  repoURLs repointed to kanatabi/vortex (9 machine-critical spots incl. the hub);
+  ExternalSecret key sets CUT OVER to the real env contract (property == secretKey,
+  1:1 — the old lumen trio was drift that would have booted prod pods blind while
+  every shape check passed; SESSION_JWT_SECRET was missing entirely); ORIGIN ruled
+  dead and removed everywhere (no reader in any repo); NEW rulings recorded in the
+  CR headers: LUMEN_MEDIA_* waits GATE #9, LUMEN_BAO_* relay creds ride the §5.6
+  bootstrap family NOT an ExternalSecret (bootstrap paradox); dev overlays added for
+  the local-cluster ESO rehearsal (bases stay ESO-free — opt-in by path). Container
+  audit: all three Dockerfiles EXISTED (previously unbuilt) — lumen gained a
+  .dockerignore (dev-plane.env would have baked into images), earendil/mellon comment
+  fictions corrected; PROOF: docker build x3 + live SSR/auth smoke against dev-lumen
+  all exit 0. NOTE: the owner merge sweep missed vortex `chore/pin-eso-2.15.0` —
+  still unmerged; the new branch is file-disjoint so either merge order works.
 - — (append deltas here: contract changes, deviations, new rulings)
