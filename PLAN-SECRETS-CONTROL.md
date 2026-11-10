@@ -127,9 +127,15 @@ manual curl of every new endpoint against the live dev plane.
 
 - [x] C1 — apps×envs **overview matrix** pane (head/pin/empty-key drift per app) — the
       data model (meta.pinnedVersion + paths) is already shaped for it.
-- [ ] C2 — `driftcheck` pin-aware (warn when head ≠ pin in CI/CLI).
-- [ ] C3 — ExternalSecret CR alignment: onboarding checklist generator (names match
-      `vortex` dirs; CRs stay GitOps-written — portal may one day _suggest_ the YAML).
+- [x] C2 — `driftcheck` pin-aware (warn when head ≠ pin in CI/CLI). Shipped
+      branch `feature/c2-pin-driftcheck` (unmerged): meta seam + unit tests +
+      LIVE proof (real pin-under-head, default exit 0 warns, --strict-pin exit
+      1, plane restored, battery 7/7).
+- [x] C3 — ExternalSecret CR alignment — ABSORBED by the 2026-11-10 key-set
+      cutover (property==secretKey 1:1 doctrine in the CR headers did the
+      generator's job by hand; the portal matrix + pin-aware driftcheck now
+      watch alignment continuously — a generator would emit what the CRs
+      already ARE). Portal-suggests-YAML stays a recorded future, not a task.
 - [ ] C4 — prod seeds (vortex): §5.6 policy w/ patch cap; kv seeds for new apps.
 - [x] C5 — integration-path isolation: the battery must OWN an `itest/`
       prefix (relay test currently purges/reseeds `kv/lumen/dev` — the same
@@ -300,4 +306,17 @@ manual curl of every new endpoint against the live dev plane.
   fictions corrected; PROOF: docker build x3 + live SSR/auth smoke against dev-lumen
   all exit 0. NOTE: the owner merge sweep missed vortex `chore/pin-eso-2.15.0` —
   still unmerged; the new branch is file-disjoint so either merge order works.
+- 2026-11-10 — **single-node + runbook round** (vortex branch `feature/single-node`
+  4 commits + lumen `feature/c2-pin-driftcheck`, both unmerged): the 1-node shape
+  is now first-class GitOps (components/single-node + selfsigned, overlays/local
+  chain, apps/single-node hub CRs with STRUCTURAL wave gating — store-Ready
+  before apps, seeded-Bao before store); mellon got its manifests; the
+  REPLACE_AT_BOOTSTRAP placeholder is DEAD (appRole.roleRef verified against the
+  shipped 2.15.0 CRD — both Bao creds now ride the bootstrap Secret; doctrine
+  restated: Git templates, Secrets bootstrap, Bao values); lumen got the
+  lumen-bao-credentials envFrom landing (optional:true keeps k3d honest);
+  RUNBOOK.md at root = one doc for minikube rehearsal + single-VPS production +
+  scale-out, pins researched and named (argo v2.13.2 vs k3s 1.37 flagged
+  known-unverified until the live walk). Dev plane proven as the seed-shape
+  reference: portal/eso policies, role writes, driftcheck live demo.
 - — (append deltas here: contract changes, deviations, new rulings)

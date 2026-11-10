@@ -108,12 +108,18 @@ placeholders. `repoURL`s are REAL too as of 2026-11-10 — repointed to
 `https://github.com/kanatabi/vortex.git` when the manifests repo moved org+name (the
 old `cavadevop/k8s-platform-manifests` was the last cluster-breaking placeholder).
 The `ORIGIN` env is DEAD (2026-11-10 ruling: no reader anywhere; dropped from base
-env + ExternalSecrets — re-add only WITH its consumer). Still open: `REPLACE_AT_BOOTSTRAP`
-(roleId in applications/secrets-plane), Bao kv seeds (`lumen/{env}`, `earendil/{env}`
-values), and the staging Application CRs (overlay dirs exist; CRs land when a staging
-target is wired).
+env + ExternalSecrets — re-add only WITH its consumer). Still open:
+Bao kv seeds (`lumen/{env}`, `earendil/{env}` values — per-cluster, seeded at
+bootstrap per RUNBOOK), the staging Application CRs (overlay dirs exist; CRs land
+when a staging target is wired), and the first live walk of RUNBOOK Part A (its
+§5 lists what remains unverified). RESOLVED 2026-11-10: `REPLACE_AT_BOOTSTRAP` —
+the ESO appRole now takes BOTH ids from the bootstrap Secret (`roleRef`, verified
+against the 2.15.0 CRD); no cluster-specific literals in Git anymore.
 
 ## Pointers
+
+- **RUNBOOK.md (this root)** — the single-node operating procedure: minikube
+  rehearsal = 1-VPS production shape; the waves enforce its ordering structurally.
 
 - Production phases, unseal drills, quorum rationale: `INFRA_ARCHITECTURE.md`
 - Local end-to-end test script (placement, failover, selfHeal, proxy): `README.md` §5
