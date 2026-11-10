@@ -277,4 +277,12 @@ manual curl of every new endpoint against the live dev plane.
   plane restart mid-round) and C1 (summary sweep + matrix page + twin + 6
   harness asserts, 85/85). Gate discipline repaired mid-flight after two
   tail-masked-exit slips: every gate now records its exit code explicitly.
+- 2026-11-10 — **ESO pin raised 0.1.4 → 2.15.0** (vortex branch `chore/pin-eso-2.15.0`,
+  unmerged). The 0.1.4 was an un-confirmed placeholder from the pre-1.x chart lifecycle;
+  ESO unified operator+chart versioning in 2.x, and v2.15.0 is current (published today;
+  operator tag + helm-chart tag + artifacthub cross-checked — the v1.5.0 the older docs
+  cite does not exist as a tag). Never deployed => pin-before-first-install, no migration;
+  all CRs already on stable external-secrets.io/v1. First-sync checklist now rides the CR
+  comment (kubeVersion vs k3s, helm show values key audit, store-Ready order); verified
+  during k3d rehearsal, not at prod. INFRA §5.6 + tree line updated to match.
 - — (append deltas here: contract changes, deviations, new rulings)

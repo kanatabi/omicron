@@ -734,7 +734,7 @@ k8s-platform-manifests/
 │   ├── observability-app.yaml     # Loki/VictoriaMetrics/Alloy/Grafana
 │   ├── meilisearch-app.yaml       # search — cluster-internal
 │   ├── openbao-app.yaml           # the values store (§5)
-│   ├── external-secrets-app.yaml  # ESO as an OCI Helm chart (Argo-managed)
+│   ├── external-secrets-app.yaml  # ESO as an OCI Helm chart (Argo-managed, chart 2.15.0 pinned)
 │   └── secrets-plane-app.yaml     # ClusterSecretStore `bao` (wave 1)
 ├── applications/                  # raw manifests (bases), one kustomize dir per app —
 │   │                              # ESO-free so k3d works unchanged
@@ -1101,8 +1101,12 @@ PUT    /v1/kv/data/<app>/<env>  (cas=0)     # create-if-absent = onboard (trio) 
 Deploy order: **all three pieces are now scaffolded** — [`applications/openbao/`](k8s-platform-manifests/applications/openbao/)
 (app `secrets`, worker-2, 1 Gi PVC, file storage; the header comment is the full
 init/unseal/AppRole command list), `apps/external-secrets-app.yaml` (Argo-managed **OCI
-Helm chart** on worker-1; requires one manual `kubectl create ns external-secrets`;
-deliberately not a kustomize+helmCharts dir so repo validation stays helm-free), and
+Helm chart** on worker-1, pinned **chart 2.15.0** — operator and chart share one version
+number in the unified 2.x line; exact-pinned 2026-11-10 before first install, replacing
+the stale 0.1.4 placeholder, and all our CRs already use the stable
+`external-secrets.io/v1`; requires one manual `kubectl create ns external-secrets`;
+deliberately not a kustomize+helmCharts dir so repo validation stays helm-free — the
+CR carries the first-sync checklist: kubeVersion vs k3s, `helm show values` key audit), and
 [`applications/secrets-plane/`](k8s-platform-manifests/applications/secrets-plane/)
 (`ClusterSecretStore bao`, sync-wave 1 — self-heals via Argo retry while ESO CRDs land).
 Sequence: hub syncs openbao + external-secrets (wave 0) → _manual first-time_: init,
