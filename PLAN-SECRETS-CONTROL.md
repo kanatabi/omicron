@@ -74,22 +74,22 @@ see §7 risks). Validate with dev plane up: `scripts/dev-plane.sh` → `dev-plan
       `PatchMetadataCustom(ctx, app, env, map)` for pin/unpin; `CreateIfAbsent`-style
       write helper for seeding empty bundles.
       **Accept:** unit tests for parsing (fixture JSON); wire-shape documented in code.
-- [ ] **A3 — service methods** `internal/adminsvc/` (secrets section)
+- [x] **A3 — service methods** `internal/adminsvc/` (secrets section)
       `OnboardApp`, `AddEnv`, `Pin`, `Unpin`, and the **WriteSecret mirror** (uses A1's
       keyDelta + reads sibling heads). Sibling CAS-stale ⇒ typed error carrying env.
       **Accept:** integration test (A5) proves fan-out; pure logic already proven in A1.
-- [ ] **A4 — handlers** `internal/api/admin/secrets.go`
+- [x] **A4 — handlers** `internal/api/admin/secrets.go`
       Mount the four new routes per §2.1; status mapping: 400 slug, 409 exists/stale,
       404 pin-version-unknown, 503 plane-disabled (existing pattern). Logs per §2.2-5.
       **Accept:** handlers stay thin (adminsvc owns logic — the repo's import rule
       still holds, check `db50d1b`-era test that guards it).
-- [ ] **A5 — dev plane + integration tests**
+- [x] **A5 — dev plane + integration tests**
       `scripts/dev-plane.sh`: policy gains `path "kv/metadata/*" {capabilities=["read","list","patch"]}`.
       `internal/api/bao_integration_test.go` additions (same env-gating style): onboard
       `itest-app` → paths shows 3 envs; write w/ key added → siblings gain `""` key;
       remove → gone everywhere; pin/Unpin/meta roundtrip; sibling-stale 409.
       **Accept:** `go test ./...` green (with plane) and green (skipped, without plane).
-- [ ] **A6 — docs**: `lumen/DESIGN.md` §9 mirror (apps-are-data rule, endpoints table,
+- [x] **A6 — docs**: `lumen/DESIGN.md` §9 mirror (apps-are-data rule, endpoints table,
       pin semantics D1); journal in `lumen/PLAN.md`.
 
 **Gate A:** `gofmt -l .` empty · `go vet ./...` · `go build ./...` · `go test ./...` ·
@@ -131,6 +131,10 @@ manual curl of every new endpoint against the live dev plane.
 - [ ] C3 — ExternalSecret CR alignment: onboarding checklist generator (names match
       `vortex` dirs; CRs stay GitOps-written — portal may one day _suggest_ the YAML).
 - [ ] C4 — prod seeds (vortex): §5.6 policy w/ patch cap; kv seeds for new apps.
+- [ ] C5 — integration-path isolation: the battery must OWN an `itest/`
+      prefix (relay test currently purges/reseeds `kv/lumen/dev` — the same
+      path a HUMAN browses; an old-worker + shared-queue incident proved the
+      collision class). Move relay-test ownership to `itest/*` paths.
 
 ## 6. Test ledger (where each promise is enforced)
 
