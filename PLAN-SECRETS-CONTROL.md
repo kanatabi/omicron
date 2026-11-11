@@ -353,4 +353,18 @@ manual curl of every new endpoint against the live dev plane.
   cluster: anchor-h1, Shiki fence, mermaid-src, task-list, search leg — zero
   module errors. Portal CSRF confirmed healthy on both paths (the 403 that
   started this was a curl missing Origin, and the answer is the guard WORKS).
+- 2026-11-11c — **setup-wizard round** (merged lumen+mellon mains): the estate
+  bootstraps itself — /setup registers the first admin via TOFU (advisory-lock
+  atomic; 410 Gone forever after; no admin-password Job in the primary path,
+  CLI demoted to recovery), must_change temps (server-generated syllable
+  passwords, one-time reveal, ~50 bits) are guided back through /setup, and
+  the 428 forced-change lock is transport-enforced in lumen (roles/flags read
+  per request — never JWT claims). lumen migration 0007 + battery e2e on a
+  scratch schema; mellon twin mirrors the invariants + 8 new harness asserts
+  (94/94). Cluster redeployed along the way: one-shot lumen migrate Job (the
+  PreSync hook automates that ordering forever), portal + users desk verified
+  live on the rehearsal cluster. Wizard security note queued FOR GATE #5: the
+  TOFU window (empty users + reachable portal) is bounded by console.gofar.id
+  staying dark until #10 — the registration endpoint is the estate's only
+  unauthenticated write, and the review should say so out loud.
 - — (append deltas here: contract changes, deviations, new rulings)

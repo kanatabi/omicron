@@ -345,8 +345,12 @@ ships a PreSync hook Job (`applications/lumen/migrate-job.yaml`) running
 every sync, idempotent; a failed migration BLOCKS the rollout (old pods keep
 serving). Nothing to do.
 
-The ADMIN account is manual (its password must not transit Git) — a one-shot
-Job reading a local secret, same shape the walk used:
+THE PRIMARY PATH (since 2026-11-11): there is no admin-bootstrap step at all.
+With the users table empty, the portal itself opens as `/setup` — the first
+visitor claims the estate (TOFU: one registration, ever; 410 Gone behind it,
+advisory-lock atomic in lumen). Nothing to run, nothing to remember, no
+password transiting any terminal. The Job below is RECOVERY-ONLY (headless
+re-set when the portal itself is the thing that's broken):
 
 ```bash
 kubectl --context minikube -n lumen create secret generic lumen-admin-password \
@@ -406,7 +410,9 @@ curl -s http://gofar.id:30080/posts/<any-slug> | grep -c 'h1 id'        # ≥1, 
 # Origin — send -H "Origin: http://console.gofar.id:30080" on POST/DELETE
 # tests (browsers always do; its absence is a 403 "Cross-site ... forbidden",
 # NOT an auth problem).
-# 2. portal answers and the session flow works:
+# 2. portal answers and the session flow works (fresh cluster: /login will
+#    REDIRECT to /setup until a human claims the estate — that bounce IS the
+#    success signal; claiming here, once, is the owner's manual act)
 curl -s -o /dev/null -w '%{http_code}\n' http://console.gofar.id:30080/login   # 200
 # PORTAL ACCESS LAW (learned the hard way, twice): reach mellon ONLY via the
 # edge — http://console.gofar.id:30080 (hosts alias -> `minikube ip`, NOT
