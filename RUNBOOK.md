@@ -423,7 +423,7 @@ curl -s -o /dev/null -w '%{http_code}\n' http://console.gofar.id:30080/login   #
 # PROTOCOL_HEADER), so the edge path is not just "the way that works" — it is
 # the way that is TRUE.
 # 3. the estate matrix sees the kv tree (log into console.gofar.id:30080 first):
-#    /secrets → read lumen/dev → /secrets/summary shows the matrix
+#    /secrets → read lumen/dev → /configs shows the matrix
 # 4. pin intent + drift tooling:
 #    portal pin v1 on lumen/dev, then from lumen/:
 go run ./cmd/lumen driftcheck            # key-set lines + pin warnings, exit 0

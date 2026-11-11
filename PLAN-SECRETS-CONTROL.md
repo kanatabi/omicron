@@ -367,4 +367,18 @@ manual curl of every new endpoint against the live dev plane.
   TOFU window (empty users + reachable portal) is bounded by console.gofar.id
   staying dark until #10 — the registration endpoint is the estate's only
   unauthenticated write, and the review should say so out loud.
+- 2026-11-11d — **IA round merged (mellon feature/nav-ia)**: nav is now
+  Content / CONTROL PLANE (Configs = summary-matrix landing, Vault, Compare —
+  future GitOps features live here) / Admin (Users); Settings + identity
+  (username · role, from whoami) + End session form the footer account story.
+  Routes /configs[/vault|/compare] + /admin/users with 308 word-migration
+  redirects (query-preserving; owner DECIDE-2). Password: ONE flow
+  (performPasswordChange: change→revoke→re-mint) behind two doors — wizard
+  forced mode + new Settings security card (voluntary rotate). Sentence-case
+  sweep across rendered chrome (brand 'mellon' stays lowercase; mid-sentence
+  wraps untouched). Harness 94/94; cluster redeployed + every route 200 live.
+  Sweep hazards logged for future us: a template token-line sweep hit a
+  SHORTHAND PROP (pinned — svelte-check caught it), a nav locator collided
+  with the settings card (assertion scoped), and child loads shadowing the
+  layout's `principal` key became `account`.
 - — (append deltas here: contract changes, deviations, new rulings)
