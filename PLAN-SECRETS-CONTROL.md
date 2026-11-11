@@ -387,4 +387,14 @@ manual curl of every new endpoint against the live dev plane.
   (action_default_with_named). Named-only fix merged; T-wiz9 regression
   pinned (95/95); cluster re-verified. Lesson added: routes' actions are an
   either-or contract, and no test had ever POSTed the settings forms before.
+- 2026-11-11f — Chrome drag-lifecycle round (owner-reported): the portal's
+  mouse drags died in real Chrome while every synthetic-DragEvent test passed
+  — the harness's blind spot, now closed by T-dragm (real CDP drag session,
+  96/96). Two fixes merged (mellon fix/chrome-drag-lift): the drag-image
+  capture race (bar removed at setTimeout(0) while Chrome snapshots on the
+  NEXT FRAME -> empty capture voids the drag; bar now lives to dragend) and
+  the hidden-source commit classic (lift deferred one task). Lesson for all
+  future browser-touching work: headless + synthetic events cannot see Chrome
+  lifecycle semantics — tests must drive the real input pipeline, and the
+  human browser is the last gate (owner verification pending on their Chrome).
 - — (append deltas here: contract changes, deviations, new rulings)
