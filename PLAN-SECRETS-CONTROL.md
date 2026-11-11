@@ -319,4 +319,22 @@ manual curl of every new endpoint against the live dev plane.
   scale-out, pins researched and named (argo v2.13.2 vs k3s 1.37 flagged
   known-unverified until the live walk). Dev plane proven as the seed-shape
   reference: portal/eso policies, role writes, driftcheck live demo.
+- 2026-11-11 — **RUNBOOK Part A walked to completion** (the "first live walk"
+  item closed). Full estate Synced/Healthy on minikube; portal login proven on
+  both postures (http→non-Secure cookie, https websecure→Secure); pin-drift
+  amber cell demonstrated through the matrix; PreSync `lumen migrate` hook
+  executed on real syncs. Rounds that came out of the walk (all merged):
+  mellon `fix/session-cookie-secure` + `fix/preview-runtime-bundle` (the
+  self-contained-server doctrine amended — jsdom/shiki are bundle-hostile,
+  prod node_modules now ship; SSR externals audited to bare-specifier zero),
+  lumen `feature/c2-pin-driftcheck` (driftcheck pin-aware + `migrate` verb —
+  battery 7/7 post-merge after an overnight dev-plane container loss),
+  vortex forwarded-headers + DSN-truth sweeps, earendil env.ts fossil.
+  Vault was BORN, died (lost unseal key — /tmp is not offline storage, the
+  runbook's own rule violated by its author), and was reborn: the A8b reinit
+  recipe (incl. the hostpath ns/claim-keyed data-dir trap) is walk-proven.
+  Earendil `about-page` + `hero-ascii-reveal` ruled STALE (Option A: never
+  merge, keep as refs — content landed via earlier PRs; trees are far behind
+  main). C2 also formally closes what C1's matrix previewed: pin intent is
+  now watched by CLI, CI (--strict-pin) and the portal simultaneously.
 - — (append deltas here: contract changes, deviations, new rulings)

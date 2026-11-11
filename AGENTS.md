@@ -111,8 +111,10 @@ The `ORIGIN` env is DEAD (2026-11-10 ruling: no reader anywhere; dropped from ba
 env + ExternalSecrets — re-add only WITH its consumer). Still open:
 Bao kv seeds (`lumen/{env}`, `earendil/{env}` values — per-cluster, seeded at
 bootstrap per RUNBOOK), the staging Application CRs (overlay dirs exist; CRs land
-when a staging target is wired), and the first live walk of RUNBOOK Part A (its
-§5 lists what remains unverified). RESOLVED 2026-11-10: `REPLACE_AT_BOOTSTRAP` —
+when a staging target is wired). The first live walk of RUNBOOK Part A is DONE
+(2026-11-11: estate green on minikube, login both postures proven; §5 of the
+runbook lists what remains open — Part B/VPS ordering, observability sizing,
+the gofar.id ingress cutover). RESOLVED 2026-11-10: `REPLACE_AT_BOOTSTRAP` —
 the ESO appRole now takes BOTH ids from the bootstrap Secret (`roleRef`, verified
 against the 2.15.0 CRD); no cluster-specific literals in Git anymore.
 

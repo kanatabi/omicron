@@ -248,12 +248,18 @@ CB=(curl -sS -H "X-Vault-Token: $ROOT" -H 'Content-Type: application/json')
   -d '{"token_policies":"portal","token_ttl":"1h","token_type":"service"}'
 ```
 
-> secret_id lifetime: dev-plane uses no-expiry for friction; a real cluster
-> should issue secret-ids with a bounded `secret_id_ttl` and re-issue on a
-> schedule (a v2 write of the app's `lumen-bao-credentials`/
-> `bao-approle-credentials` Secret IS the rotation — Argo's selfHeal won't
-> revert Secret contents it doesn't track). For the rehearsal: set
-> `secret_id_ttl` to `0` (never) and note the prod hardening in GATE #10.
+> **AppRole lifetimes, settled by pain** (2026-11-10/11): issue roles with
+> `secret_id_num_uses=0` (unlimited) BEFORE ever minting ids — a single-use
+> secret-id is consumed by the first login and the consumer (ESO or lumen)
+> dies silently when its 1h token refreshes: `ClusterSecretStore ... unable
+> to create client` / relay 500 `{"error":"internal error"}` are that corpse.
+> Rotation later = write a new Secret value + rollout restart (selfHeal never
+> reverts Secrets it doesn't track). And extraction hygiene: `bao read
+> -format=json -field=role_id` returns a QUOTED string — `tr -d '\r\n" '`
+> or you paste `"abc…"` into the Secret and get `invalid role or secret ID`
+> (both traps walked live). PROVE every pair by logging in with it before
+> declaring done (the walk's own final proof line):
+> `bao write -format=json -field=token auth/approle/login role_id=… secret_id=…`
 
 Role creation notes from the walk: `bao write auth/approle/role/...` succeeds
 SILENTLY re role_id — read it back with `-field=role_id`; secret-ids need
@@ -302,7 +308,7 @@ JWT=$(openssl rand -hex 32)
 
 curl -sS -X PUT -H "X-Vault-Token: $ROOT" -H 'Content-Type: application/json' \
   http://127.0.0.1:8200/v1/kv/data/lumen/dev -d '{ "data": {
-    "LUMEN_DB_URL": "postgres://db_user_staging:'$STAGING_PW'@lumen-pg-postgres.db.svc:5432/lumen_staging",
+    "LUMEN_DB_URL": "postgres://db_user_staging:'$STAGING_PW'@lumen-pg.db.svc:5432/lumen_staging",
     "LUMEN_MEILI_URL": "http://meilisearch.search.svc.cluster.local:7700",
     "LUMEN_MEILI_KEY": "'$MEILI_KEY'",
     "LUMEN_SESSION_JWT_SECRET": "'$JWT'" } }'
@@ -331,6 +337,48 @@ the fresh object reconciles on creation. Then `kubectl rollout restart
 deploy/...` in every consumer namespace: envFrom binds ONLY at container start,
 so pods that booted blind must be recycled once the Secret/ConfigMap exists.
 
+### A8b. Schema + admin: what is automatic vs manual now
+
+Schema is a DEPLOYMENT PROPERTY, not an operator step: the lumen Application
+ships a PreSync hook Job (`applications/lumen/migrate-job.yaml`) running
+`lumen migrate` (store SQL + river queue tables) before any workload syncs —
+every sync, idempotent; a failed migration BLOCKS the rollout (old pods keep
+serving). Nothing to do.
+
+The ADMIN account is manual (its password must not transit Git) — a one-shot
+Job reading a local secret, same shape the walk used:
+
+```bash
+kubectl --context minikube -n lumen create secret generic lumen-admin-password \
+  --from-literal=password="$(openssl rand -hex 16)"
+echo "admin password: $(kubectl --context minikube -n lumen get secret lumen-admin-password -o 'jsonpath={.data.password}' | base64 -d)"  # write it down NOW
+kubectl --context minikube apply -f - <<'EOF'
+apiVersion: batch/v1
+kind: Job
+metadata: { name: lumen-bootstrap, namespace: lumen }
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: lumen
+          image: lumen
+          imagePullPolicy: IfNotPresent
+          args: ["user", "--username", "gofar"]
+          envFrom: [{ secretRef: { name: lumen-secrets } }]
+          env:
+            - name: LUMEN_PASSWORD
+              valueFrom: { secretKeyRef: { name: lumen-admin-password, key: password } }
+EOF
+```
+
+If the vault must be REBORN (lost unseal key — the walk proved it happens):
+delete the pod-mount, PVC **and the node-side data dir** — the minikube
+hostpath provisioner names directories by `<ns>/<pvc>` (`/tmp/hostpath-
+provisioner/secrets/openbao`) and Retain + PV deletion does NOT wipe it;
+re-seed via A8; every consumer Secret/credential is re-issued from A7.
+
 ### A9. Watch it come up (the waves should fall like dominoes)
 
 ```bash
@@ -352,6 +400,14 @@ curl -s http://gofar.id:30080/ | grep -c 'gofar;'                       # ≥1
 curl -s http://gofar.id:30080/api/posts | head -c 80                     # proxy → lumen → Patroni
 # 2. portal answers and the session flow works:
 curl -s -o /dev/null -w '%{http_code}\n' http://console.gofar.id:30080/login   # 200
+# PORTAL ACCESS LAW (learned the hard way, twice): reach mellon ONLY via the
+# edge — http://console.gofar.id:30080 (hosts alias -> `minikube ip`, NOT
+# 127.0.0.1; NodePort lives on the node). kubectl port-forward BREAKS form
+# POSTs (origin reconstruction sees neither the name nor, pre-fix, the
+# protocol) and the session cookie cannot be Secure over plain http on a
+# non-localhost name. Both are now enforced correctly in code (cookieTrust +
+# PROTOCOL_HEADER), so the edge path is not just "the way that works" — it is
+# the way that is TRUE.
 # 3. the estate matrix sees the kv tree (log into console.gofar.id:30080 first):
 #    /secrets → read lumen/dev → /secrets/summary shows the matrix
 # 4. pin intent + drift tooling:
@@ -502,8 +558,20 @@ PROVEN on minikube 2026-11-10 (each entry was a §5 unknown until it ran):
   unseal drill needs a live sealed pod).
 - AppRole extraction pitfalls (sed-not-cut, -field, -force, login-proof).
 
-OPEN (untested at walk time):
-- mellon/earendil pods going Ready end-to-end through Traefik (in flight).
-- minikube tunnel/NodePort over HTTPS (we run http-only via selfsigned comp).
+ADDITIONALLY PROVEN across 2026-11-10/11 (the walk finished):
+- Full estate Synced/Healthy; blog + portal + matrix + preview all live through
+  Traefik; login proven on BOTH postures: http origin -> cookie WITHOUT
+  Secure, https origin (websecure NodePort) -> Set-Cookie WITH Secure.
+- PreSync migrate hook executed on real syncs; pin-drift demo end-to-end
+  (write v3, pin v1, matrix renders the amber `pin v1` cell, unpin clears).
+- Vault reborn after lost-unseal-key: A8b reinit recipe + the node-dir trap
+  (hostpath provisioner keys directories by ns/claim — PV delete is NOT
+  enough) + roles re-issued with unlimited-use secret-ids.
+- Production-build-only bug class EXTERNALIZED for mellon (jsdom/shiki are
+  package-layout resolvers; the runtime image now carries pruned prod
+  node_modules — "self-contained build/" remains true for earendil).
+
+STILL OPEN:
 - Part B (VPS) ordering — inherits every A lesson but has not run yet.
-- observability overlays on the single node (excluded from the hub by design).
+- Observability overlays on one node (excluded from the hub by design).
+- gofar.id ingress cutover (hosts still ainurrofiq.com by owner choice).

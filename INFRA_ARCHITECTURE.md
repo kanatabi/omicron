@@ -153,7 +153,7 @@ Managed via your external DNS provider (Cloudflare, Namecheap, Route53, etc.):
 ### B. Internal Cluster DNS (Automatic via K3s)
 
 - Managed out-of-the-box by **CoreDNS** inside the cluster.
-- Microservices communicate dynamically using Kubernetes internal service endpoints (e.g., `lumen-pg-postgres.db.svc.cluster.local:5432` for reads/writes, `lumen-pg-repl.db.svc.cluster.local` for read-only).
+- Microservices communicate dynamically using Kubernetes internal service endpoints (e.g., `lumen-pg.db.svc.cluster.local:5432` for reads/writes, `lumen-pg-repl.db.svc.cluster.local` for read-only).
 
 ### C. Private VPN Mesh DNS (Automatic via NetBird)
 
@@ -536,7 +536,7 @@ netbird` for admin access):
    > distinct owner users ⇒ distinct credentials. The env a pod talks to is decided by
    > `DATABASE_URL` in its overlay's Bao path — never in the cluster spec.
    > The operator spreads instances across hosts with built-in pod anti-affinity
-   > and creates `lumen-pg-postgres` (read/write) + `lumen-pg-repl` (read-only) Services.
+   > and creates `lumen-pg` (read/write) + `lumen-pg-repl` (read-only) Services — v2 naming (verified live).
 
    **Option C — step by step** (rental day or growth from A; identical procedure, A→C is
    zero-downtime):
