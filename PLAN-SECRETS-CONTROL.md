@@ -337,4 +337,20 @@ manual curl of every new endpoint against the live dev plane.
   merge, keep as refs — content landed via earlier PRs; trees are far behind
   main). C2 also formally closes what C1's matrix previewed: pin intent is
   now watched by CLI, CI (--strict-pin) and the portal simultaneously.
+- 2026-11-11b — **post-walk hardening** (owner driving the portal live caught
+  what the smoke missed): earendil's deepest route (/posts/[slug]) 500d on
+  ERR_MODULE_NOT_FOUND markdown-it — vite externalizes ALL node_modules in SSR
+  builds, so every undeclared-at-runtime dep was a landmine in BOTH SSR apps
+  (mellon's preview proxy fell to the same class minutes earlier; fixed there
+  first). Policy now: markdown-it family noExternal (pure JS bundles),
+  shiki/jsdom chain external + pruned prod node_modules in the image (package-
+  layout resolvers, unbundleable in any output mode); audits grep bare
+  specifiers, humans don't discover them at runtime. Deepest-route rule written
+  into RUNBOOK A10. Owner decisions executed: lumen runtime distroless ->
+  pinned alpine:3.24.4 (uid 65532 + CA certs kept — `kubectl exec` matters
+  more than purity when the pod misbehaves); earendil ingress cut over to
+  gofar.id/www (their own commit, walk-verified). Full post pipeline proven on
+  cluster: anchor-h1, Shiki fence, mermaid-src, task-list, search leg — zero
+  module errors. Portal CSRF confirmed healthy on both paths (the 403 that
+  started this was a curl missing Origin, and the answer is the guard WORKS).
 - — (append deltas here: contract changes, deviations, new rulings)

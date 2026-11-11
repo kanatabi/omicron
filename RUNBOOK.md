@@ -393,11 +393,19 @@ lumen/earendil/mellon sync + roll with env from `lumen-secrets` / `app-config`.
 ### A10. Verify the estate (every check is CLI-verifiable)
 
 ```bash
-echo "127.0.0.1 gofar.id console.gofar.id ainurrofiq.com" | sudo tee -a /etc/hosts   # once
+echo "$(minikube ip) gofar.id www.gofar.id console.gofar.id" | sudo tee -a /etc/hosts   # once. NODE IP, not 127.0.0.1 — NodePorts live on the node. (The earendil ingress was cut over to gofar.id/www 2026-11-11; ainurrofiq.com is no longer routed — a plain-text "404 page not found" from Traefik means the Host matched no rule.)
 
 # 1. blog renders FROM THE BACKEND (no mock anywhere in the runtime):
 curl -s http://gofar.id:30080/ | grep -c 'gofar;'                       # ≥1
-curl -s http://gofar.id:30080/api/posts | head -c 80                     # proxy → lumen → Patroni
+curl -s http://gofar.id:30080/api/posts | head -c 80                     # proxy → lumen → engine
+# THE DEEPEST-ROUTE RULE (learned twice): the listing 200'd while /posts/[slug]
+# 500d — only the post page RUNS the markdown pipeline (anchors, Shiki fences,
+# mermaid placeholders, task-lists). Smoke the route that does the work:
+curl -s http://gofar.id:30080/posts/<any-slug> | grep -c 'h1 id'        # ≥1, and no MODULE_NOT_FOUND in pod logs
+# curl quirk on the portal proxy: SvelteKit guards state-changing requests by
+# Origin — send -H "Origin: http://console.gofar.id:30080" on POST/DELETE
+# tests (browsers always do; its absence is a 403 "Cross-site ... forbidden",
+# NOT an auth problem).
 # 2. portal answers and the session flow works:
 curl -s -o /dev/null -w '%{http_code}\n' http://console.gofar.id:30080/login   # 200
 # PORTAL ACCESS LAW (learned the hard way, twice): reach mellon ONLY via the
@@ -574,4 +582,10 @@ ADDITIONALLY PROVEN across 2026-11-10/11 (the walk finished):
 STILL OPEN:
 - Part B (VPS) ordering — inherits every A lesson but has not run yet.
 - Observability overlays on one node (excluded from the hub by design).
-- gofar.id ingress cutover (hosts still ainurrofiq.com by owner choice).
+- staging twin host (still `staging.ainurrofiq.com` in overlays/staging — prod
+  earendil is gofar.id now; the staging name is an open owner call).
+- ~~gofar.id ingress cutover~~ DONE 2026-11-11 (owner commit 7b2c5cc; verified
+  live: gofar.id + www route, old names correctly 404 at the edge).
+- Portal + earendil SSR externals settled: shiki/jsdom-chain external, runtime
+  images carry pruned prod node_modules (both SSR apps); lumen runtime is pinned
+  alpine (kubectl exec works; uid 65532 kept) — walk-proven.

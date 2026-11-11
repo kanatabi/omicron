@@ -103,8 +103,9 @@ labels). `k3d image import` after rebuilding placeholder images.
 
 ## Placeholders — what's real vs still open
 
-`ainurrofiq.com` / `staging.ainurrofiq.com` (hosts) are REAL — do not revert them to
-placeholders. `repoURL`s are REAL too as of 2026-11-10 — repointed to
+`staging.ainurrofiq.com` remains the wired staging host (owner call to rename); the
+earendil PRODUCTION ingress was cut over to `gofar.id` + `www.gofar.id` on 2026-11-11
+(vortex 7b2c5cc, verified live) — do not revert that either. `repoURL`s are REAL too as of 2026-11-10 — repointed to
 `https://github.com/kanatabi/vortex.git` when the manifests repo moved org+name (the
 old `cavadevop/k8s-platform-manifests` was the last cluster-breaking placeholder).
 The `ORIGIN` env is DEAD (2026-11-10 ruling: no reader anywhere; dropped from base
