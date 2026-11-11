@@ -381,4 +381,10 @@ manual curl of every new endpoint against the live dev plane.
   SHORTHAND PROP (pinned — svelte-check caught it), a nav locator collided
   with the settings card (assertion scoped), and child loads shadowing the
   layout's `principal` key became `account`.
+- 2026-11-11e — hotfix post-IA (owner-found): mixed actions in
+  settings/+page.server.ts (default vim + named password) violated Kit v3's
+  "named actions exclude default" rule -> EVERY settings POST 500d
+  (action_default_with_named). Named-only fix merged; T-wiz9 regression
+  pinned (95/95); cluster re-verified. Lesson added: routes' actions are an
+  either-or contract, and no test had ever POSTed the settings forms before.
 - — (append deltas here: contract changes, deviations, new rulings)
