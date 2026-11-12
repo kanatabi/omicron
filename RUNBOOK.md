@@ -8,9 +8,13 @@ identical in A and B — that's deliberate: rehearsing here IS validating there.
 Mental model (INFRA_ARCHITECTURE.md is the WHY; this is the HOW):
 
 ```
-git push (app repo) → CI builds image → GHCR sha-tag → CI bumps image in vortex
-→ Argo CD syncs vortex → ESO reads kv/{app}/{env} from OpenBao → renders
-ConfigMaps/Secrets → pods roll. Values live ONLY in Bao; Git ONLY templates.
+merge (app repo) → CI gates ONLY — a merge never deploys anything
+release dispatch (human: patch|minor|major) → v-tag + GitHub release → image
+  built at the tag → ghcr.io/kanatabi/<app>:vX.Y.Z → bump PR in vortex
+  (deploy-bump label, fenced) → merge → Argo CD syncs vortex → ESO reads
+  kv/{app}/{env} from OpenBao → renders ConfigMaps/Secrets → pods roll.
+Only RELEASED TAGS reach the cluster — never branch builds, never :latest.
+Values live ONLY in Bao; Git ONLY templates.
 ```
 
 Two public surfaces, ever: `gofar.id` (earendil) + `console.gofar.id` (mellon).
@@ -110,10 +114,11 @@ warnings. Class name is the default `traefik` — matches every Ingress in Git.
 ### A4. Build + load the three app images (bare names = the local trick)
 
 The base deployments reference `image: lumen` / `earendil` / `mellon` — in prod
-CI rewrites those to `ghcr.io/kanatabi/<app>:sha-<short>` via
-`kustomize edit set image`. Locally, build UNDER the bare name so
-`IfNotPresent` finds them node-side with zero Git edits (same trick as the old
-k3d placeholder flow, now with real images):
+a release dispatch rewrites those to `ghcr.io/kanatabi/<app>:vX.Y.Z` via
+`kustomize edit set image` (anvil's deploy-bump). Locally, build UNDER the bare
+name so `IfNotPresent` finds them node-side with zero Git edits (same trick as
+the old k3d placeholder flow, now with real images) — this local regime
+coexists with the ghcr regime until the first v-tag bump merges:
 
 ```bash
 cd omicron
@@ -442,6 +447,47 @@ go run ./cmd/lumen driftcheck --strict-pin   # exits 1 while a pin is held
   frontend-config pod-external-secrets-io/reload=true`... simplest: bump via
   portal and wait / restart the pod).
 
+### A12. Day-2 — shipping a release (the only way anything deploys)
+
+Prerequisite owner one-timers (once per machine, not per release):
+
+1. **GHCR package visibility.** First push to `ghcr.io/kanatabi/<app>` creates
+   the package inheriting repo visibility; earendil/mellon/vortex are private,
+   so their first packages will be PRIVATE → the cluster gets
+   `ImagePullBackOff: unauthorized` the moment a v-tag pin syncs. Either flip
+   each package to public (recommended — images are non-secret artifacts;
+   lumen is already a public repo) or wire `ghcr-pull` docker secrets +
+   `imagePullSecrets` per namespace (B5 has the shape).
+2. **`VORTEX_BOT_PAT`** exists in lumen/earendil/mellon (set during Phase 6).
+3. **`DEPLOY_AUTOMERGE`** repo Variable on vortex: LEAVE ABSENT until you have
+   watched ≥1 clean manual bump cycle; absent = off = every bump PR merges by
+   human hands.
+
+The flow (per release):
+
+```bash
+# from the app repo's Actions tab (or: gh workflow run release.yml -f bump=patch)
+# dispatch release.yml with bump = patch | minor | major   ← THIS is the deploy decision
+```
+
+Then automatically: gates re-run on main → anvil `semver-release` computes the
+next tag from `git describe` (no tags yet: major→v1.0.0, minor/patch→v0.1.0 —
+so each repo's FIRST release is a hand-fired `major` ceremony) → tag pushed +
+GitHub release → `publish-image` builds AT the tag and pushes
+`ghcr.io/kanatabi/<app>:vX.Y.Z` (+ `:latest` alias — tooling/tests only, a
+deploy pin must never reference it) → `deploy-bump` opens the vortex PR
+(label `deploy-bump`, diff = the images: stanza lines only, thanks to the
+canonicalization commit). Vortex CI renders + validates; you merge the first
+one(s) by hand; Argo (targetRevision HEAD) syncs within its poll interval.
+
+- **Rollback** = `git revert` the bump commit in vortex, human PR, human merge.
+  No pipeline re-run needed; the old tag is immutable and still in ghcr.
+- **Verify** after sync: `kubectl --context minikube -n <ns> get pod -o
+  jsonpath='{.items[*].spec.containers[*].image}'` reads `…:vX.Y.Z`, and lumen
+  `/healthz` reports the stamped version (it now equals the tag).
+- Watch the first cycle pod-by-pod: this cluster has never pulled from ghcr —
+  the local bare-name regime (A4) retires one deployment at a time.
+
 ---
 
 ## 3. Part B — single VPS (production, same shape)
@@ -494,15 +540,20 @@ then the `letsencrypt-prod` ClusterIssuer + ACME email per INFRA Phase 3
 `console.gofar.id` A records must resolve to the node BEFORE first issuance —
 and console only goes public AFTER GATE #10 clears.
 
-### B5. Images — no more bare-name trick; CI contract or manual push
+### B5. Images — release pipeline or manual push (no more bare-name trick)
 
-- Once the Phase 8 workflows exist (see §5 at the end): push a commit, CI builds
-  `ghcr.io/kanatabi/<app>:sha-<short>` and PRs the `kustomize edit set image`
-  bump into vortex; hub syncs.
+- The release pipeline EXISTS and is the sanctioned path (A12): dispatch
+  `release.yml` → gates → v-tag → ghcr push → fenced bump PR → merge → sync.
+  On the VPS this needs nothing new except the package-visibility choice made
+  once (A12 pre-flight #1 — public packages need zero cluster-side acts;
+  private needs the pull-secret PR below per cluster).
 - Private GHCR packages → per-namespace pull secret (deployments' headers
   already carry the comment):
   `kubectl -n <ns> create secret docker-registry ghcr-pull --docker-server=ghcr.io --docker-username=kanatabi --docker-password=<PAT: read:packages>` + add `imagePullSecrets` in the base pods (one PR).
-- Manual path until then: `docker build -t ghcr.io/kanatabi/lumen:sha-$(git -C lumen rev-parse --short=7 HEAD) lumen && docker push ...` then edit `applications/lumen/kustomization.yaml` `images:` via `kustomize edit set image` and PR it — same names the CI hook expects.
+- Manual escape hatch (incidents only, still tag-shaped): build + push
+  `ghcr.io/kanatabi/<app>:vX.Y.Z` by hand, then a HUMAN vortex PR editing
+  `applications/<app>/kustomization.yaml` `images:` via `kustomize edit set
+  image` — same lines the bot fence guards; human PRs never auto-merge.
 
 ### B6. 2-GiB-node trimming (only if the VPS is the 2 GB build in the budget table)
 
@@ -592,11 +643,12 @@ PROVEN (tooling): anvil validate-all/diff-render/set-image-pr exercised
   diff passing the fence).
 
 STILL OPEN:
-- Phase 6 first-light: one real app-merge → publish → bump PR → (manual)
-  merge → Argo sync walkthrough; GHCR package visibility decision;
-  DEPLOY_AUTOMERGE only after watching the manual cycle.
-- meili version drift: docker-compose pins v1.56.1, cluster manifests v1.10.0 —
-  reconcile before Part B (engine version changes search semantics).
+- Phase 6 first-light: one real release dispatch (lumen `major` → v1.0.0
+  suggested) → gates → tag → publish → bump PR → (manual) merge → Argo sync
+  walkthrough. The release.yml plumbing has never executed — expect the first
+  run to teach something. Owner pre-flight in A12 (package visibility first).
+- ~~meili version drift~~ RESOLVED 2026-11-13: manifests bumped to v1.56.1
+  (vortex 7e32ad4) to match compose/CI — what dev+CI test is what prod runs.
 - Part B (VPS) ordering — inherits every A lesson but has not run yet.
 - Observability overlays on one node (excluded from the hub by design).
 - staging twin host (still `staging.ainurrofiq.com` in overlays/staging — prod

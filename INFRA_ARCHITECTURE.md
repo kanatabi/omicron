@@ -816,8 +816,16 @@ kubectl apply -f bootstrap/apps-hub.yaml
 
 > **Fixes vs. old draft:** `sed 's|image:.*|…|g'` rewrote **every** image line (sidecars,
 > init containers). We now use `kustomize edit set image` against the deployment's kustomization,
-> guard the commit against no-diff runs, and pin a single tag scheme (`sha-<short>`; `latest`
-> is not deployed).
+> guard the commit against no-diff runs, and pin a single tag scheme.
+>
+> **Amendment 2026-11-13 (supersedes the push-to-deploy example below):** the pipeline
+> shipped as **release-only** — `ci.yml` gates PRs and main and deploys NOTHING; a human
+> `workflow_dispatch` (`bump: patch|minor|major`) runs gates → anvil `semver-release`
+> (v-tag + GitHub release) → `publish-image` (`ghcr.io/kanatabi/<app>:vX.Y.Z`, `:latest`
+> alias for tooling only) → `deploy-bump` PR into vortex → fenced auto-merge behind the
+> `DEPLOY_AUTOMERGE` variable (absent = off). The yaml below is the superseded draft —
+> kept for the kustomize-edit mechanics it explains; real wiring lives in each app repo's
+> `.github/workflows/` and `anvil/`. Rollback = human `git revert` of the bump commit.
 
 `.github/workflows/deploy.yml` in your application source repository:
 

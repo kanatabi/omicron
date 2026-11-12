@@ -416,4 +416,30 @@ manual curl of every new endpoint against the live dev plane.
   visibility), the variable itself, and the first real bump walkthrough.
   Noted drift found on the way: compose pins meili v1.56.1, cluster manifests
   v1.10.0 — reconcile before VPS (engine versions move search semantics).
+- 2026-11-13 — **Release-only deploy model executed (Phase 6b).** Owner ruling:
+  a `release.yml` dispatch (patch|minor|major) IS the deploy decision — branch
+  merges gate and ship NOTHING. Chain: gates → anvil `semver-release` (newest
+  v-tag + bump math → tag + GitHub release; no-tags: major→v1.0.0 ceremony,
+  minor/patch→v0.1.0) → `publish-image` (build AT the tag; `:latest` alias is
+  tooling-only, banned from pins) → `deploy-bump` PR (vortex fenced auto-merge
+  behind DEPLOY_AUTOMERGE, absent=off). anvil refactored @59e8090 (publish-and-
+  pin split + deleted; set-image-pr now PAT-authenticates the CLONE — vortex is
+  private and anonymous clone 404s; the contract-job failure was the same
+  privacy-lie mechanism until the owner made lumen public, dissolving the need
+  for a cross-repo read token). Consumer workflows: ship deleted from 3× ci.yml,
+  release.yml added (lumen 431479b, earendil 9fb56ca, mellon f75917a); prettier
+  polices the new YAML in both node repos (the earendil self-inflicted red gate
+  turned out already fixed by the owner — 5406567, direct-to-main, noted).
+  Wave-3 integrity sweep caught a REAL defect agents' reports could not: all
+  three earendil anvil pins were 39-char transcriptions (GitHub resolves
+  `uses:` only at dispatch — CI was structurally blind to it); repaired a4b50c3,
+  all 9 refs byte-verified against anvil main. Same sweep rewrote stale ci.yml
+  headers (lumen 0a71470, mellon 7b1efa9). Vortex: meili manifests v1.10.0 →
+  v1.56.1 (7e32ad4) — cluster now runs what dev+CI test. Docs: RUNBOOK gains
+  A12 (ship-a-release + owner pre-flight), B5 and §5 rewritten to release-only;
+  INFRA Phase 8 amendment callout; AGENTS #4 now says released v-tags only.
+  Remaining owner one-timers before first-light: GHCR package visibility
+  (private packages ⇒ ImagePullBackOff at first v-tag sync; public recommended),
+  then one watched manual cycle (suggest lumen major → v1.0.0) before any
+  DEPLOY_AUTOMERGE exists.
 - — (append deltas here: contract changes, deviations, new rulings)

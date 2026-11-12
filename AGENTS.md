@@ -60,7 +60,9 @@ labels). `k3d image import` after rebuilding placeholder images.
    where 2-replica. If you add a workload, update the §1 budget table too — master has
    ~100 Mi slack, don't schedule there.
 4. **Versions pinned, tags immutable.** Argo overlay, cert-manager, operator, Helm
-   charts: exact versions. Images deploy as `sha-<short>`, never `latest`.
+   charts: exact versions. **Only released v-tags deploy** — `sha`-of-branch and
+   `latest` are banned from manifests: a `release.yml` dispatch is the deploy
+   decision; branch merges gate, never ship (amendment 2026-11-13, RUNBOOK A12).
 5. **App-of-apps shape:** `apps/` contains ONLY Argo `Application` CRs; raw manifests
    under `applications/<name>/`; hub syncs `apps/` non-recursively. Adding an app = new
    dir + new Application CR, never hub edits. Bases stay ESO-free (k3d invariant) —
