@@ -551,4 +551,33 @@ manual curl of every new endpoint against the live dev plane.
   anvil @696fc49; pins swept programmatically (18/18 byte-verified, diffs =
   6 pin lines only): lumen 9f98300, earendil 36bd320, mellon cd010de.
   v2.0.0-on-lumen is now one approval away on the pin-bump run.
+- 2026-11-13 (6) — **Phase 6g: incident round + the estate's first real
+  release.** A host reboot (uninvited) re-sealed Bao — all three ES red
+  (`could not get secret data from provider`), apps dark on config-drift —
+  healed by the A7 ritual in minutes (`bao operator unseal <key>` as an
+  ARGUMENT in non-tty exec; stdin piping fails; ESO bounce skipped its
+  backoff). The same window caught the meili engine bump mid-flight: v1.56.1
+  REFUSES the 1.10.0 volume (refuses — does not migrate), taking lumen
+  (bootstrap-fails on the engine, exit 1) and the blog feed down with it;
+  and minikube local-path keyed the recreated PVC back to the SAME host dir
+  (async reclaim loses every race), so "delete the PVC" remounts the old DB.
+  Honest wipe (node-side rm), engine boots empty, cmd/seed RECONCILE mode
+  (rows untouched, index_post enqueued per PUBLISHED post) → 1 doc = the
+  1 published post; feed green through ingress. Two receipts earned: the
+  engine-bump recipe (A11) and the reindex-verb gap (backfill = seed today;
+  proper fix = admin reindex-all + portal button, logged).
+  MEANTIME the release chain walked itself: owner approved the lumen run →
+  **v2.0.0** (version-ordered compute worked in anger — the describe fix,
+  live), cascade fired, deploy-plan evidence, deploy gate, bump PR #5,
+  merged — pods verified on ghcr v2.0.0. The informed chain is proven end
+  to end. settle POST declined silently in production (warn-only held;
+  siblings declined by hand) — diagnostics shelved by owner, evidence
+  frozen (session notes DEFERRED-settle-diagnostics.md).
+  Pre-enable audit of auto-merge (owner asked to flip the switch): TWO real
+  blockers found cold before the toggle — the B-fix poll broke on
+  IN_PROGRESS (would bail every PR forever), and vortex's merge permission
+  was contents:READ (403 on every eligible merge). Fixed: anvil 9128181
+  (terminal-state poll, SUCCESS-only), vortex b1f6789 (contents:write,
+  scoped and documented). Switch is now owner's 15-second act; first
+  auto-merged PR gets watched live.
 - — (append deltas here: contract changes, deviations, new rulings)

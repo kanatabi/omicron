@@ -450,6 +450,28 @@ go run ./cmd/lumen driftcheck --strict-pin   # exits 1 while a pin is held
   the ConfigMap within refreshInterval (1h — or `kubectl annotate externalsecret
   frontend-config pod-external-secrets-io/reload=true`... simplest: bump via
   portal and wait / restart the pod).
+- **Sealed-after-reboot** (PROVEN LIVE, uninvited, 2026-11-13: a host reboot
+  re-sealed Bao): symptom chain = every ExternalSecret red with
+  `could not get secret data from provider`, apps fine until they restart,
+  then CrashLoops arrive as Secrets/ConfigMaps go stale-render... the fix is
+  the A7 ritual, not an investigation: `bao operator unseal <key>` x3 from
+  `~/bao-rehearsal/keys` (non-tty: pass key as ARGUMENT, stdin piping fails),
+  ESO re-auths within ~a minute (bounce the controller to skip its backoff).
+  ES `get`'s "last sync" timestamps read like 30h — trust
+  `describe`'s `Last Transition Time` for WHEN it broke.
+- **Engine-bump recipe (derived data)** — meili v1.10→v1.56 taught it: the
+  engine REFUSES old data volumes (refuses, does not reindex, does not
+  migrate — crash loop on boot). And minikube local-path keys host
+  directories by `ns/pvc-name`: **delete the PVC, and the recreated one
+  remounts the SAME old directory** (async reclaim never wins the race).
+  The honest wipe: `docker exec minikube rm -rf
+  /tmp/hostpath-provisioner/<ns>/<pvc>/*` → pod restarts empty → run
+  `cmd/seed` with port-forwards at the cluster DB + engine (its reconcile
+  mode leaves rows alone, enqueues index_post per PUBLISHED post, drains).
+  Verified: engine stats 1 doc = the 1 published post; 2 drafts correctly
+  absent. lumen worker bootstrap creates the index; seed fills it — no
+  reindex verb exists yet (logged gap: admin "reindex all" is the
+  proper fix; portal needs a button).
 
 ### A12. Day-2 — shipping a release (the only way anything deploys)
 
@@ -695,15 +717,37 @@ ADDITIONALLY PROVEN across 2026-11-10/11 (the walk finished):
 PROVEN (tooling): anvil validate-all/diff-render/set-image-pr exercised
   against the real vortex tree (25-dir table GREEN; bump dry-run = 2-line
   diff passing the fence).
+- Informed deploy chain PROVEN live end to end (2026-11-13): bump approval
+  -> tag -> cascade -> build -> deploy-plan evidence -> deploy gate ->
+  born-validated PR -> merge -> Argo. lumen runs v2.0.0 from ghcr; pods,
+  feed, and search verified after the meili incident (A11 engine-bump
+  recipe executed under fire: host-dir wipe + seed reconcile = 1 published
+  post indexed, drafts correctly absent).
+- Node-reboot/sealed-Bao drill: PROVEN UNINVITED (A11 ritual restored the
+  estate in minutes; ES Last-Transition-Time was the honest clock).
+- Auto-merge blockers audited BEFORE enabling (the guard had never run in
+  anger; poll-early-bug + read-only-merge-perm both real, both fixed:
+  anvil@9128181, vortex@b1f6789).
 
 STILL OPEN:
-- PROVEN 2026-11-13: lumen deployed from a released tag end-to-end (bump PR
-  #4 merged via UI, Argo synced, pods on ghcr v1.0.0, cascade proven alive
-  via the v0.2.0 bump branch). REMAINING: close the four stale bump PRs
-  (v0.2.0 downgrade + three sha-era pre-doctrine branches); earendil's
-  release.yml mystery (two tags, zero deploy attempts — check its Actions
-  logs at next release); DEPLOY_AUTOMERGE decision after one informed-
-  deploy cycle (plan evidence → deploy approval) is watched end to end.
+- Owner's 15-second act (ready since anvil@9128181 + vortex@b1f6789):
+  vortex → Settings → Secrets and variables → Actions → Variables →
+  `DEPLOY_AUTOMERGE` = `on`; then WATCH the first auto-merged bump PR
+  live (guards: fence+label+terminal-green checks; kill switch = delete it).
+- Close the stale bump PRs in vortex: bump/lumen-v0.2.0 (downgrade-bait)
+  + the three sha-era pre-doctrine ones.
+- earendil's release.yml mystery: two released tags, zero deploy attempts —
+  read its (private) Actions logs at its next release before trusting it.
+- earendil/mellon GHCR packages must go PUBLIC (or pull-secrets wired)
+  before their first bump PR merges — their repos are private, so the
+  packages inherited private on first push.
+- settle POST declined silently in production (warn-only did its job:
+  releases completed, siblings needed manual decline). Diagnostics round
+  shelved by owner 2026-11-13 — suspects S1 (mid-run review writes refused)
+  vs S2 (per-deployment-reviewer payload shape); frozen evidence + plan
+  live in the session notes file DEFERRED-settle-diagnostics.md.
+- Reindex verb gap: backfill currently = run cmd/seed reconcile; the
+  proper fix is an admin `reindex all` + a portal button (follow-up).
 - ~~meili version drift~~ RESOLVED 2026-11-13: manifests bumped to v1.56.1
   (vortex 7e32ad4) to match compose/CI — what dev+CI test is what prod runs.
 - Part B (VPS) ordering — inherits every A lesson but has not run yet.
