@@ -585,6 +585,8 @@ ADDITIONALLY PROVEN across 2026-11-10/11 (the walk finished):
   package-layout resolvers; the runtime image now carries pruned prod
   node_modules — "self-contained build/" remains true for earendil).
 
+- Chrome mouse drag in the real browser: PROVEN by the owner (2026-11-12)
+  after the drag-image-lifetime + deferred-lift fixes; T-dragm pins it.
 PROVEN (tooling): anvil validate-all/diff-render/set-image-pr exercised
   against the real vortex tree (25-dir table GREEN; bump dry-run = 2-line
   diff passing the fence).
