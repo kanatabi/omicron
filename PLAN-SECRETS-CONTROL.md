@@ -525,4 +525,30 @@ manual curl of every new endpoint against the live dev plane.
   real merge happens; its Actions logs then tell the story.
   RUNBOOK A12 rewritten to plan/gate/open + "merge only when green" + the
   manifest-edits-don't-need-GitHub correction; INFRA callout extended.
+- 2026-11-13 (5) — **Phase 6f: version truth + settle.** Owner caught the
+  live bug by EXPECTING the right thing: approving semver-major on lumen
+  computed v1.0.0 (already exists, died exit-128) because next-version.sh
+  asked `git describe` for "newest" — describe sorts equidistant tags by
+  TAGGER DATE, and lumen's history (v1.0.0 minted at 18:27, v0.2.0 minted
+  later) poisoned it. Owner ruling: vendor the arithmetic instead of
+  reinventing it — anvil now carries **semver-tool 3.4.0** (commit
+  837ad91…, Apache-20 text beside it, sha256 provenance header, body
+  byte-identical verified; the FIRST vendored dep, README codifies the
+  rule: pinned, audited once, zero runtime fetches, upgrade=deliberate PR).
+  Selection stays ours and VERSION-ordered (sort -V over --merged HEAD tags);
+  collision guard refuses when the computed tag exists locally OR on origin
+  (remote branch = the double-approve race, reproduced in the battery with a
+  stale clone). Battery caught a self-inflicted again: I guessed the tool's
+  subcommand `check` — it is `validate`; prerelease bumps follow the TOOL's
+  mechanical rule (3.0.0-rc.1 + minor = 3.1.0), asserted so surprises are
+  red tests, never red releases (estate tags remain strict vX.Y.Z).
+  SETTLE (owner pain: approving one job left the run Waiting 24h and stalled
+  the ci queue): after a successful release the job declines the run's
+  remaining release-* reviews via the pending_deployments API — auth rides
+  RELEASE_BOT_PAT acting as owner-reviewer (owner granted Actions:RW, fence
+  3 verified: never own env, never deploy/other names, run-scoped only,
+  warn-only failure policy, empty = nothing to decline). Battery 17/17.
+  anvil @696fc49; pins swept programmatically (18/18 byte-verified, diffs =
+  6 pin lines only): lumen 9f98300, earendil 36bd320, mellon cd010de.
+  v2.0.0-on-lumen is now one approval away on the pin-bump run.
 - — (append deltas here: contract changes, deviations, new rulings)

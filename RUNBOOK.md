@@ -470,11 +470,13 @@ Prerequisite owner one-timers (once, DONE as of 2026-11-13 except #1):
    PROVEN fixed the same day: lumen run #5 parked all three jobs `waiting`
    independently. Re-check protection on any new repo (or use the deferred
    provisioning design in anvil's README Backlog).
-3. **`RELEASE_BOT_PAT`** (Contents:RW **and Workflow:RW** on the three app
-   repos ONLY, 90-day expiry) + **`VORTEX_BOT_PAT`** — both configured as
-   repo secrets. Without Workflow: the PAT's tag pushes create NO event and
-   nothing ever deploys (the first incident, proven via the events API).
-   Revoking RELEASE_BOT_PAT is the emergency brake on ALL releasing.
+3. **`RELEASE_BOT_PAT`** (Contents:RW + **Workflow:RW** + **Actions:RW** on
+    the three app repos ONLY, 90-day expiry) + **`VORTEX_BOT_PAT`** — both
+    configured as repo secrets. Without Workflow: the PAT's tag pushes create
+    NO event and nothing ever deploys (first incident, proven via the events
+    API). Without Actions: the settle step cannot post sibling-decline reviews
+    (warn-only — releases still work, the human declines by hand). Revoking
+    RELEASE_BOT_PAT is the emergency brake on ALL releasing.
 4. **`DEPLOY_AUTOMERGE`** repo Variable on vortex: LEAVE ABSENT until you have
    watched ≥1 clean manual bump cycle; absent = off = every bump PR merges by
    human hands.
@@ -487,12 +489,17 @@ The flow (per release):
    `release-major`, all amber "Waiting".** The merge itself deploys
    nothing and releases nothing.
 2. Open the run, **approve ONE bump job** (Review deployments → the card
-   IS the job now; unapproved bump jobs simply expire at 24h — double-
-   approve of DIFFERENT envs = double-release, last merge wins, nothing
-   corrupts). Approving the job IS
-   the release decision; the version = newest tag + that literal bump (no
-   tags yet: patch|minor → `v0.1.0`, major → `v1.0.0` — **to be born at
-   v1.0.0, approve `semver-major`**).
+    IS the job now; the released job then SETTLES — its siblings' pending
+    reviews are auto-declined under hard fences (`release-*` of this run
+    only, never `deploy`), so the whole pipeline goes terminal on your one
+    click. If settle ever warns, decline them by hand (else they expire at
+    24h). Double-approve of DIFFERENT envs = double-release, last merge
+    wins, nothing corrupts). Approving the job IS the release decision;
+    the version = **highest-version reachable tag** + that literal bump —
+    version-ordered, NEVER `git describe` (it sorts equidistant tags by
+    creation DATE: lumen's v0.2.0-minted-after-v1.0.0 made major compute
+    an EXISTING tag; the collision guard now refuses loudly instead).
+    No tags yet: patch|minor -> v0.1.0, major -> v1.0.0.
 3. The approved job pushes the annotated tag **via RELEASE_BOT_PAT** — never
    with the default token: `GITHUB_TOKEN` events don't cascade, so a
    "green" run would silently deploy nothing (`push-release.sh` refuses to

@@ -823,7 +823,12 @@ kubectl apply -f bootstrap/apps-hub.yaml
 > NOTHING; a merge to main parks three jobs (`semver-patch|minor|major`), EACH on its own
 > PROTECTED environment (`release-patch|minor|major`, never shared — environment approvals
 > batch per environment; unprotected environments FAIL OPEN — protection must predate the
-> workflows). The human approves exactly one → anvil `semver-release` pushes the v-tag via
+> workflows). The human approves exactly one → the released job SETTLES
+> (auto-declines the sibling bump reviews — fences: this run's release-* envs
+> only; warn-only) so one click completes the pipeline → anvil
+> `semver-release` computes the next version by VERSION-ordered reachable tags
+> (arithmetic = vendored, pinned semver-tool 3.4.0; git describe's DATE
+> ordering was a live-fire bug) + collision guard, pushes the v-tag via
 > `RELEASE_BOT_PAT` (Contents+Workflow perms; a `GITHUB_TOKEN` or Workflow-permissionless
 > tag-push never cascades — silent no-deploy) + mints
 > the GitHub release → **the tag push triggers `release.yml`**: `publish-image`
