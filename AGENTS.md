@@ -62,9 +62,11 @@ labels). `k3d image import` after rebuilding placeholder images.
 4. **Versions pinned, tags immutable.** Argo overlay, cert-manager, operator, Helm
    charts: exact versions. **Only released v-tags deploy** — `sha`-of-branch and
    `latest` are banned from manifests. Merges gate and park three waiting bump
-   jobs (patch|minor|major) on the protected `release` environment; approving
-   ONE is the release decision, and the PAT-pushed tag it emits is the only
-   deploy trigger (amendment 2026-11-13, RUNBOOK A12).
+   jobs, EACH on its own protected environment (`release-patch|minor|major` —
+   never shared: approvals batch per environment); approving ONE is the
+   release decision, and the PAT-pushed tag it emits (RELEASE_BOT_PAT,
+   Contents+Workflow perms) is the only deploy trigger
+   (amendment 2026-11-13, RUNBOOK A12).
 5. **App-of-apps shape:** `apps/` contains ONLY Argo `Application` CRs; raw manifests
    under `applications/<name>/`; hub syncs `apps/` non-recursively. Adding an app = new
    dir + new Application CR, never hub edits. Bases stay ESO-free (k3d invariant) —

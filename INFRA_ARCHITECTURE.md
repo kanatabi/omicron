@@ -820,10 +820,12 @@ kubectl apply -f bootstrap/apps-hub.yaml
 >
 > **Amendment 2026-11-13 (supersedes the push-to-deploy example below):** the pipeline
 > shipped as **approval-gated, release-only** — `ci.yml` gates PRs and main and deploys
-> NOTHING; a merge to main parks three jobs (`semver-patch|minor|major`) on the PROTECTED
-> `release` environment (unprotected environments FAIL OPEN — protection must predate the
+> NOTHING; a merge to main parks three jobs (`semver-patch|minor|major`), EACH on its own
+> PROTECTED environment (`release-patch|minor|major`, never shared — environment approvals
+> batch per environment; unprotected environments FAIL OPEN — protection must predate the
 > workflows). The human approves exactly one → anvil `semver-release` pushes the v-tag via
-> `RELEASE_BOT_PAT` (a `GITHUB_TOKEN` tag-push never cascades — silent no-deploy) + mints
+> `RELEASE_BOT_PAT` (Contents+Workflow perms; a `GITHUB_TOKEN` or Workflow-permissionless
+> tag-push never cascades — silent no-deploy) + mints
 > the GitHub release → **the tag push triggers `release.yml`**: `publish-image`
 > (`ghcr.io/kanatabi/<app>:vX.Y.Z`, `:latest` alias for tooling only) → `deploy-bump` PR
 > into vortex → fenced auto-merge behind the `DEPLOY_AUTOMERGE` variable (absent = off) →

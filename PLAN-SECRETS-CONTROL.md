@@ -470,4 +470,25 @@ manual curl of every new endpoint against the live dev plane.
   cascade (approve lumen semver-major → born v1.0.0) is the untested seam;
   pre-existing lumen ci.yml hand-edit found uncommitted in the worktree,
   stashed (`stash@{0}`) — superseded by feat/approval-jobs, owner may drop.
+- 2026-11-13 (3) — **Phase 6d: the first live approval taught the platform,
+  twice, for free.** Lesson 1: environment reviews BATCH PER ENVIRONMENT —
+  one approval of the shared `release` env released all three bump jobs
+  (v0.1.0 + v1.0.0 pushed; patch died red on the duplicate-tag guard — the
+  guard proving itself unrequested). Fix: nine per-bump environments
+  (`release-patch|minor|major` x3 repos), environments NEVER shared; lumen
+  run #5 then parked all three jobs waiting INDEPENDENTLY (API-verified) —
+  fix proven same hour. Lesson 2: a fine-grained PAT without the
+  **Workflow permission** pushes refs whose events GitHub never even
+  records (events API: two ReleaseEvents, ZERO PushEvents) — so release.yml
+  got no trigger at all; the "cascade key" was missing half its teeth. Fix:
+  owner granted Workflow:RW to release-bot + spec corrected estate-wide
+  (anvil README trap list, A12, AGENTS #4, INFRA callout); filter syntax
+  also moved from unverified regex-in-slashes to the DOCUMENTED glob
+  v*.*.*. Branches (a2c4fd7/0f95cb4/2dbef02) merged ONLY after the nine
+  envs existed — merging first would have failed open. Damage: zero (the
+  v0.1.0/v1.0.0 tags never reached vortex; cleanup: delete v0.1.0
+  release+tag, cosmetic). Mains: lumen 6da64c7, earendil 0643280, mellon
+  0455546; anvil d398094. First light now = one approval click (semver-patch
+  on lumen run #5 → v1.0.1 → the full cascade + build + first bump PR) or
+  the dispatch path (release.yml, tag: v1.0.0).
 - — (append deltas here: contract changes, deviations, new rulings)

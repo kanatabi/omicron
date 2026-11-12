@@ -9,8 +9,10 @@ Mental model (INFRA_ARCHITECTURE.md is the WHY; this is the HOW):
 
 ```
 merge (app repo) → CI gates ONLY — a merge never deploys anything
-merge to main parks THREE approval jobs (semver-patch|minor|major) on the
-protected `release` environment → the human approves EXACTLY ONE → that job
+merge to main parks THREE approval jobs (semver-patch|minor|major), EACH on
+its own protected environment (release-patch|release-minor|release-major —
+NEVER shared: one environment approval releases every job waiting on it)
+→ the human approves EXACTLY ONE → that job
 pushes the v-tag via RELEASE_BOT_PAT (a default-token tag never cascades) →
 the tag push triggers release.yml: build → ghcr.io/kanatabi/<app>:vX.Y.Z →
 bump PR in vortex (deploy-bump label, fenced) → merge → Argo CD syncs vortex
@@ -460,12 +462,18 @@ Prerequisite owner one-timers (once, DONE as of 2026-11-13 except #1):
    `ImagePullBackOff: unauthorized` the moment a v-tag pin syncs. Either flip
    each package to public (recommended — images are non-secret artifacts) or
    wire `ghcr-pull` docker secrets + `imagePullSecrets` per namespace (B5).
-2. **`release` environment with required-reviewer = self**, per app repo.
-   PROVEN live 2026-11-13: lumen's first approval-jobs run parked in
-   `waiting` — protection exists, no fail-open. Re-check on any new repo.
-3. **`RELEASE_BOT_PAT`** (Contents:RW on the three app repos ONLY, 90-day
-   expiry) + **`VORTEX_BOT_PAT`** — both configured as repo secrets. Revoking
-   RELEASE_BOT_PAT is the emergency brake on ALL releasing.
+2. **Per-bump environments with required-reviewer = self** — NINE total:
+   `release-patch`, `release-minor`, `release-major` in each app repo.
+   NEVER share one environment between bump jobs: environment approvals are
+   BATCHED PER ENVIRONMENT (proven live 2026-11-13 — one approval of a
+   shared `release` env pushed v0.1.0 AND v1.0.0 at once). PROVEN fixed the
+   same day: lumen run #5 parked all three jobs `waiting` independently.
+   Re-check protection on any new repo.
+3. **`RELEASE_BOT_PAT`** (Contents:RW **and Workflow:RW** on the three app
+   repos ONLY, 90-day expiry) + **`VORTEX_BOT_PAT`** — both configured as
+   repo secrets. Without Workflow: the PAT's tag pushes create NO event and
+   nothing ever deploys (the first incident, proven via the events API).
+   Revoking RELEASE_BOT_PAT is the emergency brake on ALL releasing.
 4. **`DEPLOY_AUTOMERGE`** repo Variable on vortex: LEAVE ABSENT until you have
    watched ≥1 clean manual bump cycle; absent = off = every bump PR merges by
    human hands.
@@ -473,12 +481,14 @@ Prerequisite owner one-timers (once, DONE as of 2026-11-13 except #1):
 The flow (per release):
 
 1. Merge a PR to main (or push) → `ci.yml` runs gates (+ contract on earendil)
-   → **three jobs park on the `release` environment: `semver-patch`,
-   `semver-minor`, `semver-major`, amber "Waiting".** The merge itself deploys
+   → **three jobs park, EACH on its own environment: `semver-patch` on
+   `release-patch`, `semver-minor` on `release-minor`, `semver-major` on
+   `release-major`, all amber "Waiting".** The merge itself deploys
    nothing and releases nothing.
-2. Open the run, **approve EXACTLY ONE bump job** (Review deployments →
-   approve patch|minor|major; decline the other two — double-approve =
-   double-release, last merge wins, nothing corrupts). Approving the job IS
+2. Open the run, **approve ONE bump job** (Review deployments → the card
+   IS the job now; unapproved bump jobs simply expire at 24h — double-
+   approve of DIFFERENT envs = double-release, last merge wins, nothing
+   corrupts). Approving the job IS
    the release decision; the version = newest tag + that literal bump (no
    tags yet: patch|minor → `v0.1.0`, major → `v1.0.0` — **to be born at
    v1.0.0, approve `semver-major`**).
