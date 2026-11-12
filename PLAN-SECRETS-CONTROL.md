@@ -442,4 +442,32 @@ manual curl of every new endpoint against the live dev plane.
   (private packages ⇒ ImagePullBackOff at first v-tag sync; public recommended),
   then one watched manual cycle (suggest lumen major → v1.0.0) before any
   DEPLOY_AUTOMERGE exists.
+- 2026-11-13 (2) — **Phase 6c: approval-gated releases (the human-controlled
+  semver the owner asked for).** Model superseded once more, to its resting
+  shape: merge-to-main runs gates and PARKS THREE waiting jobs —
+  semver-patch|minor|major — on the protected `release` environment; a human
+  approves EXACTLY ONE (approving = the release decision, bump level literal,
+  zero derivation), the job pushes the annotated tag via the new
+  **RELEASE_BOT_PAT** (Contents:RW on the three app repos only — compartmented
+  from the vortex bump hand) **because a GITHUB_TOKEN-pushed tag never
+  cascades to another workflow: the silent no-deploy trap; push-release.sh
+  now REFUSES outright without the PAT — a red job beats a ghost release.**
+  The tag push fires release.yml: build (:vX.Y.Z + :latest alias) → deploy-
+  bump PR → fence → Argo. No gates in release.yml — the tag can only exist on
+  a gates(+contract)-green commit, so re-verification would be theater.
+  ci.yml gains a concurrency queue (no two runs compute the same next-version).
+  anvil @7183eb2; consumers lumen 63d4c7b, earendil fded870 (semver needs
+  gates AND contract — never release the blog against a drifted API), mellon
+  85bc42c; all 15 pins programmatically copied + byte-verified (the 39-char
+  incident is now doctrine: sed from rev-parse, never the transcript).
+  FAIL-OPEN WARNING recorded in anvil README + RUNBOOK A12 + every workflow
+  comment: a job referencing a NONEXISTENT environment gets it auto-created
+  UNPROTECTED — protection must predate the workflows. PROVEN the same hour:
+  lumen run #4 parked `waiting` on the first approval-model merge (verified
+  via public API from the workstation). Owner one-timers now done:
+  RELEASE_BOT_PAT, three `release` environments. Remaining: GHCR visibility
+  flips for earendil/mellon packages before their bump PRs merge; first
+  cascade (approve lumen semver-major → born v1.0.0) is the untested seam;
+  pre-existing lumen ci.yml hand-edit found uncommitted in the worktree,
+  stashed (`stash@{0}`) — superseded by feat/approval-jobs, owner may drop.
 - — (append deltas here: contract changes, deviations, new rulings)

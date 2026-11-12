@@ -9,12 +9,14 @@ Mental model (INFRA_ARCHITECTURE.md is the WHY; this is the HOW):
 
 ```
 merge (app repo) → CI gates ONLY — a merge never deploys anything
-release dispatch (human: patch|minor|major) → v-tag + GitHub release → image
-  built at the tag → ghcr.io/kanatabi/<app>:vX.Y.Z → bump PR in vortex
-  (deploy-bump label, fenced) → merge → Argo CD syncs vortex → ESO reads
-  kv/{app}/{env} from OpenBao → renders ConfigMaps/Secrets → pods roll.
-Only RELEASED TAGS reach the cluster — never branch builds, never :latest.
-Values live ONLY in Bao; Git ONLY templates.
+merge to main parks THREE approval jobs (semver-patch|minor|major) on the
+protected `release` environment → the human approves EXACTLY ONE → that job
+pushes the v-tag via RELEASE_BOT_PAT (a default-token tag never cascades) →
+the tag push triggers release.yml: build → ghcr.io/kanatabi/<app>:vX.Y.Z →
+bump PR in vortex (deploy-bump label, fenced) → merge → Argo CD syncs vortex
+→ ESO reads kv/{app}/{env} from OpenBao → renders ConfigMaps/Secrets → pods
+roll. Only RELEASED TAGS reach the cluster — never branch builds, never
+:latest. Values live ONLY in Bao; Git ONLY templates.
 ```
 
 Two public surfaces, ever: `gofar.id` (earendil) + `console.gofar.id` (mellon).
@@ -449,39 +451,55 @@ go run ./cmd/lumen driftcheck --strict-pin   # exits 1 while a pin is held
 
 ### A12. Day-2 — shipping a release (the only way anything deploys)
 
-Prerequisite owner one-timers (once per machine, not per release):
+Prerequisite owner one-timers (once, DONE as of 2026-11-13 except #1):
 
-1. **GHCR package visibility.** First push to `ghcr.io/kanatabi/<app>` creates
-   the package inheriting repo visibility; earendil/mellon/vortex are private,
-   so their first packages will be PRIVATE → the cluster gets
+1. **GHCR package visibility** (still open for earendil/mellon). First push to
+   `ghcr.io/kanatabi/<app>` creates the package inheriting repo visibility;
+   lumen is public → its package is public → cluster pulls anonymously.
+   earendil/mellon are PRIVATE repos → their first packages land private →
    `ImagePullBackOff: unauthorized` the moment a v-tag pin syncs. Either flip
-   each package to public (recommended — images are non-secret artifacts;
-   lumen is already a public repo) or wire `ghcr-pull` docker secrets +
-   `imagePullSecrets` per namespace (B5 has the shape).
-2. **`VORTEX_BOT_PAT`** exists in lumen/earendil/mellon (set during Phase 6).
-3. **`DEPLOY_AUTOMERGE`** repo Variable on vortex: LEAVE ABSENT until you have
+   each package to public (recommended — images are non-secret artifacts) or
+   wire `ghcr-pull` docker secrets + `imagePullSecrets` per namespace (B5).
+2. **`release` environment with required-reviewer = self**, per app repo.
+   PROVEN live 2026-11-13: lumen's first approval-jobs run parked in
+   `waiting` — protection exists, no fail-open. Re-check on any new repo.
+3. **`RELEASE_BOT_PAT`** (Contents:RW on the three app repos ONLY, 90-day
+   expiry) + **`VORTEX_BOT_PAT`** — both configured as repo secrets. Revoking
+   RELEASE_BOT_PAT is the emergency brake on ALL releasing.
+4. **`DEPLOY_AUTOMERGE`** repo Variable on vortex: LEAVE ABSENT until you have
    watched ≥1 clean manual bump cycle; absent = off = every bump PR merges by
    human hands.
 
 The flow (per release):
 
-```bash
-# from the app repo's Actions tab (or: gh workflow run release.yml -f bump=patch)
-# dispatch release.yml with bump = patch | minor | major   ← THIS is the deploy decision
-```
+1. Merge a PR to main (or push) → `ci.yml` runs gates (+ contract on earendil)
+   → **three jobs park on the `release` environment: `semver-patch`,
+   `semver-minor`, `semver-major`, amber "Waiting".** The merge itself deploys
+   nothing and releases nothing.
+2. Open the run, **approve EXACTLY ONE bump job** (Review deployments →
+   approve patch|minor|major; decline the other two — double-approve =
+   double-release, last merge wins, nothing corrupts). Approving the job IS
+   the release decision; the version = newest tag + that literal bump (no
+   tags yet: patch|minor → `v0.1.0`, major → `v1.0.0` — **to be born at
+   v1.0.0, approve `semver-major`**).
+3. The approved job pushes the annotated tag **via RELEASE_BOT_PAT** — never
+   with the default token: `GITHUB_TOKEN` events don't cascade, so a
+   "green" run would silently deploy nothing (`push-release.sh` refuses to
+   run without the PAT for exactly this reason).
+4. The tag push TRIGGERS `release.yml`: `publish-image` (ghcr `:vX.Y.Z` +
+   `:latest` alias — tooling only, a deploy pin must never reference it) →
+   `deploy-bump` opens the vortex PR (label `deploy-bump`, diff = the
+   `images:` stanza lines only). Vortex CI renders + validates; you merge
+   the first one(s) by hand; Argo (targetRevision HEAD) syncs.
 
-Then automatically: gates re-run on main → anvil `semver-release` computes the
-next tag from `git describe` (no tags yet: major→v1.0.0, minor/patch→v0.1.0 —
-so each repo's FIRST release is a hand-fired `major` ceremony) → tag pushed +
-GitHub release → `publish-image` builds AT the tag and pushes
-`ghcr.io/kanatabi/<app>:vX.Y.Z` (+ `:latest` alias — tooling/tests only, a
-deploy pin must never reference it) → `deploy-bump` opens the vortex PR
-(label `deploy-bump`, diff = the images: stanza lines only, thanks to the
-canonicalization commit). Vortex CI renders + validates; you merge the first
-one(s) by hand; Argo (targetRevision HEAD) syncs within its poll interval.
+**The fail-open check, every time you touch this machinery:** if those three
+jobs ever EXECUTE without a Waiting badge, the environment protection is
+gone — decline nothing, fix Settings → Environments first, trust no release
+in the meantime.
 
-- **Rollback** = `git revert` the bump commit in vortex, human PR, human merge.
-  No pipeline re-run needed; the old tag is immutable and still in ghcr.
+- **Rollback** = `git revert` the bump commit in vortex, human PR, human
+  merge — or re-run `release.yml` via "Run workflow" with the older tag
+  typed in (redeploy = release; the tag is immutable and still in ghcr).
 - **Verify** after sync: `kubectl --context minikube -n <ns> get pod -o
   jsonpath='{.items[*].spec.containers[*].image}'` reads `…:vX.Y.Z`, and lumen
   `/healthz` reports the stamped version (it now equals the tag).
@@ -643,10 +661,11 @@ PROVEN (tooling): anvil validate-all/diff-render/set-image-pr exercised
   diff passing the fence).
 
 STILL OPEN:
-- Phase 6 first-light: one real release dispatch (lumen `major` → v1.0.0
-  suggested) → gates → tag → publish → bump PR → (manual) merge → Argo sync
-  walkthrough. The release.yml plumbing has never executed — expect the first
-  run to teach something. Owner pre-flight in A12 (package visibility first).
+- Phase 6c first-light: APPROVE one waiting bump job on the lumen run
+  (semver-major to be born at v1.0.0) → PAT tag push → release.yml cascade →
+  bump PR → (manual) merge → first ghcr pull by the cluster. Lumen's
+  environment PROTECTION is already proven (run #4 parked `waiting`).
+  earendil/mellon GHCR packages must go public before their bump PRs merge.
 - ~~meili version drift~~ RESOLVED 2026-11-13: manifests bumped to v1.56.1
   (vortex 7e32ad4) to match compose/CI — what dev+CI test is what prod runs.
 - Part B (VPS) ordering — inherits every A lesson but has not run yet.
