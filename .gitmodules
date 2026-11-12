@@ -10,3 +10,6 @@
 [submodule "mellon"]
 	path = mellon
 	url = git@github.com:kanatabi/mellon.git
+[submodule "anvil"]
+	path = anvil
+	url = git@github.com:kanatabi/anvil.git
