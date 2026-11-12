@@ -585,7 +585,16 @@ ADDITIONALLY PROVEN across 2026-11-10/11 (the walk finished):
   package-layout resolvers; the runtime image now carries pruned prod
   node_modules — "self-contained build/" remains true for earendil).
 
+PROVEN (tooling): anvil validate-all/diff-render/set-image-pr exercised
+  against the real vortex tree (25-dir table GREEN; bump dry-run = 2-line
+  diff passing the fence).
+
 STILL OPEN:
+- Phase 6 first-light: one real app-merge → publish → bump PR → (manual)
+  merge → Argo sync walkthrough; GHCR package visibility decision;
+  DEPLOY_AUTOMERGE only after watching the manual cycle.
+- meili version drift: docker-compose pins v1.56.1, cluster manifests v1.10.0 —
+  reconcile before Part B (engine version changes search semantics).
 - Part B (VPS) ordering — inherits every A lesson but has not run yet.
 - Observability overlays on one node (excluded from the hub by design).
 - staging twin host (still `staging.ainurrofiq.com` in overlays/staging — prod

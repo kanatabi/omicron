@@ -397,4 +397,23 @@ manual curl of every new endpoint against the live dev plane.
   future browser-touching work: headless + synthetic events cannot see Chrome
   lifecycle semantics — tests must drive the real input pipeline, and the
   human browser is the last gate (owner verification pending on their Chrome).
+- 2026-11-12 — **Phase 6 executed: anvil (fifth submodule, @50e1257) + CI across
+  all four consumers.** anvil ships validate-all (+expected-kinds table,
+  generated from and re-verified against reality: 25 dirs), diff-render
+  (rendered-manifest diffs — reviewers see what Argo applies), set-image-pr
+  (bump branch + deploy-bump PR, dedupe, --dry-run proven), guarded
+  auto-merge (label ∧ head-prefix ∧ path-fence ∧ line-fence ∧ checks-green ∧
+  DEPLOY_AUTOMERGE=on — absent=OFF), and two composite actions with ZERO
+  third-party dependencies. En route discovery with teeth: kustomize edit
+  REWRITES files canonically → first bot diff would have tripped its own line
+  fence; fixed human-first via vortex canonicalization commit (seeded no-op
+  images: stanzas) — measured dry-run now diffs exactly two lines. Workflows
+  live: lumen/earendil/mellon gates + publish-and-pin on main; earendil gains
+  the live-contract job (real lumen + pg16.6 + meili v1.56.1 seeded corpus —
+  the program's first rule, automated); vortex validate + auto-merge wired
+  but switched OFF until the owner creates DEPLOY_AUTOMERGE. Owner one-timers
+  remaining: GHCR package visibility after first push (inherits repo
+  visibility), the variable itself, and the first real bump walkthrough.
+  Noted drift found on the way: compose pins meili v1.56.1, cluster manifests
+  v1.10.0 — reconcile before VPS (engine versions move search semantics).
 - — (append deltas here: contract changes, deviations, new rulings)
