@@ -462,13 +462,14 @@ Prerequisite owner one-timers (once, DONE as of 2026-11-13 except #1):
    `ImagePullBackOff: unauthorized` the moment a v-tag pin syncs. Either flip
    each package to public (recommended — images are non-secret artifacts) or
    wire `ghcr-pull` docker secrets + `imagePullSecrets` per namespace (B5).
-2. **Per-bump environments with required-reviewer = self** — NINE total:
-   `release-patch`, `release-minor`, `release-major` in each app repo.
-   NEVER share one environment between bump jobs: environment approvals are
-   BATCHED PER ENVIRONMENT (proven live 2026-11-13 — one approval of a
-   shared `release` env pushed v0.1.0 AND v1.0.0 at once). PROVEN fixed the
-   same day: lumen run #5 parked all three jobs `waiting` independently.
-   Re-check protection on any new repo.
+2. **Twelve per-purpose environments with required-reviewer = self**:
+   `release-patch`, `release-minor`, `release-major` AND `deploy` in each
+   app repo. NEVER share one environment between jobs: environment
+   approvals are BATCHED PER ENVIRONMENT (proven live 2026-11-13 — one
+   approval of a shared `release` env pushed v0.1.0 AND v1.0.0 at once).
+   PROVEN fixed the same day: lumen run #5 parked all three jobs `waiting`
+   independently. Re-check protection on any new repo (or use the deferred
+   provisioning design in anvil's README Backlog).
 3. **`RELEASE_BOT_PAT`** (Contents:RW **and Workflow:RW** on the three app
    repos ONLY, 90-day expiry) + **`VORTEX_BOT_PAT`** — both configured as
    repo secrets. Without Workflow: the PAT's tag pushes create NO event and
@@ -498,9 +499,27 @@ The flow (per release):
    run without the PAT for exactly this reason).
 4. The tag push TRIGGERS `release.yml`: `publish-image` (ghcr `:vX.Y.Z` +
    `:latest` alias — tooling only, a deploy pin must never reference it) →
-   `deploy-bump` opens the vortex PR (label `deploy-bump`, diff = the
-   `images:` stanza lines only). Vortex CI renders + validates; you merge
-   the first one(s) by hand; Argo (targetRevision HEAD) syncs.
+   `deploy-plan` runs AUTOMATICALLY and is the evidence: rehearses the bump
+   against real vortex main, prints current-pin → proposed-pin, the exact
+   diff, and a full manifest validation — pushing nothing. Read that job's
+   log (or the run summary) NOW, not later.
+5. `deploy` PARKS on the protected `deploy` environment. Approving it is
+   the deploy decision; the job re-validates BEFORE pushing and opens the
+   vortex PR (label `deploy-bump`, diff = `images:` stanza only —
+   born-validated). Vortex CI validates independently; **merge only when
+   `validate-manifests` is GREEN** (or make it a required status check on
+   vortex main — admin-enforcement off — and physics replaces discipline).
+   Argo (targetRevision HEAD) syncs within its poll interval.
+
+**Manifest edits do NOT ride this chain.** A replicas/resources/yaml change
+merged to vortex main syncs by ARGO ALONE (auto-sync, ~3 min) — nothing in
+GitHub needs retriggering; the deploy job's only power is the image PIN.
+The diff gate for manifest changes is the vortex PR itself (validate-
+manifests posts the RENDERED diff); live-vs-new is Argo's own Diff tab.
+PROVEN 2026-11-13: bump PR #4 (`lumen → v1.0.0`) merged via UI, Argo
+synced, pods read `ghcr.io/kanatabi/lumen:v1.0.0` — the estate's first ghcr
+deploy; a `v0.2.0` bump branch appeared from a tag push alone, proving the
+PAT+Workflow cascade fires on its own.
 
 **The fail-open check, every time you touch this machinery:** if those three
 jobs ever EXECUTE without a Waiting badge, the environment protection is
@@ -671,11 +690,13 @@ PROVEN (tooling): anvil validate-all/diff-render/set-image-pr exercised
   diff passing the fence).
 
 STILL OPEN:
-- Phase 6c first-light: APPROVE one waiting bump job on the lumen run
-  (semver-major to be born at v1.0.0) → PAT tag push → release.yml cascade →
-  bump PR → (manual) merge → first ghcr pull by the cluster. Lumen's
-  environment PROTECTION is already proven (run #4 parked `waiting`).
-  earendil/mellon GHCR packages must go public before their bump PRs merge.
+- PROVEN 2026-11-13: lumen deployed from a released tag end-to-end (bump PR
+  #4 merged via UI, Argo synced, pods on ghcr v1.0.0, cascade proven alive
+  via the v0.2.0 bump branch). REMAINING: close the four stale bump PRs
+  (v0.2.0 downgrade + three sha-era pre-doctrine branches); earendil's
+  release.yml mystery (two tags, zero deploy attempts — check its Actions
+  logs at next release); DEPLOY_AUTOMERGE decision after one informed-
+  deploy cycle (plan evidence → deploy approval) is watched end to end.
 - ~~meili version drift~~ RESOLVED 2026-11-13: manifests bumped to v1.56.1
   (vortex 7e32ad4) to match compose/CI — what dev+CI test is what prod runs.
 - Part B (VPS) ordering — inherits every A lesson but has not run yet.

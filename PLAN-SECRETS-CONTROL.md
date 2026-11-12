@@ -491,4 +491,38 @@ manual curl of every new endpoint against the live dev plane.
   0455546; anvil d398094. First light now = one approval click (semver-patch
   on lumen run #5 → v1.0.1 → the full cascade + build + first bump PR) or
   the dispatch path (release.yml, tag: v1.0.0).
+- 2026-11-13 (4) — **Phase 6e: informed deploys + the live-fire surprise.**
+  Owner ruled the bump-PR step must be a MANUALLY TRIGGERED, EVIDENCED act:
+  release.yml split `deploy` into deploy-plan (automatic rehearsal against
+  real vortex main — pin pre-flight + exact diff + full validation, writes
+  nothing; piped to the run summary for the human) and deploy (PARKS on a
+  new protected `deploy` environment; approval re-validates and opens the
+  PR — set-image-pr now REFUSES to push a render that fails validation,
+  --skip-validate emergency-only). anvil @259da81 (deploy-plan action +
+  validate-before-push + README Backlog recording the DEFERRED centralized-
+  settings design: provision/settings.yaml + estate-provision PAT; org
+  migration analyzed-and-declined for now; terraform rejected for plaintext
+  state). auto-merge guard #5 fail-open closed (empty check list was
+  passing when checks simply had not been created yet; now polls 3 min,
+  requires the check to EXIST and be SUCCESS). Consumers: lumen cfaeb8e,
+  earendil 5ec8bcc, mellon 9e1b2aa — 6/6 pins re-verified to the new anvil
+  SHA by all three agents, gates green, merges parked three fresh waiting
+  jobs per repo (CI-only changes — let them expire; approving would cut a
+  pointless release).
+  LIVE FIRE, discovered during the round (owner had been clicking in
+  parallel — good pressure test): bump PR #4 (`lumen → v1.0.0`) MERGED via
+  UI, Argo synced, pods verified running ghcr.io/kanatabi/lumen:v1.0.0,
+  /healthz ok — the estate's first ghcr deploy, and the first proof the
+  whole doctrine works. A `v0.2.0` bump branch appeared purely from a tag
+  push — cascade confirmed alive post-PAT-fix. Debris to close (owner):
+  open PRs for bump/lumen-v0.2.0 (same commit, LOWER version — merging
+  would downgrade the pin) and the three pre-doctrine `sha-*` bump PRs
+  (lumen-sha-202af5c, mellon-sha-cf9c545, mellon-sha-e230468 — Phase-6a
+  ship-era leftovers; sha-tags violate release-only, close unmerged).
+  earendil holds v0.1.0+v1.0.0 releases with NO bump branches — their
+  release.yml runs failed or skipped (private, unseen); releases-without-
+  deploys are legitimate doctrine states, revisit when earendil's first
+  real merge happens; its Actions logs then tell the story.
+  RUNBOOK A12 rewritten to plan/gate/open + "merge only when green" + the
+  manifest-edits-don't-need-GitHub correction; INFRA callout extended.
 - — (append deltas here: contract changes, deviations, new rulings)

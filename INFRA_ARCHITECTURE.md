@@ -827,9 +827,13 @@ kubectl apply -f bootstrap/apps-hub.yaml
 > `RELEASE_BOT_PAT` (Contents+Workflow perms; a `GITHUB_TOKEN` or Workflow-permissionless
 > tag-push never cascades — silent no-deploy) + mints
 > the GitHub release → **the tag push triggers `release.yml`**: `publish-image`
-> (`ghcr.io/kanatabi/<app>:vX.Y.Z`, `:latest` alias for tooling only) → `deploy-bump` PR
-> into vortex → fenced auto-merge behind the `DEPLOY_AUTOMERGE` variable (absent = off) →
-> Argo syncs. The yaml below is the superseded draft — kept for the kustomize-edit
+> (`ghcr.io/kanatabi/<app>:vX.Y.Z`, `:latest` alias for tooling only) →
+> `deploy-plan` prints the evidence (pin pre-flight + rendered diff + full
+> validation, writes nothing) → `deploy` PARKS on a second protected
+> environment (`deploy`) for the human → `deploy-bump` PR into vortex
+> (validated before push — born-validated) → fenced auto-merge behind the
+> `DEPLOY_AUTOMERGE` variable (absent = off) → Argo syncs.
+> The yaml below is the superseded draft — kept for the kustomize-edit
 > mechanics it explains; real wiring lives in each app repo's `.github/workflows/` and
 > `anvil/`. Rollback = human `git revert` of the bump commit, or re-dispatch release.yml
 > with an older tag.
