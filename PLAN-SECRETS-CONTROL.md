@@ -602,4 +602,24 @@ manual curl of every new endpoint against the live dev plane.
   the standing skip from the checklist); merging #7 before flipping it
   strands mellon pods in ImagePull. Sequence: package public -> label
   cycle -> auto-merge watched live.
+- 2026-11-13 (8) — **Phase 6i: the bolted-shut kill switch.** PR #8
+  (bump/earendil-v1.1.0) passed every fence and died on DEPLOY_AUTOMERGE —
+  not because it was off, but because the guard PROBED IT THROUGH AN API THE
+  WORKFLOW TOKEN CANNOT USE: 403 "Resource not accessible by integration"
+  is GitHub's design, not a misconfiguration; repo variables are reachable
+  in workflows ONLY via the vars context. The switch the owner had just
+  created was unreachable by its own reader — a bolted-shut box, discover-
+  able only when the first eligible PR hit it (fail-safe survived: bailed,
+  PR stayed with humans — the direction was right, the mechanism was dead).
+  Fix: vortex d77d4b2 passes vars.DEPLOY_AUTOMERGE into the guard step's
+  env (comment explains why the API is not the door); anvil 0b90ba4 reads
+  env first, keeps the API only as a manual-run fallback, and SANITIZES it
+  to literal on/off — the 403 error body once printed as the "value"; no
+  error object can masquerade as a verdict again. Mock battery covers all
+  three paths, including the exact production error JSON → <absent> →
+  silent bail. PR #8 gate: earendil package visibility FIRST (its v1.1.0
+  build made the package, private-by-inheritance — the same trap #7 nearly
+  was, and the mellon #7 merge proved the flip works), then remove+re-add
+  the deploy-bump label: fresh run, new env door, first AUTO-MERGE in
+  anger.
 - — (append deltas here: contract changes, deviations, new rulings)

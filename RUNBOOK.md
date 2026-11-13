@@ -730,10 +730,10 @@ PROVEN (tooling): anvil validate-all/diff-render/set-image-pr exercised
   anvil@9128181, vortex@b1f6789).
 
 STILL OPEN:
-- Owner's 15-second act (ready since anvil@9128181 + vortex@b1f6789):
-  vortex → Settings → Secrets and variables → Actions → Variables →
-  `DEPLOY_AUTOMERGE` = `on`; then WATCH the first auto-merged bump PR
-  live (guards: fence+label+terminal-green checks; kill switch = delete it).
+- DEPLOY_AUTOMERGE: ENABLED (variable exists; env door shipped — anvil
+  0b90ba4, vortex d77d4b2). Watch the FIRST auto-merge live: PR #8
+  (bump/earendil-v1.1.0) after (a) earendil package made PUBLIC and (b) a
+  remove+re-add of the deploy-bump label. Kill switch = delete variable.
 - Close the stale bump PRs in vortex: bump/lumen-v0.2.0 (downgrade-bait)
   + the three sha-era pre-doctrine ones.
 - earendil's release.yml mystery: two released tags, zero deploy attempts —
