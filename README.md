@@ -8,7 +8,7 @@ under `kanatabi/` and is pinned here by commit:
 | Blog frontend (SvelteKit SSR) | [`earendil/`](https://github.com/kanatabi/earendil) | The site itself — dev mode standalone (against a local lumen), or containerized via adapter-node (`Dockerfile`) for cluster deploys |
 | REST backend (LIVE — M1–M6 merged) | [`lumen/`](https://github.com/kanatabi/lumen) | Go API: read API on Meilisearch, admin API, media relay, Bao passthrough. ONE binary, role-split: `LUMEN_ROLE=admin` (the Control Plane: sessions, users, relay) \| `cms` (content planes) |
 | Admin portal (LIVE) | [`mellon/`](https://github.com/kanatabi/mellon) | Private UI for content + secrets management; UI-only doctrine (`mellon/DESIGN.md`) — relays to lumen, holds no credentials. Its routing table (`src/lib/api/routing.ts`) picks the upstream per path |
-| GitOps manifests | [`vortex/`](https://github.com/kanatabi/vortex) | The app-of-apps repo: `applications/` bases (shape only) + `environments/{foundation,staging,production}/` overlays (the env axis, the image-version homes) + three hub entrypoints |
+| GitOps manifests | [`vortex/`](https://github.com/kanatabi/vortex) | The app-of-apps repo: `bases/` (shape-only kustomize bases) + `environments/{foundation,staging,production}/` overlays (the env axis, the image-version homes) + three hub entrypoints |
 | Deployment toolkit | [`anvil/`](https://github.com/kanatabi/anvil) | Shared CI: validate-all (the structural truth battery), auto-merge fence, bump/semver/release actions — pinned by SHA in every consumer |
 
 The infra blueprint lives in this repo: [`INFRA_ARCHITECTURE.md`](INFRA_ARCHITECTURE.md)

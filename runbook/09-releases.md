@@ -96,7 +96,7 @@ purpose — the estate's software is exactly as versioned as you want).
 
 ## 4. Where versions live, and what the fence accepts
 
-**The bases pin NOTHING** (`applications/<app>/kustomization.yaml` carries
+**The bases pin NOTHING** (`bases/<app>/kustomization.yaml` carries
 no `images:` stanza — a fixture-proven kustomize fact: a base stanza
 OUTRANKS every env overlay, because the inner transform rewrites the
 image name before the outer one can match it, silently overriding the env

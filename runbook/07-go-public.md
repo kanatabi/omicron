@@ -105,7 +105,7 @@ kubectl -n cert-manager wait --for=condition=Available deploy/cert-manager --tim
 ```
 
 Exactly pinned v1.16.2 — the version the prereq comment in
-`applications/certificates/kustomization.yaml` names. One-time manual apply,
+`bases/certificates/kustomization.yaml` names. One-time manual apply,
 same class as Argo CD and the Zalando operator; the certificates app is
 already synced (ch. 04 — PRODUCTION hub wave 1) and has been *visibly
 waiting* for this Namespace to exist.
@@ -119,7 +119,7 @@ Cloudflare → My Profile → API Tokens → Create Token:
 Then it goes to the vault — `bao kv put kv/cert-manager/production
 CF_API_TOKEN=<that token>` (ch. 05 §6's replace-the-whole-map rule: one
 call, then re-verify the key set). From there the estate renders it with no
-human middleman: `applications/certificates/externalsecret.yaml` maps
+human middleman: `bases/certificates/externalsecret.yaml` maps
 `cert-manager/production::CF_API_TOKEN` → Secret **`cf-token`**, key
 **`api-token`**, namespace `cert-manager`, where the issuer's solver reads
 it. If you seeded this path before the token existed (ch. 05 does),
@@ -132,7 +132,7 @@ re-creates → syncs now (ch. 05 §8's timing trick).
 
 ### 3.3 What's already in Git (read, don't write)
 
-The old plan of hand-writing an issuer is retired — `applications/certificates/`
+The old plan of hand-writing an issuer is retired — `bases/certificates/`
 is the whole TLS story, synced by the `certificates` app:
 
 - **`issuer.yaml`** — ClusterIssuer `letsencrypt-prod`, dns01/Cloudflare
@@ -164,7 +164,7 @@ is the whole TLS story, synced by the `certificates` app:
   because left in place the ingress-shim would auto-create a *shadow*
   Certificate with its own Secret for the same hostnames, double-issuing
   against Let's Encrypt rate limits (the Secret-name match is the
-  whole binding; `applications/observability/ingress.yaml` was written
+  whole binding; `bases/observability/ingress.yaml` was written
   annotation-free from day one for the same reason).
 
 ✅ checks:
@@ -217,7 +217,7 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/grafana/production \
   GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=<from Access>"
 ```
 
-— exactly the four keys `applications/observability/externalsecret.yaml`
+— exactly the four keys `bases/observability/externalsecret.yaml`
 declares (remember: one put, whole map, re-verify). Then
 `kubectl -n observability delete externalsecret grafana-config grafana-secrets`
 (ES re-sync) and `kubectl -n observability rollout restart deploy/grafana`
@@ -236,9 +236,9 @@ answers "what may you touch".
 
 **If you choose `beacon.gofar.id` instead of `anor`:** exactly four places
 hold the name — (1) the DNS record (Act 1), (2) the `anor-gofar-id`
-Certificate's dnsNames/secretName in `applications/certificates/certificates.yaml`
+Certificate's dnsNames/secretName in `bases/certificates/certificates.yaml`
 + the `tls.secretName` binding in
-`applications/observability/ingress.yaml`, (3) the Access application
+`bases/observability/ingress.yaml`, (3) the Access application
 domain, (4) `GF_SERVER_ROOT_URL` in the vault. Rename all four in one
 sitting; the doc's examples use `anor`.
 
@@ -445,7 +445,7 @@ the edge, not the origin.)
 | **Google login box on `anor.gofar.id`** | **Access is working** — the guest list checked before Grafana was ever reached | not on the list? add the email to the one Access policy (Act 4) |
 | All sites 502/refused right after a DNS tweak | You grey-clouded a record → real IP exposed → ch. 02 firewall rejects the visitors | back to 🟠; `dig` must show CF IPs (Act 1.2) |
 | One hostname shows a browser privacy error | Its Certificate stuck; 90% = CF token expired/edited | `kubectl get certificate -A` + Act 3.4's dying-look recipe |
-| Certs fine but a NEW hostname never issues | Shadow-cert prevention working as designed — the shim annotation is removed in the env overlays; a bare Ingress gets nothing | add the Certificate in `applications/certificates/` (Git PR), don't re-add the annotation |
+| Certs fine but a NEW hostname never issues | Shadow-cert prevention working as designed — the shim annotation is removed in the env overlays; a bare Ingress gets nothing | add the Certificate in `bases/certificates/` (Git PR), don't re-add the annotation |
 | Blog unreachable to RSS readers/monitors but fine in browsers | "I'm Under Attack" left ON | panic button off — Act 2 |
 | Photos 404 while the site renders | `img` binding or `LUMEN_MEDIA_CDN_BASE` drift | Act 5's smoke test + `curl -sI` the URL |
 | Everything down, Cloudflare status green (tunnel variant) | `cloudflared` lost its outbound connection | `kubectl logs deploy/cloudflared` — the Level-2 shape fails *loudly at one pod* |

@@ -54,7 +54,7 @@ flowchart LR
 
 ## 3. Turning it on (already templated — GitOps like everything else)
 
-`applications/observability/` is the base (alloy, victoria-metrics, loki,
+`bases/observability/` is the base (alloy, victoria-metrics, loki,
 grafana, namespace, ingress, externalsecret — pinned images),
 `environments/foundation/observability/` is the plane view (placement
 collapse + the alerting file), and `apps/foundation/observability-app.yaml`
@@ -66,7 +66,7 @@ either env hub is applied — and the single stack serves **BOTH staging and
 production from day one**: Alloy relabels scrapes/logs with the pod's
 `omicron/env` label, and every dashboard filters by env (00a A10's fifth
 proof). The `anor` door's Certificate arrives with the certificates app
-(production hub wave 1, rendered by `applications/certificates/`).
+(production hub wave 1, rendered by `bases/certificates/`).
 *No manual installs* — on the VPS the stack is merged, not installed.
 
 **Sizing on the 4c/8G box:** VM retention **30d / ~10 Gi PVC**, Loki
@@ -92,16 +92,16 @@ annotations:
 
 lumen already does (admin port 9090, not public); structured stdout logs
 are picked up automatically. Grafana watches *itself* on its HTTP port —
-`prometheus.io/port: "3000"` in `applications/observability/grafana.yaml`
+`prometheus.io/port: "3000"` in `bases/observability/grafana.yaml`
 (dashboard-alert latency for the thing that watches everything else).
 The OTLP receiver is configured-but-waiting (the Go OTel SDK forward
 path — "add, not a rewrite" is the INFRA line; nothing to do today).
 
 ## 5. The door: `anor.gofar.id` — plumbing as verified in vortex
 
-- **Ingress** (`applications/observability/ingress.yaml`): Traefik,
+- **Ingress** (`bases/observability/ingress.yaml`): Traefik,
   host `anor.gofar.id`, TLS secret **`tls-anor`** — served by the
-  explicit `Certificate` in `applications/certificates/` (no
+  explicit `Certificate` in `bases/certificates/` (no
   ingress-shim annotation, or it would shadow-issue a duplicate).
 - **Service**: `grafana` ClusterIP, `port: 3000, targetPort: http`
   (verified in `grafana.yaml` — this is the port ch.11's tunnel uses).

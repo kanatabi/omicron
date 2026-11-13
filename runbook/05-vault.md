@@ -16,7 +16,7 @@ status: ritual incident-proven (rehearsal walk + two unseal drills); the
 > the vault at boot, and the vault is the single place to concentrate your
 > paranoia.
 
-The manifests already exist (`vortex/applications/openbao|external-secrets|
+The manifests already exist (`vortex/bases/openbao|external-secrets|
 secrets-plane`, brought up by chapter 04's FOUNDATION hub). This chapter
 is the **manual bootstrap** they can't self-start: the vault cannot unlock
 itself (the docs call this the bootstrap paradox, INFRA §5.6).
@@ -47,7 +47,7 @@ the day the pod's shell misbehaves (it has), the HTTP API saved the walk.
 ## 1. The vault comes up with the FOUNDATION hub (ch. 04), sealed
 
 You'll see: `openbao` pod Running in namespace `secrets` (Deployment
-`openbao`, Service `bao` — see `applications/openbao/openbao.yaml`), the
+`openbao`, Service `bao` — see `bases/openbao/openbao.yaml`), the
 store's `bao` ClusterSecretStore **not-Ready**, and the vault itself
 SEALED. **That is the expected state** — sealed vault = no values =
 nothing renders. This ritual runs *between* the manual applies: the env
@@ -194,7 +194,7 @@ X "export VAULT_TOKEN=$ROOT; bao write auth/approle/role/portal token_policies=p
 
 These few credentials are **k8s Secrets created by hand** — they unlock the
 store that would render them, so they can never ride it. The consumers'
-manifests name them: `applications/secrets-plane/clustersecretstore.yaml`
+manifests name them: `bases/secrets-plane/clustersecretstore.yaml`
 wants `external-secrets/bao-approle-credentials` with keys **`role-id` +
 `secret-id`**; the lumen family wants `lumen/lumen-bao-credentials` —
 **consumed meaningfully by lumen-admin only** now: `LUMEN_BAO_*` binds
@@ -283,7 +283,7 @@ Order trap: Patroni (the Zalando operator, ch. 04 §2) **generates** the DB
 user passwords itself at cluster creation. The vault seeds *from* them, not
 the other way around. The foundation `lumen-db` overlay declares ONE
 Patroni cluster (`lumen-pg`, ns `db`) with **THREE logical databases +
-owner users** in `applications/lumen-db/postgresql.yaml`:
+owner users** in `bases/lumen-db/postgresql.yaml`:
 
 | database | owner user | consumer | vault path holding the DSN |
 | :-- | :-- | :-- | :-- |
@@ -293,7 +293,7 @@ owner users** in `applications/lumen-db/postgresql.yaml`:
 
 The operator publishes each credential as a k8s Secret with its dotted
 naming — `<cluster>.<user>.credentials.postgresql.acid.zalan.do` (the
-operator's own convention, echoed in `applications/lumen-db/postgresql.yaml`:
+operator's own convention, echoed in `bases/lumen-db/postgresql.yaml`:
 `lumen-pg.db_user_admin`; if a secret name ever surprises you, list
 first: `kubectl -n db get secret -o name | grep db_user`):
 
@@ -329,7 +329,7 @@ machine-readable: `lumen config keys --role admin|cms`. Generate fresh
 values on the spot (`openssl rand -hex 16|32`); reuse nothing from the
 rehearsal. The paths are what the store mounts: `remoteRef: { key:
 lumen/staging }` + the `bao` store's `path: kv` =
-`kv/data/lumen/staging` (see `applications/secrets-plane/
+`kv/data/lumen/staging` (see `bases/secrets-plane/
 clustersecretstore.yaml`).
 
 **Seed order: `shared` first** (lumen-admin boots with foundation wave 2,
@@ -456,8 +456,8 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/production \
 
 | kv path | Keys | Declared by |
 |---|---|---|
-| `kv/grafana/production` | `GF_SERVER_ROOT_URL` `GF_SECURITY_ADMIN_PASSWORD` `GF_AUTH_GENERIC_OAUTH_CLIENT_ID` `GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET` | `applications/observability/externalsecret.yaml` (rendered by the FOUNDATION overlay — the one Grafana door serves BOTH envs) |
-| `kv/cert-manager/production` | `CF_API_TOKEN` | `applications/certificates/externalsecret.yaml` |
+| `kv/grafana/production` | `GF_SERVER_ROOT_URL` `GF_SECURITY_ADMIN_PASSWORD` `GF_AUTH_GENERIC_OAUTH_CLIENT_ID` `GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET` | `bases/observability/externalsecret.yaml` (rendered by the FOUNDATION overlay — the one Grafana door serves BOTH envs) |
+| `kv/cert-manager/production` | `CF_API_TOKEN` | `bases/certificates/externalsecret.yaml` |
 | `kv/meilisearch/production` | `MASTER_KEY` (mirror — see note) | *(no ES yet — note below)* |
 
 ```bash
@@ -482,7 +482,7 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$ME
 
 > **Meilisearch's special case:** its Deployment reads
 > `search/meilisearch-master-key` (key `master-key`,
-> `applications/meilisearch/deployment.yaml`) — and **no ExternalSecret
+> `bases/meilisearch/deployment.yaml`) — and **no ExternalSecret
 > renders that Secret yet** (the manifest comment says "eventually via
 > ExternalSecret/OpenBao"; today it's `optional: true` so the pod can boot
 > unkeyed, which production must not do). So: pick ONE `$MEILI_KEY` (the
@@ -575,7 +575,7 @@ Chapter 06 picks the story up there.
   skip its error backoff. All-ES-red = sealed-vault signature; trust
   `describe`'s *Last Transition Time* to date the incident, not `get`'s
   misleading "last sync". (The pod's liveness probe deliberately ignores
-  seal state — see the war comment in `applications/openbao/openbao.yaml` —
+  seal state — see the war comment in `bases/openbao/openbao.yaml` —
   so the pod being alive *while sealed* is you being able to exec the
   unseal into it.)
 - **Rotation:** values change in Bao → ES re-renders on refresh (1h) → pods

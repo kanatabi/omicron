@@ -49,7 +49,7 @@ a rumor, same doctrine as the restore drill.)
       is Ready: `kubectl get certificates -A` — **five** live (production's
       three + staging's two), each in its workload's namespace —
       earendil / mellon / observability, per
-      `applications/certificates/certificates.yaml`
+      `bases/certificates/certificates.yaml`
 - [ ] **"Under Attack mode" still OFF?** (ch.07 — the panic switch is
       never a lifestyle; if it's on, note the date it was earned)
 - [ ] OS: `apt list --upgradable` glance (unattended handles security;

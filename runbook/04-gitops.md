@@ -15,7 +15,7 @@ status: fully proven on the rehearsal cluster (walk ledger) — same commands
 > philosophy.
 
 The apps' YAML already exists — ESO-free, pin-free **bases** under
-`vortex/applications/`, the **environment axis** under
+`vortex/bases/`, the **environment axis** under
 `vortex/environments/{foundation,staging,production}/` (the env overlays are
 the ONLY image-version homes), fleet pointers under `vortex/apps/
 {foundation,staging,production}/` (Application CRs only), and the manual
@@ -59,8 +59,8 @@ today), plus exactly **three** pinned one-time installs:
 | What | Pin | Command (from a cloned `vortex`) | Why it can't ride the hub |
 |---|---|---|---|
 | **Argo CD** | v3.6.1 | `kubectl apply -k platform/argocd/ --server-side --force-conflicts` | the robot can't host itself |
-| **Zalando postgres-operator** | v1.13.0 | `kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/v1.13.0/manifests/operator-manifests.yaml` (pinned in the header comment of `applications/lumen-db/postgresql.yaml`) | the CRD that defines `postgresql.yaml` must exist before any app applies it |
-| **cert-manager** | v1.16.2 | `kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml` (prereq comment in `applications/certificates/kustomization.yaml`) | its CRDs gate the certificates app; Namespace ships with the install, deliberately untracked |
+| **Zalando postgres-operator** | v1.13.0 | `kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/v1.13.0/manifests/operator-manifests.yaml` (pinned in the header comment of `bases/lumen-db/postgresql.yaml`) | the CRD that defines `postgresql.yaml` must exist before any app applies it |
+| **cert-manager** | v1.16.2 | `kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml` (prereq comment in `bases/certificates/kustomization.yaml`) | its CRDs gate the certificates app; Namespace ships with the install, deliberately untracked |
 
 Anything else you catch yourself `kubectl apply`-ing to the cluster is a
 bug in this document — tell the next reader.
@@ -113,7 +113,7 @@ kubectl apply -f bootstrap/apps-hub-staging.yaml      # act 3 (optional): the st
 > numbers *inside* the fleet; with the hub set, it lives in the entrypoints
 > — chapter 05 slots between the applies, so the application planes have
 > never existed yet when the vault is empty. Adding an app = new YAML under
-> `applications/<app>/` (+ `environments/<env>/<app>/` overlays as the app
+> `bases/<app>/` (+ `environments/<env>/<app>/` overlays as the app
 > needs envs) + a new Application CR in the hub dir its plane belongs to;
 > the hub dirs never get raw manifests (their prune would delete them).
 
@@ -264,7 +264,7 @@ ignoreDifferences:
 
 - **Image pins live ONLY in the environment overlays** —
   `environments/<env>/<app>/kustomization.yaml` (`images:` stanza) — and are
-  changed only by the release chain. The bases in `applications/`
+  changed only by the release chain. The bases in `bases/`
   deliberately pin NOTHING: a fixture-proven kustomize fact says a base
   `images:` stanza OUTRANKS every env overlay (the inner transform rewrites
   the name before the outer can match), so a base pin would silently

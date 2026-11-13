@@ -87,7 +87,7 @@ real public ghcr v-tags (no placeholder builds / image imports anymore).
    (amendments 2026-11-13/14, runbook/06–09 + `runbook/00a` for order)
 5. **App-of-apps shape:** `apps/foundation/` + `apps/applications/` (and the
    Part-C `apps/`) contain ONLY Argo `Application` CRs; raw manifests
-   under `applications/<name>/`; each hub syncs its folder non-recursively.
+   under `bases/<name>/`; each hub syncs its folder non-recursively.
    Adding an app = new dir + new Application CR, never hub edits. Bases stay ESO-free (k3d invariant)
    AND carry NO image pins (2026-11-13 convergence: a base `images:` stanza
    outranks every env overlay in kustomize — fixture-proven; env trees are

@@ -106,7 +106,7 @@ Let's Encrypt cert, Full strict). Responses travel back out the same path.
 > CD needs **no repo credentials**: there is nothing to protect in the clone.
 > The structure itself is checkable: `anvil`'s validate-all asserts every
 > config-shaped value is absent from Git, and its table reads **23 dirs
-> GREEN** against the shipped shape — the `applications/` bases plus every
+> GREEN** against the shipped shape — the `bases/` tree plus every
 > `environments/{foundation,staging,production}/*` overlay
 > (`../anvil/bin/expected-kinds.txt`). Break the iron law and CI says so.
 

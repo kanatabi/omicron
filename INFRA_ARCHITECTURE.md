@@ -602,7 +602,7 @@ netbird` for admin access):
    ```
 
 3. **Meilisearch (namespace `search`), internal-only:** scaffolded in Git —
-   [`applications/meilisearch/`](vortex/applications/meilisearch/), synced as the
+   [`bases/meilisearch/`](vortex/bases/meilisearch/), synced as the
    `meilisearch` Application.
    - Deployment pinned `getmeili/meilisearch:v1.10.0`, `nodeSelector: { node-pool: edge }`,
      PVC 5 Gi, `MEILI_DB_PATH=/data`; exposes Prometheus metrics (annotated for Alloy).
@@ -622,7 +622,7 @@ netbird` for admin access):
 > [`runbook/10-observability.md`](runbook/10-observability.md); the
 > multi-worker budget table below stays the Part-C scale-out story.
 
-Scaffolded in Git: [`applications/observability/`](vortex/applications/observability/)
+Scaffolded in Git: [`bases/observability/`](vortex/bases/observability/)
 — synced by the hub as the `observability` Application.
 
 **Agent topology (the decision that matters on 4 GB workers):** Alloy is a
@@ -792,7 +792,7 @@ vortex/
 │   ├── apps-hub-staging.yaml      # #3: syncs apps/staging/ (same or another cluster)
 │   └── apps-hub.yaml              # 3-node BLUEPRINT hub (future scale-out shape)
 ├── apps/{foundation,production,staging}/   # Application CRs ONLY, one dir per hub
-├── applications/                  # raw manifests (bases), one kustomize dir per app —
+├── bases/                          # raw manifests (bases), one kustomize dir per app —
 │   │                              # ESO-free AND image-pin-free (shape only)
 │   ├── earendil/  mellon/  lumen/  lumen-db/  observability/  meilisearch/
 │   ├── openbao/   secrets-plane/  certificates/  external-secrets/
@@ -844,7 +844,7 @@ kubectl apply -f bootstrap/apps-hub-foundation.yaml
 kubectl apply -f bootstrap/apps-hub-production.yaml   # and/or -staging
 ```
 
-Adding an app = new `applications/<app>/` base (+ env overlays as needed) +
+Adding an app = new `bases/<app>/` base (+ env overlays as needed) +
 a new Application CR in the hub dir its plane belongs to — never a hub edit,
 never raw manifests in a hub dir (their prune would delete them).
 
@@ -985,7 +985,7 @@ jobs:
           # GHCR requires lowercase org/repo names; github.repository may not be.
           NEW_IMAGE: ghcr.io/${{ github.repository }}:${{ needs.build-and-push.outputs.version }}
         run: |
-          cd applications/lumen/
+          cd bases/lumen/
           kustomize edit set image lumen=$(echo "$NEW_IMAGE" | tr '[:upper:]' '[:lower:]')
           git config user.name "GitHub Actions Bot"
           git config user.email "bot@github.com"
@@ -1001,7 +1001,7 @@ jobs:
 
 **Longer-term alternative:** Argo CD **Image Updater** watches GHCR tags directly and patches the Application's image parameter in-cluster — removes the manifest-commit hop and the PAT. Consider once more than 2–3 services ship.
 
-**Frontend deploys the same way:** the `sv-fzr` repo uses an identical workflow (it already ships a production `Dockerfile` for adapter-node), pointed at `applications/earendil/` and `kustomize edit set image earendil=…`. Only the manifests dir and image name differ.
+**Frontend deploys the same way:** the `sv-fzr` repo uses an identical workflow (it already ships a production `Dockerfile` for adapter-node), pointed at `bases/earendil/` and `kustomize edit set image earendil=…`. Only the manifests dir and image name differ.
 
 ---
 
@@ -1060,7 +1060,7 @@ them into workloads.
    editor + true-to-prod preview, secrets control plane (CAS + history + pin-as-intent
    D1 + restore-by-overlay D2 + app onboarding; PLAN-SECRETS-CONTROL.md).
    Light/dark parity day one. DONE on branches; merges per owner review.
-3. **Vortex:** `applications/lumen/` + `applications/mellon/` (ESO-free bases) with
+3. **Vortex:** `bases/lumen/` + `bases/mellon/` (ESO-free bases) with
    `overlays/{staging,production}/…` and `apps/` Application CRs. Mellon gets its
    ClusterIP service **plus an IngressRoute on Traefik** for `console.gofar.id` with the
    Phase-3 `console-headers` + `console-ratelimit` middlewares attached (§2 amendment,
@@ -1165,7 +1165,7 @@ exist by the Naming contract (vortex README).
 One template per app, in the manifests repo — values-free, synced by Argo like anything else:
 
 ```yaml
-# applications/earendil/externalsecret.yaml
+# bases/earendil/externalsecret.yaml
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata: { name: frontend-config, namespace: earendil }
@@ -1257,7 +1257,7 @@ PUT    /v1/kv/data/<app>/<env>  (cas=0)     # create-if-absent = onboard (trio) 
 
 ### 5.6 Bootstrap, unsealing, and DR-critical seeds
 
-Deploy order: **all three pieces are now scaffolded** — [`applications/openbao/`](vortex/applications/openbao/)
+Deploy order: **all three pieces are now scaffolded** — [`bases/openbao/`](vortex/bases/openbao/)
 (app `secrets`, worker-2, 1 Gi PVC, file storage; the header comment is the full
 init/unseal/AppRole command list), `apps/external-secrets-app.yaml` (Argo-managed **OCI
 Helm chart** on worker-1, pinned **chart 2.15.0** — operator and chart share one version
@@ -1266,7 +1266,7 @@ the stale 0.1.4 placeholder, and all our CRs already use the stable
 `external-secrets.io/v1`; requires one manual `kubectl create ns external-secrets`;
 deliberately not a kustomize+helmCharts dir so repo validation stays helm-free — the
 CR carries the first-sync checklist: kubeVersion vs k3s, `helm show values` key audit), and
-[`applications/secrets-plane/`](vortex/applications/secrets-plane/)
+[`bases/secrets-plane/`](vortex/bases/secrets-plane/)
 (`ClusterSecretStore bao`, sync-wave 1 — self-heals via Argo retry while ESO CRDs land).
 Sequence: hub syncs openbao + external-secrets (wave 0) → _manual first-time_: init,
 unseal, enable `kv` v2 mount, create AppRoles/policies → seed the first values +

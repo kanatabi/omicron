@@ -96,7 +96,7 @@ Four things, in order, and none of them names the app in a script:
    at day ~75 (ch. 12). And the note on `DEPLOY_AUTOMERGE`: the vortex
    repo variable that arms auto-merge; absent = off = the kill switch
    (ch. 09 §4).
-3. **vortex manifests** — `applications/<app>/` base (**shape only: NO
+3. **vortex manifests** — `bases/<app>/` base (**shape only: NO
    `images:` stanza — a base pin outranks every env overlay, the
    fixture-proven kustomize fact that made bases pin-free**, ESO-free,
    no inline config literals) + `environments/<env>/<app>/` overlays:

@@ -84,7 +84,7 @@ them):
 
 **Port audit (re-checked 2026-11-13, the old table's bug is gone):**
 the grafana Service is `port: 3000, targetPort: http` in
-`vortex/applications/observability/grafana.yaml` — the old doc's
+`vortex/bases/observability/grafana.yaml` — the old doc's
 `tunnel grafana observability 3000 80` would have forwarded to a port
 that doesn't exist. Argo's server service is the standard `443` from
 the pinned upstream install (remote-pinned, so not greppable in-repo —
