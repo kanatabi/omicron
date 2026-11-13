@@ -580,4 +580,26 @@ manual curl of every new endpoint against the live dev plane.
   (terminal-state poll, SUCCESS-only), vortex b1f6789 (contents:write,
   scoped and documented). Switch is now owner's 15-second act; first
   auto-merged PR gets watched live.
+- 2026-11-13 (7) — **Phase 6h: the auto-merge name-contract bug, found by
+  its first real patient.** Owner enabled DEPLOY_AUTOMERGE and released
+  mellon v1.0.0 — PR #7 (bump/mellon-v1.0.0) correctly stayed open: the
+  guard's log said `validate-manifests not green (<never created>)`, and
+  archaeology of the two workflows found the true bug: check-run NAMES come
+  from the JOB, and vortex's job id was `validate` — the guard had been
+  polling a name that never existed. The v1 fail-open (empty=proceed) had
+  been MASKING this on every PR; my fail-open fix converted silent-pass into
+  loud-ineligibility — a bug found by fixing its hiding place, again.
+  Fixes cold: anvil 7976886 (guard accepts both `validate` and
+  `validate-manifests`, 15-min terminal poll, dumps observed check names on
+  bail — this class is now self-diagnosing); vortex dede983 (job gets an
+  explicit `name: validate-manifests` + a do-not-rename warning comment; pin
+  swept). Mock battery replayed PR #7's exact shape: all six guards GREEN,
+  dry-run merge decision, exit 0. Re-trigger path for #7: fix the mellon
+  package visibility FIRST (see below), then remove+re-add the deploy-bump
+  label — the `labeled` event runs the guard fresh (workflow reads anvil
+  main-tip by design, no re-pin). NEW OWNER DEBT surfaced by this same
+  release: ghcr.io/kanatabi/mellon is PRIVATE (private repo inheritance —
+  the standing skip from the checklist); merging #7 before flipping it
+  strands mellon pods in ImagePull. Sequence: package public -> label
+  cycle -> auto-merge watched live.
 - — (append deltas here: contract changes, deviations, new rulings)
