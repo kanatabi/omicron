@@ -65,7 +65,7 @@ Memory limits must stay **below** allocatable RAM (node OS + kubelet reserve ~50
 
 ```mermaid
 flowchart LR
-  V["Visitors"] -->|"HTTPS ainurrofiq.com"| DNS["Public DNS<br/>A record"]
+  V["Visitors"] -->|"HTTPS gofar.id"| DNS["Public DNS<br/>A record"]
   DNS --> TF["Traefik edge<br/>worker-2 · TLS"]
   TF --> FE["Earendil (SSR pods) ×2<br/>worker-1 & worker-2"]
   FE -->|"SSR page loads:<br/>API_BASE (internal DNS)"| API["Lumen http-server ×2<br/>(+ worker ×1)"]
@@ -153,8 +153,13 @@ _always_ serves the laptop→cluster admin path regardless of that choice.
 
 Managed via your external DNS provider (Cloudflare, Namecheap, Route53, etc.):
 
-- **A Record:** `ainurrofiq.com` ➔ `[Biznet Gio Public IP]`
-- **Wildcard CNAME / A Record:** `*.ainurrofiq.com` ➔ `[Biznet Gio Public IP]`
+> **Amended 2026-11-11 (cutover, verified live):** the live public records are
+> `gofar.id` + `www.gofar.id` (www is production-only) behind the Cloudflare
+> proxy — walk-through in runbook/07. The `ainurrofiq.com` bullets below are
+> the pre-cutover history; the old domain 301s in.
+
+- **A Record:** `ainurrofiq.com` ➔ `[Biznet Gio Public IP]` *(pre-cutover)*
+- **Wildcard CNAME / A Record:** `*.ainurrofiq.com` ➔ `[Biznet Gio Public IP]` *(pre-cutover)*
 - **Console (amended 2026-11-08):** `console.gofar.id` ➔ the Traefik edge node's public IP (a lone A record is enough; wildcards were never required for certificates) — resolves BEFORE first issuance, same ordering constraint below — and only AFTER GATE #10 clears
 - **Routing:** Traefik Ingress receives traffic on ports 80/443 and terminates SSL via `cert-manager` (ACME HTTP-01 challenge).
 - **Ordering constraint:** public DNS records must resolve to all node IPs (or the egress node running Traefik) **before** first certificate issuance, or HTTP-01 solvers will fail.
@@ -697,8 +702,10 @@ RED dashboards exist for every service even before apps instrument themselves.
    kubectl get nodes        # sanity check before touching anything else
    ```
 
-3. **Clone this repo and set the remaining placeholders** (`ainurrofiq.com` hosts) in
-   `bootstrap/`, `apps/`, and `applications/*/kustomization.yaml` — then:
+3. **Clone this repo** — no placeholders remain: the `repoURL`s are real
+   (2026-11-10), the production hosts are live (`gofar.id` + `www`, cutover
+   2026-11-11), and staging's contractual hosts live in the env overlays'
+   authored ingresses (`environments/<env>/<app>/ingress.yaml`) — then:
 
 4. **Apply the overlay (self-hosting bootstrap — the one manual apply):**
 

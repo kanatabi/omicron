@@ -140,19 +140,24 @@ real public ghcr v-tags (no placeholder builds / image imports anymore).
 
 ## Placeholders — what's real vs still open
 
-`staging.ainurrofiq.com` remains the wired staging host (owner call to rename); the
+Staging hosts are contractual `staging.gofar.id` + `staging-console.gofar.id`
+(vortex README; DNS records + vault seeds land when staging goes live on a
+real cluster); the
 earendil PRODUCTION ingress was cut over to `gofar.id` + `www.gofar.id` on 2026-11-11
 (vortex 7b2c5cc, verified live) — do not revert that either. `repoURL`s are REAL too as of 2026-11-10 — repointed to
 `https://github.com/kanatabi/vortex.git` when the manifests repo moved org+name (the
 old `cavadevop/k8s-platform-manifests` was the last cluster-breaking placeholder).
-The `ORIGIN` env is DEAD (2026-11-10 ruling: no reader anywhere; dropped from base
-env + ExternalSecrets — re-add only WITH its consumer). Still open:
+The `ORIGIN` env: dropped 2026-11-10 with no reader, then RE-ADOPTED WITH its
+reader per the with-its-consumer clause (earendil `resolveOrigin` → JSON-LD
+canonical; vortex earendil ES data lines render it per env, seeded from Bao).
+Still open:
 Bao kv seeds (`lumen/{env}`, `earendil/{env}` values — per-cluster, seeded at
-bootstrap per RUNBOOK), the staging Application CRs (overlay dirs exist; CRs land
-when a staging target is wired). The first live walk of RUNBOOK Part A is DONE
+bootstrap per RUNBOOK) plus the staging DNS records and vault seeds
+(`kv/{app}/staging`, `kv/lumen/shared`) — the staging Application CRs +
+`bootstrap/apps-hub-staging.yaml` have LANDED (staging hub live; first bump
+#17 proved the ladder). The first live walk of RUNBOOK Part A is DONE
 (2026-11-11: estate green on minikube, login both postures proven; §5 of the
-runbook lists what remains open — Part B/VPS ordering, observability sizing,
-the gofar.id ingress cutover). RESOLVED 2026-11-10: `REPLACE_AT_BOOTSTRAP` —
+runbook lists what remains open — Part B/VPS ordering, observability sizing). RESOLVED 2026-11-10: `REPLACE_AT_BOOTSTRAP` —
 the ESO appRole now takes BOTH ids from the bootstrap Secret (`roleRef`, verified
 against the 2.15.0 CRD); no cluster-specific literals in Git anymore.
 

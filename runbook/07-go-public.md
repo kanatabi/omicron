@@ -157,14 +157,13 @@ is the whole TLS story, synced by the `certificates` app:
   90/30 days are written 2160/720 hours (the file comments them `# 90d` and
   `# 30d` so nobody re-derives it).
 - **Why explicit Certificates instead of the annotation:** the env overlays
-  (`environments/production/earendil/kustomization.yaml`,
-  `environments/production/mellon/kustomization.yaml` — and their staging
-  twins) carry a JSON6902 `- op: remove` of the base's
-  `cert-manager.io/cluster-issuer` annotation —
+  author their Ingresses ANNOTATION-FREE — each
+  `environments/<env>/<app>/ingress.yaml` states hosts, backend service name
+  and `tls.secretName` final (env-model ingress retirement, 2026-11-14; the
+  bases carry no Ingress at all anymore) —
   because left in place the ingress-shim would auto-create a *shadow*
   Certificate with its own Secret for the same hostnames, double-issuing
-  against Let's Encrypt rate limits — and replace `spec.tls` with the
-  explicit `tls.secretName` binding above (the Secret-name match is the
+  against Let's Encrypt rate limits (the Secret-name match is the
   whole binding; `applications/observability/ingress.yaml` was written
   annotation-free from day one for the same reason).
 
