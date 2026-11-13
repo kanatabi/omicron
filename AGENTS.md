@@ -127,8 +127,10 @@ against the 2.15.0 CRD); no cluster-specific literals in Git anymore.
 
 ## Pointers
 
-- **RUNBOOK.md (this root)** — the single-node operating procedure: minikube
-  rehearsal = 1-VPS production shape; the waves enforce its ordering structurally.
+- **`runbook/` (this repo)** — THE operating procedure: VPS-first,
+  provider-neutral, junior-readable (start at `runbook/00-overview.md`).
+  The minikube rehearsal that produced its claims lives in the archived
+  `RUNBOOK.md` at this root.
 
 - Production phases, unseal drills, quorum rationale: `INFRA_ARCHITECTURE.md`
 - Local end-to-end test script (placement, failover, selfHeal, proxy): `README.md` §5

@@ -1,0 +1,4 @@
+# superproject scratch + editor state
+.obsidian/
+*.swp
+.DS_Store

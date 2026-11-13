@@ -622,4 +622,33 @@ manual curl of every new endpoint against the live dev plane.
   was, and the mellon #7 merge proved the flip works), then remove+re-add
   the deploy-bump label: fresh run, new env door, first AUTO-MERGE in
   anger.
+- 2026-11-13 (9) — **GATE #9 CLOSED + the production runbook set shipped.**
+  Owner ruled media provider = Cloudflare R2 ($0 egress, one vendor for
+  DNS/guard/Access/media/backups; GATE #9's "provider choice" deferred
+  since M5). Executed as the CR pre-announced: vortex 94db3ca extends the
+  production lumen ES with the exact LUMEN_MEDIA_* family bound in
+  internal/config (CREATE_BUCKET deliberately absent — prod never
+  auto-creates cloud resources), lumen 8866e53 finalizes the sample-doc
+  family; validate-all 25 dirs GREEN. Owner rulings recorded in the same
+  breath (INFRA amendments adjacent to their superseded text): third
+  sanctioned human surface `anor.gofar.id` (alt `beacon`) — Grafana behind
+  CF proxy+challenge+Access, the no-public-API invariant untouched; admin
+  mesh = Tailscale (NetBird plan superseded); backups = restic→R2 own
+  bucket; Contabo-first provider direction, commands provider-neutral;
+  wizard fix deployed & live (v1.0.1 — ghost username field, form-shape
+  test + T-wiz10 harness tripwire shipped first).
+  Deliverable: **`runbook/`** — 14 Obsidian-ready chapters (00–13),
+  VPS-first, junior-tone with why-boxes, DNS records/challenges/certs +
+  maintenance story, vault bootstrap incl. the incident-proven non-tty
+  unseal line, releases chapter honestly flagging settle's production
+  decline (habit: decline two), media with the presigned option written
+  as an explicit PR-shaped upgrade-not-yet-needed, backup/DR with the
+  monthly restore drill, access roads (SSH-tunnel-first + Tailscale),
+  operations calendar with the five incident cards (each one we already
+  paid for), references. Old RUNBOOK carries the archive banner; AGENTS
+  pointer moved; .gitignore added for .obsidian/.
+  Status honesty: every VPS-specific step is drafted-from-rehearsal, and
+  the frontmatter says so — Part B's first walk converts claims to proof;
+  the calendar's first entry post-go-live is "update status markers after
+  each chapter walks green."
 - — (append deltas here: contract changes, deviations, new rulings)

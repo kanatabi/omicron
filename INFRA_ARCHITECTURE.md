@@ -361,6 +361,22 @@ netbird` for admin access):
    > the Bao plane, gated by mellon PLAN ledger #10). Phase 3 installs the edge
    > posture that makes the second one safe to expose.
 
+   > **Dashboard amendment (owner ruling 2026-11-13):** `anor.gofar.id`
+   > (Grafana; alternative name `beacon.gofar.id`) becomes the THIRD human
+   > surface — same 443 the edge already opens, no new listener, lockdown
+   > unchanged: **no public API ingress remains absolute** (lumen/Bao/search/
+   > DB/Argo/kubectl all stay private; 6443 firewall-denied at the host).
+   > Its safety layering is Cloudflare-managed → proxied DNS → managed
+   > challenge (whole host) → Access email allowlist → Grafana OIDC (Access
+   > = the identity; break-glass admin lives only on the tunnel path).
+   > In the same ruling the admin mesh becomes **Tailscale** (replacing the
+   > NetBird-agent assumption in the workload tables — client is open
+   > source, zero-ops hosted control plane, Headscale as later escape
+   > hatch; NetBird stays the answer if self-hosting the coordinator is a
+   > requirement). Media and backups settle on **Cloudflare R2** (GATE #9
+   > closed; restic→R2, separate bucket each). Operating procedure moved to
+   > `runbook/` — this doc remains the decision record it cites.
+
 5. **Label Nodes for Placement (used by GitOps overlays in later phases):**
    ```bash
    kubectl label node master-node node-pool=platform
@@ -580,6 +596,11 @@ netbird` for admin access):
 ---
 
 ### Phase 5: Observability — Grafana LGTM (+VM) with Alloy DaemonSet
+
+> Amended in practice 2026-11-13 → operational shape (single-node sizing,
+> `anor.gofar.id` door, family-lab roles, alert set) is written in
+> [`runbook/09-observability.md`](runbook/09-observability.md); the
+> multi-worker budget table below stays the Part-C scale-out story.
 
 Scaffolded in Git: [`applications/observability/`](vortex/applications/observability/)
 — synced by the hub as the `observability` Application.

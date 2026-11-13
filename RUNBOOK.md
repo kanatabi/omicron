@@ -1,3 +1,10 @@
+> **📦 SUPERSEDED 2026-11-13 → this file is now the REHEARSAL LOG & REFERENCE.**
+> The operating procedure lives in [`runbook/`](runbook/00-overview.md)
+> (VPS-first, provider-neutral, junior-readable, Obsidian-ready). Keep this
+> one open for what the new docs deliberately don't duplicate: minikube
+> quirks, walk-ledger incident details, and the archival A-steps the new
+> runbook's claims were rehearsed against.
+
 # RUNBOOK.md — bringing the omicron estate up on ONE node
 
 One document, two destinations: **Part A** runs the whole infra on your local

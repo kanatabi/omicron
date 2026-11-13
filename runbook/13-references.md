@@ -1,0 +1,71 @@
+---
+tags: [runbook, refs]
+updated: 2026-11-13
+---
+
+# 13 · References — the official docs behind every claim
+
+> **Why:** this runbook should be *checkable*, not faith-based. Every
+> pinned thing links to its source; when a version bumps deliberately,
+> these are the pages you re-read.
+
+## The cluster itself
+
+| Topic | Link |
+|---|---|
+| k3s install script & options (`--disable`) | https://docs.k3s.io/installation |
+| k3s channels/versioning | https://k3s.io / https://github.com/k3s-io/k3s/releases |
+| k3s storage class (local-path) | https://docs.k3s.io/storage |
+| Kubernetes concepts (for the junior reader: pods/Deployments/Services/Ingress) | https://kubernetes.io/docs/concepts/ |
+
+## Edge & doors
+
+| Topic | Link |
+|---|---|
+| Traefik helm chart (pinned 42.3.2) | https://doc.traefik.io/traefik/ + https://github.com/traefik/traefik-helm-chart |
+| Cloudflare: proxy vs DNS-only | https://developers.cloudflare.com/dns/manage-dns-records/reference/proxied-dns-records/ |
+| Cloudflare IP list (firewall input) | https://api.cloudflare.com/client/v4/ips (+ docs page) |
+| Managed challenges / WAF custom rules / Under Attack | https://developers.cloudflare.com/waf/managed-challenges/ · https://support.cloudflare.com/hc/articles/18680167876377 (Under Attack) |
+| Cloudflare Access (Zero Trust) incl. Grafana SaaS template | https://developers.cloudflare.com/cloudflare-one/applications/ · https://developers.cloudflare.com/cloudflare-one/applications/configure-apps/datasheet-grafana/ |
+| Cloudflare DNSSEC | https://developers.cloudflare.com/dns/dnssec/ |
+| cert-manager v1.16.x, DNS-01 Cloudflare solver | https://cert-manager.io/docs/ · https://cert-manager.io/docs/configuration/acme/dns01/cloudflare/ |
+| Let's Encrypt lifecycle (90d/renew-60) | https://letsencrypt.org/docs/a-warm-welcome-to-that-certificate-issuing-process/ |
+
+## GitOps & the machine
+
+| Topic | Link |
+|---|---|
+| Argo CD (pinned v3.6.1; SSA note) | https://argo-cd.readthedocs.io/ |
+| GitOps concepts | https://opengitops.dev/ |
+| kustomize (images: transformer used by bump PRs) | https://kubectl.docs.kubernetes.io/references/kustomize/builtins/ |
+| GitHub environments/required reviewers (the approval model) | https://docs.github.com/actions/deployment/environments |
+| Fine-grained PATs (Contents/Workflow/Actions perms — our three lessons) | https://docs.github.com/authentication/keeping-your-account-and-data-secure/about-fine-grained-personal-access-tokens |
+| Actions anti-recursion rule (why tags need a PAT) | https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idsteps-run (see "GITHUB_TOKEN" notes) & https://github.community/t/support-triggeringRepositoryPushEvents-in-github-token/11510 |
+| Repo variables NOT readable by GITHUB_TOKEN (the env-door lesson) | https://docs.github.com/actions/learn-github-actions/variables (limitations note) |
+| Zalando Postgres Operator v2.0.3 | https://postgres-operator.readthedocs.io/ |
+| External Secrets Operator 2.15.0 (Vault backend) | https://external-secrets.io/ |
+| OpenBao | https://openbao.org/docs/ (init/unseal/snapshot/approle pages) |
+| Meilisearch upgrade policy (v1.56.1) | https://www.meilisearch.com/docs/learn/welcome/update-meilisearch |
+| Grafana LGTM (Loki/Grafana/Tempo story + Alloy) | https://grafana.com/docs/alloy/ · https://grafana.com/docs/loki/ |
+| VictoriaMetrics single-binary | https://docs.victoriametrics.com/ |
+| Grafana auth proxy/OIDC (Access integration) | https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/generic-oauth/ |
+
+## Storage, backups, access roads
+
+| Topic | Link |
+|---|---|
+| Cloudflare R2 (S3 compat, $0 egress, custom domains, scoped tokens) | https://developers.cloudflare.com/r2/ |
+| restic (S3 backend, restore, check, forget) | https://restic.readthedocs.io/ |
+| age (file encryption used elsewhere in the estate) | https://age-encryption.org/ |
+| Tailscale (ACLs, kube-over-tailnet) | https://tailscale.com/kb/ |
+| Ubuntu hardening baseline (ssh config.d, ufw, unattended-upgrades) | https://documentation.ubuntu.com/server/how-to/security/ |
+
+## Estate-internal truth (where OUR decisions live, read before changing)
+
+| Question | Where |
+|---|---|
+| Why any of this is shaped this way | `../INFRA_ARCHITECTURE.md` (the decision record) |
+| What's proven vs open (walk ledger) | `../PLAN-SECRETS-CONTROL.md` + this folder's frontmatter |
+| Working rules for agents/devs | `../AGENTS.md` (workspace) + each child repo's AGENTS/DESIGN |
+| Rehearsal-era detail (minikube quirks) | `../RUNBOOK.md` (archived reference) |
+| API contract between apps | `../lumen/DESIGN.md` ⇄ `../earendil` client.ts |
