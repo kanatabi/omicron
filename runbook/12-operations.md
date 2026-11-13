@@ -43,8 +43,11 @@ a rumor, same doctrine as the restore drill.)
       **upload → `img.gofar.id` loads → delete** (ch.07's media flow).
 - [ ] **Restore drill** (ch.08 §5) — the one line that keeps backups
       honest; pass criterion is the `count(*)` sentence.
-- [ ] **Cloudflare-only firewall** (ch.02): re-pull CF IP ranges into
-      `/etc/cloudflare-v4.txt` (they change occasionally), `ufw reload`
+- [ ] **Cloudflare-only firewall** (ch.02): the CF ranges change
+      occasionally — `ufw reload` alone does NOT re-derive the per-CIDR
+      allow rules; run the refresh script (install it once below):
+      `sudo cf-firewall-refresh` → `ufw status numbered | head` still
+      shows a CF-shaped allow set, no strays
 - [ ] Cert-manager: nothing due (auto-renews) — confirm every Certificate
       is Ready: `kubectl get certificates -A` — **five** live (production's
       three + staging's two), each in its workload's namespace —
@@ -56,6 +59,28 @@ a rumor, same doctrine as the restore drill.)
       you handle the *reboot* — in a window, then ch.05's unseal
       ritual — Bao returns SEALED after every restart, that's by
       design)
+
+The firewall-refresh script the monthly item calls (install once, on
+the server — it re-runs ch.02 §3's loop and prunes the ranges CF
+retired, which `ufw reload` alone never does):
+
+```bash
+sudo tee /usr/local/bin/cf-firewall-refresh >/dev/null <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+curl -sL https://api.cloudflare.com/client/v4/ips | python3 -c \
+  "import sys,json;[print(p['cidr']) for p in json.load(sys.stdin)['result'] if ':' not in p['cidr']]" \
+  | sudo tee /etc/cloudflare-v4.txt >/dev/null
+# prune every rule that cites the old list, then re-allow the fresh one:
+for cidr in $(sudo ufw status | grep -oE 'from [0-9./]+' | awk '{print $2}'); do
+  grep -qxF "$cidr" /etc/cloudflare-v4.txt || sudo ufw --force delete allow from "$cidr" to any port 80,443 proto tcp
+done
+for c in $(cat /etc/cloudflare-v4.txt); do sudo ufw allow from "$c" to any port 80,443 proto tcp; done
+sudo ufw reload
+EOF
+sudo chmod 700 /usr/local/bin/cf-firewall-refresh
+sudo /usr/local/bin/cf-firewall-refresh && sudo ufw status numbered | head -8   # sanity: fresh CF set
+```
 
 ## Quarterly (60–90 min)
 
@@ -117,7 +142,7 @@ flowchart TD
 **1. Everything red, "could not get secret data from provider"**
 → Bao sealed (host reboot? someone's fault?). Do ch.05 §9's unseal ritual
 (2 offline keys as ARGUMENTS, non-tty), bounce ESO. Symptom-check:
-`kubectl -n secrets exec openbao-0 -- bao status` — `sealed: true`.
+`kubectl -n secrets exec deploy/openbao -- bao status` — `sealed: true`.
 Trust `describe`'s Last Transition Time, not `get`'s "last sync", to date it.
 
 **2. New pods ImagePullBackOff: `unauthorized`**
@@ -151,7 +176,8 @@ to a human), lines in the `images:` stanza ∪ an epoch-TRIO line
 never auto-merged). Merge by hand; the PR tells you which.
 
 **5. Search empty after engine bump / site 500s "503 from /api"**
-→ Meilisearch refused the old data volume (ch.03 + the A11 recipe):
+→ Meilisearch refused the old data volume (ch.03 + the archived root
+  `RUNBOOK.md` reseed recipe — wipe the host dir + `cmd/seed`):
 wipe the **host directory** (PVC delete alone remounts the same old
 dir — Retain is deliberate), let the engine boot empty, run `cmd/seed`
 reconcile (port-forwards to DB+engine; indexes only PUBLISHED posts,

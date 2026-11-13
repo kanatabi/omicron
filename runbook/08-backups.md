@@ -20,9 +20,9 @@ status: M6 — designed & rehearsed (restic loop written, never walked on the
 | Thing | Reconstructable without a backup? | Plan |
 |---|---|---|
 | Postgres data (posts, users, media DB pointers) | ❌ **the only copy** | nightly `pg_dumpall` → restic — `dumpall`, not per-DB: the ONE Patroni (`lumen-pg`) holds all three logical DBs (`lumen_admin`, `lumen_staging`, `lumen_production`), and the admin DB is the one with the users table |
-| OpenBao `/data` (every secret ever seeded) | ❌ | `bao snapshot save` via kubectl → restic (see §3b — never rsync the live dir) |
+| OpenBao `/data` (every secret ever seeded) | ❌ | nightly **seal → tar `/data` → unseal** via kubectl → restic (§4 — the file backend's consistent moment; never rsync the live dir) |
 | Media photos | ✅ already offsite (R2, ch.07) — but the **database** rows linking them are the fragile memory | covered by the DB backup |
-| Meilisearch index | ✅ rebuilds from Postgres (the A11 recipe: wipe the host dir + `cmd/seed` reconcile — archived rehearsal log, ch.13) | not backed up |
+| Meilisearch index | ✅ rebuilds from Postgres (wipe the host dir + `cmd/seed` reconcile — the archived root `RUNBOOK.md` recipe, A-numbered in the rehearsal log — not to be confused with 00a's A11) | not backed up |
 | K8s objects, all YAML, images | ✅ Git = truth, ghcr = released tags | GitHub + the GitLab mirrors already do it |
 | TLS certs | ✅ re-issued in minutes | not backed up |
 | Unseal keys · restic password · root tokens | ❌❌ **NOT in any backup** — these unlock the backups | *offline: password manager + paper, separate physical places* |
@@ -60,7 +60,7 @@ photos and your photos-about-the-past.
 ```mermaid
 flowchart LR
     PG["nightly pg_dumpall\n(lumen-pg-0 via kubectl)"] --> STAGE["/srv/backup\nstage dir"]
-    BAO["bao snapshot save\n(openbao-0 via kubectl)"] --> STAGE
+    BAO["nightly vault safe-copy\nseal → tar /data → unseal\n(deploy/openbao, pod resolved)"] --> STAGE
     STAGE --> BK["restic backup -> R2\nomicron-backups bucket"]
     BK --> FP["restic forget --prune\n7d / 4w / 12m"]
     BK --> CK["restic check"]
@@ -71,39 +71,91 @@ flowchart LR
 
 ## 4. The nightly loop (systemd timers or one cron file)
 
+**One-time setup** — the stage dirs and the env file the whole loop reads
+(cron inherits NO shell environment; without sourcing, every `restic`
+command fails with "repository not configured"):
+
 ```bash
-# /etc/cron.d/omicron-backup (cron shown for clarity; timers also fine)
-02 3 * * * root KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n db exec lumen-pg-0 -- \
-  pg_dumpall -U postgres > /srv/backup/pg/dump-$(date +\%F).sql && \
-  restic backup /srv/backup/pg --tag pg
-03 3 * * * root kubectl -n secrets exec openbao-0 -- bao snapshot save /tmp/snap && \
-  kubectl cp secrets/openbao-0:/tmp/snap /srv/backup/bao/snapshot && \
-  restic backup /srv/backup/bao --tag bao
-04 3 * * * root restic backup /srv/backup && restic forget --prune \
-  --keep-daily 7 --keep-weekly 4 --keep-monthly 12 && restic check
+sudo mkdir -p /srv/backup/pg /srv/backup/bao
+sudo tee /etc/omicron-backup.env >/dev/null <<'EOF'
+# chmod 600, root-owned. The restic values are §2's; BAO_UNSEAL_KEY is
+# one of the three unseal keys — see the honesty note below the cron.
+export RESTIC_REPOSITORY="s3:https://<account>.r2.cloudflarestorage.com/omicron-backups"
+export RESTIC_PASSWORD="<the offline-vault item>"
+export AWS_ACCESS_KEY_ID="<R2 token scoped to this bucket>"
+export AWS_SECRET_ACCESS_KEY="<R2 token scoped to this bucket>"
+export BAO_UNSEAL_KEY="<one of the three unseal keys>"
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+EOF
+sudo chmod 600 /etc/omicron-backup.env
 ```
 
-(The environment vars from §2 live in `root`'s env file — values stay out
-of the crontab, same doctrine as everywhere else.)
+**The Bao safe-copy helper** — one-time on the server:
 
-> **Why a snapshot API, not a copy of the PVC directory:** copying a live
-> database directory gets you a backup that restores to *corruption* —
-> the classic half-written-file surprise. Bao's `snapshot save` is
-> consistent by design; Postgres's `pg_dumpall` is consistent by design.
-> Neither touches storage files directly.
+```bash
+sudo tee /usr/local/bin/bao-safe-copy >/dev/null <<'EOF'
+#!/usr/bin/env bash
+# openbao runs the FILE storage backend (vortex bases/openbao ConfigMap,
+# storage "file" path=/data) — `bao snapshot save` is Raft-only and would
+# fail nightly. The file backend's consistent moment is SEALED (zero
+# writes), so: seal → tar /data → unseal.
+set -euo pipefail
+. /etc/omicron-backup.env   # BAO_UNSEAL_KEY lives here, not in cron
+POD=$(kubectl -n secrets get pod -l app=openbao -o jsonpath='{.items[0].metadata.name}')
+kubectl -n secrets exec "$POD" -- bao operator seal
+kubectl -n secrets exec "$POD" -- tar -cf - -C /data . \
+  | gzip > /srv/backup/bao/vault-$(date +%F).tar.gz
+kubectl -n secrets exec "$POD" -- bao operator unseal "$BAO_UNSEAL_KEY"
+kubectl -n external-secrets rollout restart deploy/external-secrets  # skip ESO's error backoff
+EOF
+sudo chmod 700 /usr/local/bin/bao-safe-copy
+```
+
+**The cron** (`/etc/cron.d/omicron-backup`; timers also fine — each line
+sources the env file itself, because cron does not):
+
+```cron
+# /etc/cron.d/omicron-backup
+02 3 * * * root . /etc/omicron-backup.env && kubectl -n db exec lumen-pg-0 -- \
+  pg_dumpall -U postgres > /srv/backup/pg/dump-$(date +\%F).sql && \
+  restic backup /srv/backup/pg --tag pg
+03 3 * * * root /usr/local/bin/bao-safe-copy && \
+  . /etc/omicron-backup.env && restic backup /srv/backup/bao --tag bao
+04 3 * * * root . /etc/omicron-backup.env && restic backup /srv/backup && \
+  restic forget --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 12 && restic check
+```
+
+> **Why seal-and-copy, honestly:** the chapter first drafted `bao snapshot
+> save` — a real command, but only for **integrated Raft storage**; the
+> shipped vault is `storage "file"` and the command fails every night,
+> silently (cron mails nobody — that's the failure mode that kills backup
+> systems). Sealing is the file backend's ONLY consistency guarantee:
+> sealed = zero writers = the tar is a coherent database. The unseal key
+> lives in root's 600 env file — **documented trade, not an accident:**
+> node-root can already read `/data` directly, so the key on the node adds
+> no new exposure; the 3/2 offline math still guards every *other*
+> location (laptop, paper, backups).
+> **Why `pg_dumpall` stays:** same consistency story, done by Postgres
+> itself. Neither method ever touches a live database directory.
 
 **Retention reality:** 7 daily / 4 weekly / 12 monthly ≈ a year of "what
 Tuesday looked like" in a few gigabytes. Restic dedups; blog data is
-tiny; disk is the least of your worries.
+tiny; disk is the least of your worries. *(Backlog note: moving openbao
+to integrated Raft storage in vortex would restore the one-line
+`bao snapshot save` ritual and real snapshot/restore — recorded as an
+owner decision, not invented silently.)*
 
-**The freshness metric:** step 04's `restic check` success is what
-exports `backup_last_success_timestamp_seconds`. That name is not
-invented on this page — it is exactly the metric the ch.10 alert rule
-*Backups stale (no success in 36h)* (`environments/foundation/observability/alerting.yaml`)
-queries. Until the timer exists, that rule is **inert by design**
+**The freshness metric:** the ch.10 alert rule *Backups stale (no
+success in 36h)* (`environments/foundation/observability/alerting.yaml`)
+queries `backup_last_success_timestamp_seconds` — a name that is not
+invented on this page. The loop above does not yet export it (an export
+needs a push to the observability plane — the statsd listener exists in
+the Alloy config but stays commented, per the no-sidecar contract),
+so until a small exporter ships, that rule is **inert by design**
 (noData → OK): the alert is provisioning that becomes alive, not a
 broken promise. *An old backup is not a backup, it's a hope* — the
-timer turns the hope into a measurement.
+timer turns the hope into a schedule; the exporter is what turns it
+into a measurement.
 
 ## 5. The monthly drill (the actual job; the rest is plumbing)
 
@@ -115,24 +167,35 @@ First Saturday, 20 minutes, **on the rehearsal VM — never prod**:
    `psql -c 'select count(*) from posts;'` → **the number must match the
    dashboard number**. That single sentence is the only thing in this
    chapter that *proves* a backup works. Everything else is plumbing.
-3. Restore the Bao snapshot into a throwaway instance (`bao operator
-   migrate -command` or straight-into-datadir) and unseal it with the
-   offline keys. **Restoring the vault = you also need the offline
-   unseal keys → drill both together or you've drilled half the plane.**
+3. Restore the Bao tarball into a throwaway instance: a scratch
+   directory + a throwaway `bao server -config=…` pointed at it (file
+   storage = just files), then unseal it with the offline keys. **Restoring
+   the vault = you also need the offline unseal keys → drill both together
+   or you've drilled half the plane.**
 
 ## 6. Total-loss runbook (the "VPS burned down" sequence)
 
 1. New VPS → **this folder, in order**: 02 (hardening) → 03 (k3s) →
-   05 (restore Bao first — everything else reads its secrets from there)
-   → 04 (Argo) → 06 (apps) → 07 (DNS/TLS/media, buy time on 07 while
-   anything is still pointed elsewhere).
-2. Restore Bao: fresh pod → restore snapshot → unseal (offline keys) →
-   the vault's *content* is whatever was backed up. Re-issue AppRole
-   creds only if the vault was lost, not restored (ch.05).
+   **04 (Argo — the foundation hub first: it creates the openbao pod you
+   are about to restore INTO, plus Patroni)** → 05 (restore the vault,
+   then §3.5's hand-made Secrets) → 06 (apps) → 07 (DNS/TLS/media, buy
+   time on 07 while anything is still pointed elsewhere). *The old
+   order restored Bao before Argo — impossible for a literal follower:
+   the openbao pod comes from the foundation hub (ch.04 §3 act 1).*
+2. Restore Bao: fresh pod (foundation hub did it) → untar the latest
+   vault-*.tar.gz into the pod's `/data` → restart the pod → unseal
+   (offline keys) → the vault's *content* is whatever was backed up.
+   Then re-create the **hand-made k8s Secrets** (ch.05 §3.5) that ride
+   no backup: `bao-approle-credentials` + `lumen-bao-credentials`
+   (mint the pairs from the restored vault exactly as ch.05 §3.5 says)
+   and `search/meilisearch-master-key` — read `MASTER_KEY` back from
+   the restored vault (`bao kv get -field=MASTER_KEY
+   kv/meilisearch/production`).
 3. Restore Postgres: Patroni comes up empty → load `pg_dumpall` into the
    primary → ESO is already syncing (its values came from step 2).
 4. Argo reconciles everything Git owns; images live in ghcr (immutable
-   tags, ch.09), media in R2, search reindexes (the A11 recipe).
+   tags, ch.09), media in R2, search reindexes (wipe the host dir +
+   `cmd/seed` — the archived root `RUNBOOK.md` recipe).
 5. RTO honesty: with these chapters, a rebuild is an afternoon. The long
    tail is DNS TTLs and *your own memory of the order* — which is why
    this folder exists and why the drill is monthly.

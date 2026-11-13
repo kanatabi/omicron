@@ -67,8 +67,8 @@ ports are never public.
 
 ```bash
 sudo apt install -y ufw
-# update this list monthly — Cloudflare publishes it (card 9 in ch.12
-# automates the refresh; the refresh script re-runs this same loop):
+# update this list monthly — Cloudflare publishes it (ch.12's monthly
+# ritual calls cf-firewall-refresh, which re-runs this same loop):
 curl -sL https://api.cloudflare.com/client/v4/ips | python3 -c "import sys,json;[print(p['cidr']) for p in json.load(sys.stdin)['result'] if ':' not in p['cidr']]" | sudo tee /etc/cloudflare-v4.txt >/dev/null
 for c in $(cat /etc/cloudflare-v4.txt); do sudo ufw allow from "$c" to any port 80,443 proto tcp; done
 sudo ufw allow 22/tcp
