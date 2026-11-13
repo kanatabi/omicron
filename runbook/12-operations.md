@@ -1,8 +1,9 @@
 ---
 tags: [runbook, ops]
-updated: 2026-11-13
+updated: 2026-11-14
 status: calendar designed from rehearsal; every card here already happened
-  once somewhere in the estate — prevention lines are the point
+  once somewhere in the estate — prevention lines are the point; card 9 is
+  the 2026-11-13 gate incident (record in ch.09 §6)
 ---
 
 # 12 · Operations Calendar & Incident Cards
@@ -45,9 +46,10 @@ a rumor, same doctrine as the restore drill.)
 - [ ] **Cloudflare-only firewall** (ch.02): re-pull CF IP ranges into
       `/etc/cloudflare-v4.txt` (they change occasionally), `ufw reload`
 - [ ] Cert-manager: nothing due (auto-renews) — confirm every Certificate
-      is Ready: `kubectl get certificates -A` (each lives in its
-      workload's namespace — earendil / mellon / observability, per
-      `applications/certificates/certificates.yaml`)
+      is Ready: `kubectl get certificates -A` — **five** live (production's
+      three + staging's two), each in its workload's namespace —
+      earendil / mellon / observability, per
+      `applications/certificates/certificates.yaml`
 - [ ] **"Under Attack mode" still OFF?** (ch.07 — the panic switch is
       never a lifestyle; if it's on, note the date it was earned)
 - [ ] OS: `apt list --upgradable` glance (unattended handles security;
@@ -77,9 +79,15 @@ a rumor, same doctrine as the restore drill.)
       checksum.)
 - [ ] **Walk the gate** (~15 min, ch.05 §7.1 + ch.06 §4): pin a scratch
       path, try a save — read the 403 copy; run unpin→restore→save and
-      take the "pin vN?" offer; then bump `--declared` to a wrong number
-      in a throwaway vortex PR and watch the epoch-pair assertion go red.
+      take the "pin vN?" offer; then bump ONE side of an epoch TRIO (pod
+      annotation vs `--declared` vs ES annotation) to a wrong number in a
+      throwaway vortex PR and watch the class-4 TRIO assertion go red.
       The lock, the road back, the no-lie gate: prove they still bite.
+- [ ] **Gate-audit still armed?** (ch.09 §6): every `deploy-<env>`
+      environment across lumen/earendil/mellon exists AND has required
+      reviewers — the CI job fails closed if not, but a RED gate-audit
+      mid-release is an afternoon you didn't budget. Five minutes in
+      Settings → Environments, three repos.
 
 ## Yearly / evergreen
 
@@ -104,7 +112,7 @@ flowchart TD
     Q1 -- "CF fine" --> INC["it's the estate, not the edge:\nincident cards below"]
 ```
 
-## Incident cards (eight — each one real, most already happened once)
+## Incident cards (nine — each one real, most already happened once)
 
 **1. Everything red, "could not get secret data from provider"**
 → Bao sealed (host reboot? someone's fault?). Do ch.05 §9's unseal ritual
@@ -134,10 +142,12 @@ fix together with the guard, ch.09 §4); `DEPLOY_AUTOMERGE` absent/off
 (**it is read from the ENV the workflow passes — if someone
 "simplifies" the script back to a variables-API call, GITHUB_TOKEN
 403s and the switch silently reads ABSENT = off**, by design); or the
-change walks outside the **fence of patterns** — files
-`applications/*/kustomization.yaml` + `overlays/production/<app>/*.yaml`
-(app parsed from the bump branch), lines in the `images:` stanza ∪ a
-`config.epoch` line ∪ a `--declared` line (by design: human PRs are
+change walks outside the **fence** — files must live under
+`environments/<env>/**` (the env parsed from the
+`bump/<app>-<env>-<tag>` branch; the legacy `bump/<app>-<tag>` grammar
+means production and is DEPRECATED, an unparseable env BAILS the merger
+to a human), lines in the `images:` stanza ∪ an epoch-TRIO line
+(`config.epoch` / `--declared`) (by design: human PRs are
 never auto-merged). Merge by hand; the PR tells you which.
 
 **5. Search empty after engine bump / site 500s "503 from /api"**
@@ -151,7 +161,8 @@ leaves rows alone). Verify `/indexes/posts/stats`
 **6. Portal matrix missing an app row → "seed went off-contract"**
 → mellon's app matrix shows a gap or an app that won't seed: someone
 wrote secrets to a path the apps don't read. The contract is
-**`kv/<app>/<env>`** — one path per app per env — and the proof is a
+**`kv/<app>/<env>`** — one path per app per env, `shared` being the
+foundation env (lumen/shared, mellon/shared) — and the proof is a
 `ListPaths` walk of the mount: every app dir listed, every consumer's
 ExternalSecret `remoteRef` key matches a listed path, nothing else
 lives there. Fix = move the secret to the contract path (ch.05),
@@ -172,6 +183,18 @@ outage — the pin is a LOCK and it just told you so (ch.05 §7.1, block
 mode). Remedy in three verbs: **unpin → act → re-pin** (restore-draft
 the version you mean, save as vN, answer the "pin vN?" offer). Head kept
 serving the whole time; readers never felt the freeze.
+
+**9. Release parked… then un-parked itself with no click (the gate
+incident, 2026-11-13)** → if a `deploy-<env>` job EXECUTES without ever
+showing an amber Waiting badge, the protected environment is gone (or
+never existed — GitHub auto-creates referenced-but-missing environments
+UNPROTECTED, which is how v3.0.0/v2.0.0 opened five bump PRs
+unattended). Today the chain's `gate-audit` job fails RED before that
+can repeat, so the live symptom is the opposite: **gate-audit red =
+Settings → Environments lost a required reviewer (or an env) — recreate
+and protect, then re-run.** Full record + the owner pending task:
+ch.09 §6. Bump PRs born of an unparked chain are INVALID evidence:
+merge only after a human park, or deliberately supersede them.
 
 ## The one meta-line
 

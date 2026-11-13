@@ -767,4 +767,38 @@ manual curl of every new endpoint against the live dev plane.
   MEILI_INDEX_PHOTOS, MEDIA_PREFIX, mellon ADMIN_URL/CMS_URL, earendil
   ORIGIN) BEFORE syncing any hub — ESO fails the whole render on a
   missing property.
+- 2026-11-14 follow-up round (approval-gate incident + docs): the
+  v3.0.0/v2.0.0 releases PROVED the missing-gate failure mode the
+  previous entry's OWNER TODO warned about — referenced-but-missing
+  GitHub environments are AUTO-CREATED UNPROTECTED, the park silently
+  no-oped, all deploy jobs ran green, five bump PRs (#14–18) opened
+  unattended (NONE merged — the merge gate held the line, proving the
+  second guard's worth). Fix = fail-closed `gate-audit` job in every
+  release pipeline (GET environments API with GITHUB_TOKEN; missing OR
+  no required_reviewers → deploy chain RED; plans still run — evidence
+  is free, opening PRs is the fenced act): lumen dc187ce, mellon
+  5680849, earendil a8dfaaf (earendil's needs referenced the job before
+  its own file had it — caught pre-commit). Docs convergence: vortex
+  b716720 added the ES ignoreDifferences block to BOTH lumen env CRs
+  (the selfHeal-thrash class; the sweep found production too, not just
+  staging) + fixed the README tree's pre-rename dir line; anvil 6b1c103
+  brought its release-contract sketch to per-env chains. THEN the
+  Phase-11 docs agent finally ran: runbook/ all 15 chapters reworked to
+  the env model (00a rewritten for the three-hub entry + NEW A10
+  isolation-proof step; 05 carries the full render contract + seed
+  order; 09 §6 = the incident record incl. the owner's pending
+  environment-protection task; 12 gained card #9 + the quarterly
+  gate-audit check; 13's table = 23 rows, Zalando pin corrected to the
+  disk truth v1.13.0), INFRA amended (not rewritten; incl. a
+  note-on-note correcting its own 11-13 vocabulary), root README
+  rewritten (five live submodules, Track A/B, no more placeholder
+  images). Agent's disk-over-brief corrections accepted: single-node
+  component is LIVE (every env overlay wires it), bootstrap/apps-hub.yaml
+  kept as the 3-node BLUEPRINT, all five Certificates render from the
+  production hub. STILL OPEN: owner creates + protects the five
+  deploy-* environments, then decides #14–18 (deliberate merge vs
+  protected re-run); mellon wizard env list (dev gone, `shared`
+  undecided); the staging portal-policy extension in 05 is the agent's
+  reasoned call pending owner confirmation; P3 epoch-agent remains
+  backlog.
 - — (append deltas here: contract changes, deviations, new rulings)

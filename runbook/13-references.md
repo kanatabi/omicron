@@ -1,6 +1,6 @@
 ---
 tags: [runbook, refs]
-updated: 2026-11-13
+updated: 2026-11-14
 ---
 
 # 13 · References — the official docs behind every claim
@@ -45,7 +45,7 @@ updated: 2026-11-13
 | Fine-grained PATs (Contents/Workflow/Actions perms — the trio's lesson, ch.09 §5) | https://docs.github.com/authentication/keeping-your-account-and-data-secure/about-fine-grained-personal-access-tokens |
 | Actions anti-recursion rule (why tags need a PAT) | https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idsteps-run (see "GITHUB_TOKEN" notes) & https://github.community/t/support-triggeringRepositoryPushEvents-in-github-token/11510 |
 | Repo variables NOT readable by GITHUB_TOKEN (the env-door lesson) | https://docs.github.com/actions/learn-github-actions/variables (limitations note) |
-| Zalando Postgres Operator v2.0.3 | https://postgres-operator.readthedocs.io/ |
+| Zalando Postgres Operator v1.13.0 (pinned install, ch.04 §2's table) | https://postgres-operator.readthedocs.io/ |
 | External Secrets Operator 2.15.0 (Vault backend; generic `target.manifest` ConfigMap renders) | https://external-secrets.io/ |
 | OpenBao | https://openbao.org/docs/ (init/unseal/**snapshot**/approle pages — snapshot is ch.08 §3b's) |
 | Meilisearch upgrade policy (v1.56.1) | https://www.meilisearch.com/docs/learn/welcome/update-meilisearch |
@@ -81,6 +81,7 @@ updated: 2026-11-13
 | How this folder is numbered & why (reading order, waves, the 04–07 split) | `00-overview.md` + this folder's git history |
 | Working rules for agents/devs | `../AGENTS.md` (workspace) + each child repo's AGENTS/DESIGN |
 | Rehearsal-era detail (minikube quirks, the A-numbered recipes like A11) | `../RUNBOOK.md` (**archived** rehearsal log — reference, not procedure) |
-| The manifest truth battery's expected-kinds table | `../anvil/bin/expected-kinds.txt` — the 32-row truth table (per-directory expected resource-kind counts) enforced by `validate-manifests`; a count change is a reviewable event |
+| The manifest truth battery's expected-kinds table | `../anvil/bin/expected-kinds.txt` — the 23-row truth table (per-directory expected resource-kind counts, regenerated for the `environments/*` tree — `applications/` bases + the 7 foundation + 3×2/3 env overlays) enforced by `validate-manifests`; a count change is a reviewable event |
+| The render contract per plane | `vortex/README.md` ("ES = the render contract", "Naming contract") + lumen `config keys --role admin\|cms` — the machine truth behind ch.05's seed tables |
 | The auto-merge guard itself (the six guards are law in code) | `../anvil/bin/auto-merge.sh` + `../vortex/.github/workflows/` |
 | API contract between apps | `../lumen/DESIGN.md` ⇄ `../earendil` client.ts |

@@ -1,8 +1,10 @@
 ---
 tags: [runbook, network, tls, media, go-live]
-updated: 2026-11-13
+updated: 2026-11-14
 status: DNS/TLS/challenge acts rehearsed (minikube-era walk, cert paths
-  adapted to real ACME); media public face + Access = first real VPS walk
+  adapted to real ACME — and ACME now serves BOTH envs: selfsigned is dead,
+  DNS-01 works from any cluster); media public face + Access = first real
+  VPS walk
 ---
 
 # 07 · Go Public — DNS, guard, TLS, the guest list, and photos
@@ -40,10 +42,12 @@ Three layers people constantly mix up. Keep them separate:
 | Type | Name | Target | Proxy | Why |
 |---|---|---|---|---|
 | A | `@` | server IPv4 | 🟠 Proxied | the blog; CF hides the IP and absorbs floods |
-| CNAME | `www` | `gofar.id` | 🟠 Proxied | second spelling of the same door (both hosts are in the `gofar-id` Certificate's dnsNames) |
+| CNAME | `www` | `gofar.id` | 🟠 Proxied | second spelling of the same door (both hosts are in the `gofar-id` Certificate's dnsNames) — **production-only** (owner ruling: staging never wears www) |
 | A | `console` | server IPv4 | 🟠 Proxied | the portal — the door to your vault wants the guard most |
-| A | `anor` | server IPv4 | 🟠 Proxied | Grafana; Access (Act 4) holds the guest list |
-| CNAME | `img` | *created FOR you by the R2 domain binding (Act 5)* | 🟠 | photos served by the CDN; bucket itself stays private |
+| A | `anor` | server IPv4 | 🟠 Proxied | Grafana; Access (Act 4) holds the guest list — the ONE door, serving dashboards for both envs |
+| A | `staging` | server IPv4 | 🟠 Proxied | `staging.gofar.id` — staging's earendil (real cert via the same DNS-01 issuer; there is no self-signed plane anymore) |
+| A | `staging-console` | server IPv4 | 🟠 Proxied | staging's mellon — same challenge budget applies if you care; the door is private-by-obscure-zone today |
+| CNAME | `img` | *created FOR you by the R2 domain binding (Act 5)* | 🟠 | photos served by the CDN; bucket itself stays private; BOTH envs share it — `LUMEN_MEDIA_PREFIX` keeps their objects apart |
 | — | *(nothing for kubectl/Argo/SSH/API)* | — | — | admin roads never get public records (ch. 02 firewall + the tunnels chapter) |
 
 **The proxied law:** every record that *serves humans* is 🟠 Proxied. Grey
@@ -103,9 +107,8 @@ kubectl -n cert-manager wait --for=condition=Available deploy/cert-manager --tim
 Exactly pinned v1.16.2 — the version the prereq comment in
 `applications/certificates/kustomization.yaml` names. One-time manual apply,
 same class as Argo CD and the Zalando operator; the certificates app is
-already synced (ch. 04 — apps hub wave 1) and has been *visibly waiting*
-for this
-Namespace to exist.
+already synced (ch. 04 — PRODUCTION hub wave 1) and has been *visibly
+waiting* for this Namespace to exist.
 
 ### 3.2 The token — scoped, never global
 
@@ -139,19 +142,25 @@ is the whole TLS story, synced by the `certificates` app:
   metadata, not runtime-tunable config — putting it behind ESO would make
   the issuer depend on its own secret plane at bootstrap. Everything else
   stays in Bao.
-- **`certificates.yaml`** — three Certificates, one per serving door, each
+- **`certificates.yaml`** — FIVE Certificates, one per serving door, each
   in the namespace of the workload whose Ingress consumes it:
   `gofar-id` → **`tls-gofar`** (earendil; SANs `gofar.id` + `www.gofar.id`),
   `console-gofar-id` → **`tls-console`** (mellon), `anor-gofar-id` →
-  **`tls-anor`** (observability/Grafana). All with
+  **`tls-anor`** (observability/Grafana), plus staging's two:
+  `staging-gofar-id` → **`tls-gofar-staging`** (earendil ns) and
+  `staging-console-gofar-id` → **`tls-console-staging`** (mellon ns).
+  Staging rides the SAME ClusterIssuer — DNS-01 works from any cluster, so
+  the self-signed rehearsal component is retired and nothing wears a fake
+  cert. All with
   `duration: 2160h0m0s` / `renewBefore: 720h0m0s` — note the *hours*
   spelling: these are **Go duration strings and there is no day unit**, so
   90/30 days are written 2160/720 hours (the file comments them `# 90d` and
   `# 30d` so nobody re-derives it).
-- **Why explicit Certificates instead of the annotation:** the prod overlays
-  (`overlays/production/earendil/kustomization.yaml`,
-  `overlays/production/mellon/kustomization.yaml`) carry a JSON6902
-  `- op: remove` of the base's `cert-manager.io/cluster-issuer` annotation —
+- **Why explicit Certificates instead of the annotation:** the env overlays
+  (`environments/production/earendil/kustomization.yaml`,
+  `environments/production/mellon/kustomization.yaml` — and their staging
+  twins) carry a JSON6902 `- op: remove` of the base's
+  `cert-manager.io/cluster-issuer` annotation —
   because left in place the ingress-shim would auto-create a *shadow*
   Certificate with its own Secret for the same hostnames, double-issuing
   against Let's Encrypt rate limits — and replace `spec.tls` with the
@@ -179,7 +188,7 @@ echo | openssl s_client -connect 127.0.0.1:443 -servername gofar.id 2>/dev/null 
   stopped happening.
 - **The alert that replaces vigilance:** the "certificate expires < 21 days"
   rule among the five estate alerts provisioned in
-  `overlays/production/observability/alerting.yaml` (`certmanager_certificate_expiration_timestamp_seconds`).
+  `environments/foundation/observability/alerting.yaml` (`certmanager_certificate_expiration_timestamp_seconds`).
   One line beats a calendar.
 - **The drill (quarterly, Operations chapter):** delete one test
   `Certificate` → selfHeal re-applies → Ready again in minutes. Proves
@@ -296,30 +305,34 @@ OIDC pair). Each save is a **versioned config-plane write** — head moves
   refuses saves — 403 `{"error":"pinned at v<N> — unpin first"}`. The
   root-token CLI puts above are the operator's break-glass road; the
   gate downstream is what catches any disagreement.
-- **`components/config-gate`** — a PreSync Job shipped in the PRODUCTION
-  overlays of `lumen`, `earendil` and `mellon` (dev/local/minikube
-  shapes untouched) — runs `lumen config check-epoch --app <app> --env
-  production --declared N` before every sync of those apps. Pass iff
-  the declared epoch (pod annotation + gate arg, a pair CI keeps
-  byte-equal) equals vault head and no pin lock disagrees; failure
+- **`components/config-gate`** — a PreSync Job shipped in EVERY
+  environment overlay of `lumen`, `earendil` and `mellon` (foundation
+  included, where lumen-admin's gate runs `--app lumen --env shared`) —
+  runs `lumen config check-epoch --app <app> --env <env> --declared N`
+  before every sync of those apps. Pass iff
+  the declared epoch (the **TRIO**: pod annotation + gate arg + ES
+  annotation, all three byte-equal, CI-enforced) equals vault head and
+  no pin lock disagrees; failure
   blocks the sync with exactly one remedy line. The full bump flow —
   dispatch `release.yml` from the existing tag with the optional
-  `config-epoch` input — is [06 §4](06-apps-first-release.md). Why the
+  `config-epoch` input (honored ONLY on a single-environment dispatch) —
+  is [06 §4](06-apps-first-release.md). Why the
   gate pulls the *lumen* image: it is the one estate config checker,
   on deliberately the tag the backend itself runs, so a gate can never
   read config with a stale decoder.
 - **`validate-all` is STRUCTURAL** (anvil CI): every assertion reads
   rendered output and directory shape, never app names — the
   Deployment inline-literal ban, ES+Deployment⇒`envFrom`,
-  `*migrate*`⇒PreSync, epoch-pair equality. No script knows lumen,
+  `*migrate*`⇒PreSync, epoch-TRIO equality. No script knows lumen,
   earendil or mellon exist; that's how the gate, the fence and the
   assertions cover a new app the moment its YAML follows the convention
   — the registry IS the convention (ch. 14).
 
 ✅ check (cheap, do it once here): `kubectl -n lumen get jobs config-gate`
-→ `Complete` from the apps hub's first sync; and a deliberate half-bump
-draft PR turns `validate-manifests` red with a `FAIL epoch` line — prove
-the alarm, then throw the draft away.
+→ `Complete` from the env hubs' first sync; and a deliberate half-bump
+(a 2-of-3 TRIO edit) in a throwaway vortex draft PR turns
+`validate-manifests` red with a `FAIL epoch` line — prove the alarm,
+then throw the draft away.
 
 ## Traffic Anatomy — the whole estate in four pictures
 
@@ -331,24 +344,32 @@ flowchart LR
     EDGE -->|"gofar.id + www 🟠"| TR["Traefik :443<br/>firewall: Cloudflare IPs only (ch.02)"]
     EDGE -->|"console.gofar.id 🟠"| TR
     EDGE -->|"anor.gofar.id 🟠 — Access gates HERE, at the edge:<br/>only allow-listed emails get a Google box; Grafana is never reached anonymous"| TR
+    EDGE -->|"staging + staging-console .gofar.id 🟠<br/>(the same doors' staging twins — real certs, same issuer)"| TR
     EDGE -->|"img.gofar.id 🟠 — CDN cache"| R2[("R2 omicron-media")]
-    TR --> E["earendil pod<br/>SSR blog"]
-    TR --> M["mellon pod<br/>portal UI + /api relay"]
-    TR --> G["grafana pod<br/>dashboards"]
-    E -->|"in-cluster, same-origin /api proxy"| L["lumen pod"]
-    M -->|"in-cluster relay"| L
+    TR --> E["earendil pods (per env)<br/>SSR blog"]
+    TR --> M["mellon pods (per env)<br/>portal UI + routing-table relay"]
+    TR --> G["grafana pod<br/>dashboards (one door, env filters)"]
+    E -->|"in-cluster, same-origin /api proxy<br/>→ lumen-http-server-[env]"| L["cms lumen (per env)<br/>content only, NO users table"]
+    M -->|"content + /api paths → CMS_URL"| L
+    M -->|"session · users · setup · bao → ADMIN_URL"| LA["lumen-admin (foundation)<br/>the ONE Control Plane: sessions,<br/>users, Bao relay — no ingress, ever"]
+    L -->|"POST /admin/session/verify<br/>(30s cache, fail closed)"| LA
     subgraph NO["✗ never exposed — no record, no port, no ingress"]
         direction TB
-        N1["✗ lumen API direct"]
+        N1["✗ lumen API direct (admin or cms)"]
         N2["✗ meilisearch"]
         N3["✗ kubectl · SSH · Argo UI · Bao"]
     end
 ```
 
-Note the asymmetry the picture makes obvious: **photos bypass the VPS
-entirely** (edge→R2, your server isn't in the read path), while every
-cluster route terminates at Traefik on exactly one firewall-allowed port
-pair.
+Note the asymmetries the picture makes obvious: **photos bypass the VPS
+entirely** (edge→R2, your server isn't in the read path), every cluster
+route terminates at Traefik on exactly one firewall-allowed port pair, and
+the **mellon relay is now a router** — `src/lib/api/routing.ts` decides
+per-path which lumen gets the call (`/admin/session·users·setup·bao` →
+`ADMIN_URL`; `/admin/posts·photos·tags·collections·media·search` + `/api`
+→ `CMS_URL`; anything else throws a RoutingError instead of guessing — a
+mis-routed secrets call riding the content plane is a security story, so
+the table refuses rather than defaults).
 
 ### 2. A reader asking for the blog (two TLS legs, one in-pod hop)
 
@@ -363,8 +384,8 @@ sequenceDiagram
     B->>CF: GET https://gofar.id/ — TLS leg 1 (edge cert, visitor↔CF)
     Note over B,CF: managed challenge ONLY if suspicious — blog has no rules (Act 2); real browsers pass silently
     CF->>T: proxied request — TLS leg 2 (origin cert tls-gofar, cert-manager-issued)
-    T->>E: route earendil-web-server
-    E->>L: server load: API_BASE=http://lumen-http-server.lumen.svc (in-cluster, never public)
+    T->>E: route earendil-web-server-production
+    E->>L: server load: API_BASE=http://lumen-http-server-production.lumen.svc (SEEDED value naming the suffixed Service; in-cluster, never public)
     L-->>E: posts JSON (rendered as-is — no FE filtering)
     E-->>CF: HTML; the page's own browser calls ride /api/* — the same-origin proxy inside the SSR pod
     CF-->>B: page (+ images later from img.gofar.id, edge→R2, VPS not involved)
@@ -425,14 +446,16 @@ the edge, not the origin.)
 | **Google login box on `anor.gofar.id`** | **Access is working** — the guest list checked before Grafana was ever reached | not on the list? add the email to the one Access policy (Act 4) |
 | All sites 502/refused right after a DNS tweak | You grey-clouded a record → real IP exposed → ch. 02 firewall rejects the visitors | back to 🟠; `dig` must show CF IPs (Act 1.2) |
 | One hostname shows a browser privacy error | Its Certificate stuck; 90% = CF token expired/edited | `kubectl get certificate -A` + Act 3.4's dying-look recipe |
-| Certs fine but a NEW hostname never issues | Shadow-cert prevention working as designed — the shim annotation is removed in prod overlays; a bare Ingress gets nothing | add the Certificate in `applications/certificates/` (Git PR), don't re-add the annotation |
+| Certs fine but a NEW hostname never issues | Shadow-cert prevention working as designed — the shim annotation is removed in the env overlays; a bare Ingress gets nothing | add the Certificate in `applications/certificates/` (Git PR), don't re-add the annotation |
 | Blog unreachable to RSS readers/monitors but fine in browsers | "I'm Under Attack" left ON | panic button off — Act 2 |
 | Photos 404 while the site renders | `img` binding or `LUMEN_MEDIA_CDN_BASE` drift | Act 5's smoke test + `curl -sI` the URL |
 | Everything down, Cloudflare status green (tunnel variant) | `cloudflared` lost its outbound connection | `kubectl logs deploy/cloudflared` — the Level-2 shape fails *loudly at one pod* |
 
-✅ **End-of-chapter state:** four hostnames live, three Certificates
+✅ **End-of-chapter state:** production's four hostnames live (+ staging's
+two, on the same rules), all five Certificates
 Ready, guest list enforced at the edge, photos served entirely off-cluster —
-and `lumen`, `meilisearch`, `bao`, and kubectl still have no public face at
+and `lumen` (both planes), `meilisearch`, `bao`, and kubectl still have no
+public face at
 all. That's not a coincidence; that was the design from INFRA §2, now
 proven by `dig`.
 

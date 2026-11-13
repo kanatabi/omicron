@@ -1,9 +1,10 @@
 ---
 tags: [runbook, observability]
-updated: 2026-11-13
-status: stack fully templated & pinned in vortex (base + prod overlay + the
-  five alert rules + ESO feeds merged); the Application CR ships in
-  apps/applications/ wave 2 — the stack's eyes open when the apps hub walks
+updated: 2026-11-14
+status: stack fully templated & pinned in vortex (foundation overlay + the
+  five alert rules + ESO feeds merged); the Application CR rides the
+  FOUNDATION hub (wave 2, gated on the Ready store) — the stack's eyes open
+  the moment the vault is seeded, before either env hub exists
 ---
 
 # 10 · Observability — the estate's eyes (Grafana LGTM + VictoriaMetrics)
@@ -35,7 +36,7 @@ status: stack fully templated & pinned in vortex (base + prod overlay + the
 ```mermaid
 flowchart LR
     subgraph PRODUCE["Producers opt in — 3 pod annotations, no sidecars"]
-        L["lumen :9090 /metrics"]
+        L["lumen fleets :9090 /metrics<br/>(admin + cms per env — omicron/env stamped)"]
         G["grafana :3000 /metrics"]
         K["kubelet / cAdvisor"]
     end
@@ -55,24 +56,26 @@ flowchart LR
 
 `applications/observability/` is the base (alloy, victoria-metrics, loki,
 grafana, namespace, ingress, externalsecret — pinned images),
-`overlays/production/observability/` is the prod view, and
-`apps/applications/observability-app.yaml` is the Argo Application (sync
-**wave 2** — the first wave gated on the Ready `bao` store, which
-Grafana's config feeds consume; Grafana degrades to defaults via
-`optional: true`, never a blocked wave). `apps/applications/` also carries
-`certificates-app.yaml` now — the `anor` door's Certificate arrives in
-wave 1 of the same hub. The store gating that used to be "wave 2 waits"
-now lives at the entrypoint boundary: hub #2 (this chapter's app) is only
-applied after the M3 seed. The single-node rehearsal hub *deliberately* excludes the
-stack (a 2 GB node can't afford the eyes); on the VPS it's merged, not
-installed — *no manual installs.*
+`environments/foundation/observability/` is the plane view (placement
+collapse + the alerting file), and `apps/foundation/observability-app.yaml`
+is the Argo Application — it rides the **FOUNDATION hub in wave 2**, the
+first wave structurally gated on the Ready `bao` store (Grafana's config
+feeds consume it; Grafana degrades to defaults via `optional: true`, never
+a blocked wave). So the eyes open right after chapter 05's ritual, *before*
+either env hub is applied — and the single stack serves **BOTH staging and
+production from day one**: Alloy relabels scrapes/logs with the pod's
+`omicron/env` label, and every dashboard filters by env (00a A10's fifth
+proof). The `anor` door's Certificate arrives with the certificates app
+(production hub wave 1, rendered by `applications/certificates/`).
+*No manual installs* — on the VPS the stack is merged, not installed.
 
 **Sizing on the 4c/8G box:** VM retention **30d / ~10 Gi PVC**, Loki
 **7d / ~15 Gi PVC**, Grafana 1 Gi PVC. Say it plainly: the base
-**already matches the INFRA §1 VPS budget line for line**, so the prod
-overlay adds **no sizing patches** — inventing no-op patches would fake
-a drift that doesn't exist and give real drift a place to hide. What the
-overlay *does* own: the alerting file (§6) and any future per-VPS knob.
+**already matches the INFRA §1 VPS budget line for line**, so the
+foundation overlay adds **no sizing patches** — inventing no-op patches
+would fake a drift that doesn't exist and give real drift a place to
+hide. What the overlay *does* own: the alerting file (§6) and any
+future per-VPS knob.
 If disk pressure shows up, shrink *Loki retention first* — metrics are
 cheaper to keep than logs. Traces stay OFF (no Tempo — deliberate).
 
@@ -148,10 +151,10 @@ actual teaching tool.
 
 ## 7. The five estate alerts — and why they're green today
 
-`overlays/production/observability/alerting.yaml` → ConfigMap
+`environments/foundation/observability/alerting.yaml` → ConfigMap
 **`grafana-alerting`**, Grafana file-provisioning format
 (`monitoring.grafana.com/v1alpha1`, live since 10.4), mounted at
-`/etc/grafana/provisioning/alerting` by the prod overlay. One folder
+`/etc/grafana/provisioning/alerting` by the foundation overlay. One folder
 (`Estate`), one group (`estate-vital-signs`, 5m interval), **five
 rules**, each against its target metric:
 

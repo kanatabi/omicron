@@ -1,8 +1,9 @@
 ---
 tags: [runbook, index, checklist]
-updated: 2026-11-13
-status: execution map — Track A steps are the k3d-rehearsed path; Track B is
-  PROVEN only when walked on the real VPS (tick it there, same ledger style).
+updated: 2026-11-14
+status: execution map — Track A steps are the k3d-rehearsed path (the
+  dual-environment shape is walked fresh this round); Track B is PROVEN only
+  when walked on the real VPS (tick it there, same ledger style).
 ---
 
 # 00a · Run Order — the execution sheet
@@ -13,13 +14,23 @@ status: execution map — Track A steps are the k3d-rehearsed path; Track B is
 > chapter, a checkbox, and the state that must be true before you continue.
 > Track A is mandatory; Track B is the same knowledge on real metal.
 
+> **The three-plane reality (Phase 11):** `vortex/environments/` holds
+> **foundation** (shared plumbing), **staging** and **production** (per-env
+> app trees). Hubs match: `apps-hub-foundation.yaml`, `apps-hub-staging.yaml`,
+> `apps-hub-production.yaml`. Entry order is always **foundation hub → SEED
+> THE VAULT → staging and/or production hubs**. One cluster can run any
+> combination — moving an environment to another cluster is an Argo
+> destination edit, zero manifest changes. Track A below deliberately runs
+> **both** staging and production on one cluster, because the thing worth
+> rehearsing is their ISOLATION (A10).
+
 ## Track A — LOCAL REHEARSAL (mandatory, k3d)
 
 Everything here runs on the laptop (the 32 GB box; k3d needs the headroom
 because the full production fleet fits in ~4 GB and you want slack, not
-swap). The point: **the rehearsal runs the PRODUCTION shape** — the same
-**two hub files** (foundation, then apps), the same `overlays/production/*`,
-the same waves, the same vault bootstrap. See the why-box at the bottom.
+swap). The point: **the rehearsal runs the SHIPPED shape** — the same hub
+files, the same `environments/{foundation,staging,production}/*` trees, the
+same waves, the same vault bootstrap. See the why-box at the bottom.
 
 - [ ] **A1 · install k3d** — [01 §4](01-prerequisites.md).
   `wget -qO - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash`
@@ -42,84 +53,122 @@ the same waves, the same vault bootstrap. See the why-box at the bottom.
   https://github.com/kanatabi/vortex.git`. Plain HTTPS is fine — the repo
   is **public** and Argo therefore needs **no repo credentials** (the iron
   law, [00](00-overview.md): values live only in Bao).
-  ✅ after: `vortex/bootstrap/apps-hub-foundation.yaml` **and**
-  `vortex/bootstrap/apps-hub-apps.yaml` exist on disk (the hub pair —
-  there is no `apps-hub-production.yaml` anymore).
+  ✅ after: `vortex/bootstrap/apps-hub-foundation.yaml`,
+  `apps-hub-staging.yaml` and `apps-hub-production.yaml` all exist on disk
+  (the env hubs; `apps-hub.yaml` is the 3-node BLUEPRINT entrypoint, not
+  used on this track), and `vortex/overlays/` does **not** (it died with the
+  env model — if your clone shows one, you cloned an old ref).
 
 - [ ] **A4 · install Argo CD (pinned)** — [04 §1](04-gitops.md):
   `kubectl apply -k platform/argocd/ --server-side --force-conflicts`.
   ✅ after: argocd namespace green; the controller is a StatefulSet — check
   `sts`, not `deploy`.
 
-- [ ] **A5 · apply the FOUNDATION hub — entrypoint #1 of two** —
+- [ ] **A5 · apply the FOUNDATION hub — entrypoint #1** —
   [04 §3](04-gitops.md):
 
   ```bash
   kubectl apply -f bootstrap/apps-hub-foundation.yaml
   ```
 
-  The first of the TWO manual applies — together with A9's, this pair is
-  the documented chicken-and-egg exception (GitOps cannot bootstrap the
+  The first of the manual applies — together with A9's, this is the
+  documented chicken-and-egg exception (GitOps cannot bootstrap the
   cluster that hosts its own root apps). It syncs `apps/foundation/`
-  non-recursively: **5 Applications** in waves — 0: openbao +
+  non-recursively: **7 Applications** in waves — 0: openbao +
   external-secrets · 1: lumen-db + meilisearch + secrets-plane (the `bao`
-  store). **Do NOT apply the apps hub yet** — the split exists precisely
-  so the vault ritual (A7) happens *between* the entrypoints: the
-  seed-before-apps order becomes structural, not a wave number.
+  store) · 2: observability + **lumen-admin** (the estate's single Control
+  Plane). Wave 2 waits **structurally**: the store's Ready condition gates
+  it, so the admin fleet cannot boot before `kv/lumen/shared` exists.
+  **Do NOT apply the env hubs yet** — the split exists precisely so the
+  vault ritual (A7) happens *between* the entrypoints: seed-before-apps
+  becomes structural, not a wave number.
   ✅ after: foundation wave 0 healthy; `openbao` pod Running but **SEALED**
   and the `bao` ClusterSecretStore **not-Ready** — that is the expected
-  state until A7, not a bug.
+  state until A7, not a bug; foundation wave 2 (observability, lumen-admin)
+  parked, waiting on that store.
 
 - [ ] **A6 · node-pool label** — [03 §3](03-k3s.md):
   `kubectl label node k3d-omicron-server-0 node-pool=platform --overwrite`.
-  (The production shape collapses placement via `components/single-node`, so
+  (The env overlays collapse placement via `components/single-node`, so
   nothing Pending without it — label anyway: parity with the VPS and a
   free hedge for scale-out.) ✅ after: node shows the label.
 
 - [ ] **A7 · vault bootstrap (M3)** — [05 §2–§7](05-vault.md): init (3
-  shares, threshold 2), unseal, policies + AppRoles, mint pairs, seed
-  `kv/<app>/production` — against the foundation hub's store.
-  ✅ after: `bao status` unsealed; ClusterSecretStore `bao` `Ready: True`.
+  shares, threshold 2), unseal, policies + AppRoles, mint pairs, then the
+  FULL seed contract for this walk: `kv/lumen/shared` + `kv/lumen/staging`
+  + `kv/lumen/production` + `kv/earendil/{staging,production}` +
+  `kv/mellon/shared` + `kv/mellon/{staging,production}` + the foundation
+  singletons (`grafana/production`, `cert-manager/production`,
+  `meilisearch/production`). **ESO fails the whole render on a missing
+  property** — every key the [05 §6](05-vault.md) tables name must exist
+  BEFORE its hub syncs.
+  ✅ after: `bao status` unsealed; ClusterSecretStore `bao` `Ready: True`;
+  foundation wave 2 (observability + lumen-admin) rolls in its wake.
 
-- [ ] **A8 · seeded-matrix check** (before the second hub opens) —
+- [ ] **A8 · seeded-matrix check** (before any env hub opens) —
   [05 §6–§7](05-vault.md): prove the seed matches the contract: the
-  `kv/metadata` listing shows every `kv/<app>/production` path §6 seeded,
+  `kv/metadata` listing shows every `kv/<app>/<env>` path §6 seeded,
   and each path's key set diffs clean, key-by-key, against its
   ExternalSecret's `data:` list — nothing extra lives there. (The portal
   matrix row walk joins it after A9, once mellon exists — §7's
   conformance check.) ✅ after: paths + keys == the CRs' declarations.
 
-- [ ] **A9 · apply the APPS hub — entrypoint #2 — and first release (M4)**
-  — [04 §3](04-gitops.md), [06](06-apps-first-release.md):
+- [ ] **A9 · apply the ENV hubs — entrypoints #2/#3 — and first release
+  (M4)** — [04 §3](04-gitops.md), [06](06-apps-first-release.md):
 
   ```bash
-  kubectl apply -f bootstrap/apps-hub-apps.yaml
+  kubectl apply -f bootstrap/apps-hub-production.yaml
+  kubectl apply -f bootstrap/apps-hub-staging.yaml
   ```
 
-  Syncs `apps/applications/` non-recursively: **5 Applications**, waves
-  restarting per hub — 0: lumen (the dependency root) · 1: earendil +
-  mellon + certificates · 2: observability. Everything rolls onto real
-  values because the vault was seeded *before this hub existed* — that
-  ordering is the split's whole point, not luck. Then ship one real
-  `vX.Y.Z` through the release machine ([09](09-releases.md)) into *this*
-  cluster — the bump PR, the pin, the Argo sync, and a
-  config-only bump ([06 §4](06-apps-first-release.md)) — rehearsed end to
-  end.
-  ✅ after: `kubectl -n argocd get applications` lists all **ten**
-  (5 + 5), all Synced/Healthy; and
+  The production hub syncs `apps/production/` (4 Applications — waves
+  restart per hub: 0: lumen · 1: earendil + mellon + certificates) from
+  `environments/production/*`; the staging hub syncs `apps/staging/`
+  (3 Applications — 0: lumen · 1: earendil + mellon) from
+  `environments/staging/*`. Both co-tenant the SAME cluster on purpose —
+  suffixed names + the `omicron/env` label keep them apart. Everything
+  rolls onto real values because the vault was seeded *before these hubs
+  existed* — that ordering is the split's whole point, not luck. Then ship
+  one real `vX.Y.Z` through the release machine
+  ([09](09-releases.md)) into *this* cluster — the bump PR, the pin, the
+  Argo sync, and a config-only bump ([06 §4](06-apps-first-release.md)) —
+  rehearsed end to end.
+  ✅ after: `kubectl -n argocd get applications` lists all **fourteen**
+  (7 + 4 + 3), all Synced/Healthy; and
   the edge answers — `curl -s -o /dev/null -w '%{http_code}\n'
   http://localhost/` → **404 from Traefik** (edge up, no host matched; with
-  `-H "Host: gofar.id"` you should get earendil instead).
+  `-H "Host: gofar.id"` you get production earendil, with
+  `-H "Host: staging.gofar.id"` the staging twin).
 
-- [ ] **A10 · optional Level-2 rehearsal** — a **named Cloudflare Tunnel**
+- [ ] **A10 · the isolation proof (the point of running both here)** — the
+  rehearsal must SHOW, not assume, that staging and production are separate
+  planes on one cluster:
+
+  - [ ] write a post in **staging-console** (mellon-staging) → it appears
+        on `staging.gofar.id` only; `gofar.id` never shows it;
+  - [ ] the staging cms indexed it into **posts-staging** while production
+        reads **posts** (`curl` the Meilisearch pod's index stats or use
+        each site's search);
+  - [ ] a media upload on staging lands under the **`staging/`** prefix in
+        the shared bucket;
+  - [ ] an epoch flip in ONE env's overlay gates ONLY that env's rollout
+        (the other env's syncs stay green through it);
+  - [ ] Grafana: every dashboard's env filter splits the two fleets (the
+        `omicron/env` pod label is the attribution — [10](10-observability.md)).
+
+  ✅ after: all five hold — you have rehearsed the model, not just the
+  YAML.
+
+- [ ] **A11 · optional Level-2 rehearsal** — a **named Cloudflare Tunnel**
   from the laptop cluster lets you rehearse the REAL public path before any
   VPS exists: proxy behavior, managed challenges, Access policies, and real
   Let's Encrypt certs (DNS-01 needs no open port — the `certificates` app
-  works from a laptop). The cheaper Level-1 trick is also valid: real certs
-  + `/etc/hosts` entries pointing `gofar.id`/`console`/`anor` at
-  127.0.0.1. Details in [07](07-go-public.md).
-  ✅ after: `https://gofar.id` green on the laptop, same Ingress rules the
-  VPS will use.
+  works from a laptop, staging included). The cheaper Level-1 trick is also
+  valid: real certs + `/etc/hosts` entries pointing
+  `gofar.id`/`staging.gofar.id`/`console`/`anor` at 127.0.0.1. Details in
+  [07](07-go-public.md).
+  ✅ after: `https://gofar.id` AND `https://staging.gofar.id` green on the
+  laptop, same Ingress rules the VPS will use.
 
 ### Deliberately SKIPPED on Track A
 
@@ -127,21 +176,32 @@ the same waves, the same vault bootstrap. See the why-box at the bottom.
 |---|---|
 | [02](02-security.md) hardening (SSH, ufw, swap…) | those are the *VPS's* front-door locks — the laptop cluster has no public SSH and no firewall job |
 | DNS records + nameservers | nothing public is pointed; records land at M5 ([07](07-go-public.md)) |
-| Managed challenges + Access | edge-layer features of the public path — M5; A10 can optionally rehearse them |
-| cert issuance (default run) | the fleet tolerates certs not existing yet; A10/Level-1 makes issuance rehearsalable when you want it |
+| Managed challenges + Access | edge-layer features of the public path — M5; A11 can optionally rehearse them |
+| cert issuance (default run) | the fleet tolerates certs not existing yet; A11/Level-1 makes issuance rehearsalable when you want it |
 | restic → R2 ([08](08-backups.md)) | M6 "when boring" — a rehearsal cluster you can delete is not a backup target |
 
-> **Why we rehearse the PRODUCTION shape locally, not a dev sketch:**
-> the failure this protects against is *shape drift* — rehearsing
-> `overlays/local` and shipping `overlays/production` means the first time
-> you meet the real waves, the real `certificates` app, and the real
-> secrets-plane gating is on production day. k3d runs the **same k3s
-> image** and the **same YAML chain** (both hubs → `apps/foundation/` +
-> `apps/applications/` → `overlays/production/*` +
-> `components/single-node` + `components/config-gate`), so the only deltas
-> left for the VPS are the host-level ones (02's locks, hostNetwork
-> publish) — cheap, boring, and exactly what Track B walks. An accident
-> here costs `k3d cluster delete omicron`; on the VPS it costs an afternoon.
+> **Why we rehearse the SHIPPED shape locally, not a dev sketch:**
+> the failure this protects against is *shape drift* — rehearsing one old
+> `overlays/local` tree and shipping another environment meant the first
+> time you met the real waves, the real `certificates` app, and the real
+> secrets-plane gating was on production day. k3d runs the **same k3s
+> image** and the **same YAML chain** (foundation hub → seed → both env
+> hubs → `environments/{foundation,staging,production}/*` +
+> `components/single-node` + `components/config-gate`), and because the
+> model is cluster-agnostic it can run staging AND production together —
+> so the only deltas left for the VPS are the host-level ones (02's locks,
+> hostNetwork publish) — cheap, boring, and exactly what Track B walks. An
+> accident here costs `k3d cluster delete omicron`; on the VPS it costs an
+> afternoon.
+
+> **Playground note (owner ruling, 2026-11-14):** the old minikube
+> playground currently runs the **RETIRED** tree — its Argo errors
+> `overlays/local/lumen: app path does not exist`, which is the retired
+> shape talking, not a bug. Its vault holds only disposable `kv/*/dev`
+> scratch (the dev plane is gone) — nothing to rescue. The ruling: the next
+> live walk of the new model repoints that box to **staging** (foundation
+> hub → seed → staging hub), which is exactly the A5→A9 choreography with
+> one env hub. Do not treat its current redness as estate breakage.
 
 ## Track B — VPS (later; same steps, real metal, nothing optional)
 
@@ -154,18 +214,21 @@ the same waves, the same vault bootstrap. See the why-box at the bottom.
   v1.37, label, local-path truth, Traefik hostNetwork variant. ✅ checkpoint
   green; same fleet shape A5 will recognize.
 - [ ] **B4 · M2** — [04](04-gitops.md): Argo install + apply
-  `bootstrap/apps-hub-foundation.yaml` — the FIRST of the hub pair (the
-  apps hub gets applied only after B5; two hubs, one vault ritual between
-  them — the production entrypoint IS this pair, no single-hub file
-  exists). ✅ foundation waves healthy, `bao` store NOT-Ready — the vault
-  is what's missing.
+  `bootstrap/apps-hub-foundation.yaml` (the env hubs get applied only after
+  B5 — foundation first, vault ritual between, env planes after; that entry
+  order IS the seed-before-apps invariant). ✅ foundation waves 0–1 healthy,
+  `bao` store NOT-Ready, wave 2 parked — the vault is what's missing.
 - [ ] **B5 · M3** — [05](05-vault.md): init/unseal/AppRole/seed — **freshly
-  generated values**, reuse nothing from the rehearsal — plus A8's
-  seeded-matrix check. ✅ store Ready, paths + keys match the CRs.
+  generated values**, reuse nothing from the rehearsal — for every
+  environment this box will run (production at minimum; plus staging and
+  `kv/lumen/shared` if the VPS hosts both), plus A8's seeded-matrix check.
+  ✅ store Ready, paths + keys match the CRs, foundation wave 2 rolls.
 - [ ] **B6 · M4** — [06](06-apps-first-release.md): apply
-  `bootstrap/apps-hub-apps.yaml`, apps green; the first production release
-  rides the machine rehearsed in A9. ✅ four Ingress
-  routes exist, still no DNS pointing at the box.
+  `bootstrap/apps-hub-production.yaml` (+ the staging hub if this box runs
+  it), apps green; the first production release rides the machine rehearsed
+  in A9. ✅ four production Ingress routes live (`gofar.id`+`www`,
+  `console`, `anor`; staging rides the same DNS-01 issuer — real certs from
+  day one, no selfsigned anything), still no DNS pointing at the box.
 - [ ] **B7 · M5** — [07](07-go-public.md): records, proxy ON, challenges,
   real certs settle, Access on anor, img custom domain. ✅ public doors
   open; Traffic Anatomy verified with your own eyes.

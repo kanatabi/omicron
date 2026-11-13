@@ -1,6 +1,6 @@
 ---
 tags: [runbook, setup]
-updated: 2026-11-13
+updated: 2026-11-14
 status: M0 · prepare — the buy/create list for both tracks; every item here
   is a dependency of a later milestone, and nothing public is pointed yet.
 ---
@@ -74,7 +74,7 @@ different lifecycles, different blast radius.
 
 | Token | Scoped to | Feeds |
 |---|---|---|
-| media token | `omicron-media` | `LUMEN_MEDIA_ACCESS_KEY` / `_SECRET_KEY` in `kv/lumen/production` |
+| media token | `omicron-media` | `LUMEN_MEDIA_ACCESS_KEY` / `_SECRET_KEY` in `kv/lumen/staging` AND `kv/lumen/production` (one token may serve both paths — the envs share the bucket and separate objects by `LUMEN_MEDIA_PREFIX`) |
 | backup token | `omicron-backups` | the restic S3 keys in [08](08-backups.md) |
 
 > **Why scoped:** a bucket-scoped token can replace your photos; it cannot
@@ -125,8 +125,9 @@ wget -qO - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
 > **Why:** the build chapters should be typed twice — once where a mistake
 > costs `k3d cluster delete`, once on the real box. And the rehearsal must
-> run the **production shape** (the two-hub pair: `bootstrap/apps-hub-foundation.yaml`
-> then `bootstrap/apps-hub-apps.yaml`), not
+> run the **shipped shape** (the hub set:
+> `bootstrap/apps-hub-foundation.yaml` first, the vault ritual, then
+> `apps-hub-production.yaml` and/or `apps-hub-staging.yaml`), not
 > a dev sketch — otherwise the first time you meet the real waves, the real
 > secrets-plane gating and the `certificates` app is production day. The
 > execution map is [00a](00a-run-order.md).
@@ -145,8 +146,13 @@ Two demotions, so the history stays honest:
   inside the cluster is already covered by k3d.
 - **minikube**: the historical playground. It produced the archived
   rehearsal log (`../RUNBOOK.md`) and its quirks (the `standard`
-  StorageClass alias) are *not* part of the production procedure. Don't
-  build this walk on it.
+  StorageClass alias) are *not* part of the production procedure. Owner
+  ruling 2026-11-14 gives it one redo: it currently runs the RETIRED tree
+  (Argo errors about `overlays/local/…` — expected) and holds only
+  disposable `kv/*/dev` scratch, and it gets **repointed to STAGING**
+  (foundation hub → seed → staging hub) as the first live walk of the env
+  model. Don't build the FIRST Track A on it — k3d is that — but don't
+  read its current redness as estate breakage either.
 
 ## 6. Before continuing — checklist
 

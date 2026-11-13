@@ -1,6 +1,6 @@
 ---
 tags: [runbook, backup, dr]
-updated: 2026-11-13
+updated: 2026-11-14
 status: M6 — designed & rehearsed (restic loop written, never walked on the
   VPS). Nothing depends on this chapter yet; it becomes mandatory the day
   real readers exist.
@@ -19,7 +19,7 @@ status: M6 — designed & rehearsed (restic loop written, never walked on the
 
 | Thing | Reconstructable without a backup? | Plan |
 |---|---|---|
-| Postgres data (posts, users, media DB pointers) | ❌ **the only copy** | nightly `pg_dumpall` → restic |
+| Postgres data (posts, users, media DB pointers) | ❌ **the only copy** | nightly `pg_dumpall` → restic — `dumpall`, not per-DB: the ONE Patroni (`lumen-pg`) holds all three logical DBs (`lumen_admin`, `lumen_staging`, `lumen_production`), and the admin DB is the one with the users table |
 | OpenBao `/data` (every secret ever seeded) | ❌ | `bao snapshot save` via kubectl → restic (see §3b — never rsync the live dir) |
 | Media photos | ✅ already offsite (R2, ch.07) — but the **database** rows linking them are the fragile memory | covered by the DB backup |
 | Meilisearch index | ✅ rebuilds from Postgres (the A11 recipe: wipe the host dir + `cmd/seed` reconcile — archived rehearsal log, ch.13) | not backed up |
@@ -99,7 +99,7 @@ tiny; disk is the least of your worries.
 **The freshness metric:** step 04's `restic check` success is what
 exports `backup_last_success_timestamp_seconds`. That name is not
 invented on this page — it is exactly the metric the ch.10 alert rule
-*Backups stale (no success in 36h)* (`overlays/production/observability/alerting.yaml`)
+*Backups stale (no success in 36h)* (`environments/foundation/observability/alerting.yaml`)
 queries. Until the timer exists, that rule is **inert by design**
 (noData → OK): the alert is provisioning that becomes alive, not a
 broken promise. *An old backup is not a backup, it's a hope* — the

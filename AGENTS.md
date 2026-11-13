@@ -28,8 +28,10 @@ Always run `npm run check && npm run test:unit` after touching `src/`.
 kustomization under `vortex/` — run it after ANY manifest edit.
 Remote-pinned resources (Argo overlay) need network on first fetch.
 
-**Local cluster rehearsal:** follow `README.md` (k3d, 1 server + 2 agents, node-pool
-labels). `k3d image import` after rebuilding placeholder images.
+**Local cluster rehearsal:** follow `README.md` / `runbook/00a` — Track A
+(the canonical k3d rehearsal: both staging AND production envs on one
+cluster) and the 3-node topology exercise (node-pool labels). Images are
+real public ghcr v-tags (no placeholder builds / image imports anymore).
 
 ## Workflow
 
@@ -66,13 +68,23 @@ labels). `k3d image import` after rebuilding placeholder images.
    never shared: approvals batch per environment); approving ONE is the
    release decision; the PAT-pushed tag it emits (RELEASE_BOT_PAT,
    Contents+Workflow+Actions perms) triggers the deploy pipeline, whose
-   `deploy` job parks on a FOURTH environment (`deploy`) — evidence first
-   (deploy-plan), then the human's deploy click, then the bump PR (born
-   validated, auto-merge behind `DEPLOY_AUTOMERGE`). Config is likewise
-   released: the `omicron/config.epoch` pair (annotation + gate `--declared`)
-   bumps through the same pipeline; the in-cluster gate BLOCKS sync unless
-   declared==head and pin agrees — and a pin is a LOCK (lumen 403s writes
-   while set). (amendments 2026-11-13, runbook/06–09 + `runbook/00a` for order)
+   `deploy` jobs — ONE CHAIN PER ENVIRONMENT (`deploy-foundation|
+   deploy-staging|deploy-production`, lumen three, earendil/mellon two) —
+   each parking on its SAME-NAMED protected environment; evidence first
+   (deploy-plan-<env>), then the human's deploy click, then that env's
+   bump PR (born validated, auto-merge behind `DEPLOY_AUTOMERGE`); the
+   ladder is the APPROVAL ORDER (staging before production). Because a
+   referenced-but-missing environment is AUTO-CREATED UNPROTECTED (the
+   2026-11-13 incident: v3.0.0 fired with no park, five bump PRs opened
+   unattended), every release pipeline ships a fail-closed `gate-audit`
+   job: no environment OR no required_reviewers = deploy chain RED.
+   Config is likewise released: the `omicron/config.epoch` TRIO
+   (pod annotation + gate `--declared` + ES annotation, byte-equal)
+   bumps through the same pipeline, per-env only (an epoch flip targets
+   ONE environment — trio values differ per env); the in-cluster gate
+   BLOCKS sync unless declared==head and pin agrees — and a pin is a
+   LOCK (lumen 403s writes while set).
+   (amendments 2026-11-13/14, runbook/06–09 + `runbook/00a` for order)
 5. **App-of-apps shape:** `apps/foundation/` + `apps/applications/` (and the
    Part-C `apps/`) contain ONLY Argo `Application` CRs; raw manifests
    under `applications/<name>/`; each hub syncs its folder non-recursively.

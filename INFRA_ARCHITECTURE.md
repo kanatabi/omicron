@@ -123,9 +123,9 @@ _always_ serves the laptop→cluster admin path regardless of that choice.
 
 | Service                              | Access Level                                                      | Endpoint / Route                                                                                                      | Protocol / Security Layer                                                                                                                                                                                                                                                                                                                               |
 | :----------------------------------- | :---------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Blog Frontend (SvelteKit SSR)**    | **Public**                                                        | `ainurrofiq.com`                                                                                                      | HTTPS via Traefik Ingress + Let's Encrypt TLS (HTTP→HTTPS redirect enforced)                                                                                                                                                                                                                                                                            |
-| **Lumen API**                        | **Cluster-internal only**                                         | `http://lumen-http-server.lumen.svc.cluster.local`                                                                    | No public ingress. Earendil SSR pods call it directly; the browser's single client-side call (search suggest) rides earendil's same-origin `/api/...` proxy                                                                                                                                                                                             |
-| **Mellon (admin portal)**            | **Public — TLS only** (amended 2026-11-08; was port-forward-only) | `https://console.gofar.id` (Traefik, edge node) · `kubectl port-forward svc/mellon 8080:8080` remains **break-glass** | Service stays ClusterIP — only Traefik routes to it, with the console middlewares (headers/HSTS/rate-limit, Phase 3) + JWT sessions with `tv`-revocation (`mellon/DESIGN.md` §8). Go-public is **HUMAN-GATE #10**: the checklist verifies before DNS flips. Its relay still calls lumen's Admin API server-side; mellon holds no credentials in any era |
+| **Blog Frontend (SvelteKit SSR)**    | **Public** (production + staging twins, amended 2026-11-14) | `gofar.id` (+`www`, production-only) · staging: `staging.gofar.id` — the old `ainurrofiq.com` 301s in                                    | HTTPS via Traefik Ingress + Let's Encrypt TLS via **DNS-01** (HTTP→HTTPS redirect enforced; staging rides the SAME ClusterIssuer — the self-signed rehearsal component is retired, DNS-01 works from any cluster)                                                                                                                                                                                                 |
+| **Lumen API**                        | **Cluster-internal only — and role-split** (amended 2026-11-14)  | cms: `http://lumen-http-server-{staging,production}.lumen.svc.cluster.local` (suffixed per the Naming contract — the suffix is part of the SEEDED value, not a rewrite) · admin: `http://lumen-admin.lumen.svc.cluster.local` (ONE Control Plane, foundation plane, unsuffixed) | No public ingress, either plane. `LUMEN_ROLE=admin` = sessions (the only ones), users (the only `users` table), Bao relay, TOFU wizard — no worker, no content routes, no ingress; `LUMEN_ROLE=cms` = content only, introspects every admin write against the admin plane (≤30 s cache; unreachable → 503 fail-closed). Earendil SSR pods call their env's cms; the browser's single client-side call (search suggest) rides earendil's same-origin `/api/...` proxy. Mellons reach BOTH by path per `routing.ts` |
+| **Mellon (admin portal)**            | **Public — TLS only** (amended 2026-11-08; was port-forward-only) | `https://console.gofar.id` (production) · `https://staging-console.gofar.id` (staging) · `kubectl port-forward svc/mellon-web-server-<env>` remains **break-glass** | Service stays ClusterIP — only Traefik routes to it, with the console middlewares (headers/HSTS/rate-limit, Phase 3) + JWT sessions minted ONLY by lumen-admin (`tv`-revocation; `mellon/DESIGN.md` §8). Go-public is **HUMAN-GATE #10**: the checklist verifies before DNS flips. Its relay is a ROUTING TABLE (`src/lib/api/routing.ts`): session/users/setup/bao → ADMIN_URL, content + /api → CMS_URL, unknown → throw (no default). Mellons hold no credentials in any era |
 | **Argo CD Control Panel**            | **Private (VPN Only)**                                            | `localhost:8080` (Port-forwarded) / Private Ingress                                                                   | Private NetBird WireGuard Overlay Mesh                                                                                                                                                                                                                                                                                                                  |
 | **Grafana / VictoriaMetrics / Loki** | **Private (VPN Only)**                                            | Internal Mesh DNS / Local Tunnel                                                                                      | Private NetBird WireGuard Overlay Mesh                                                                                                                                                                                                                                                                                                                  |
 | **Meilisearch**                      | **Cluster-internal only**                                         | `http://meilisearch.search.svc.cluster.local:7700`                                                                    | No public or mesh ingress; API-only access                                                                                                                                                                                                                                                                                                              |
@@ -139,6 +139,15 @@ _always_ serves the laptop→cluster admin path regardless of that choice.
 ---
 
 ## 3. DNS Architecture Strategy
+
+> **Status note 2026-11-14:** the live zone is `gofar.id` on **Cloudflare**
+> (proxy + DNS-01 ACME; `ainurrofiq.com` 301-redirects to it — production
+> ingress cut over 2026-11-11). The record spellings below are the original
+> Biznet-era draft; the current procedure with the record table is
+> `runbook/07-go-public.md` Act 1. Hosts: `gofar.id` + `www` (production
+> only), `console.gofar.id`, `anor.gofar.id` (one Grafana door, dashboards
+> filtered per env), `img.gofar.id` (R2 custom domain), plus staging's
+> `staging.gofar.id` / `staging-console.gofar.id`.
 
 ### A. Public Domain DNS (For External Users)
 
@@ -542,15 +551,21 @@ netbird` for admin access):
        requests: { cpu: "250m", memory: "512Mi" }
        limits: { cpu: "1000m", memory: "1Gi" }
      databases:
-       { lumen_staging: db_user_staging, lumen_production: db_user_production }
+       { lumen_admin: db_user_admin, lumen_staging: db_user_staging, lumen_production: db_user_production }
    users:
+     db_user_admin: [createdb]
      db_user_staging: [createdb]
      db_user_production: [createdb]
    ```
 
-   > **DB-1 in one line:** one shared Patroni cluster, one database per environment,
-   > distinct owner users ⇒ distinct credentials. The env a pod talks to is decided by
-   > `DATABASE_URL` in its overlay's Bao path — never in the cluster spec.
+   > **DB-1 in one line (amended 2026-11-14 — THREE logical databases):** one shared
+   > Patroni cluster, one database per environment PLUS `lumen_admin` for the shared
+   > Control Plane, distinct owner users ⇒ distinct credentials. The env a pod talks to
+   > is decided by `LUMEN_DB_URL` in its overlay's Bao path (`kv/lumen/shared`,
+   > `kv/lumen/staging`, `kv/lumen/production`) — never in the cluster spec. The role
+   > split makes `lumen_admin` the ONLY home of the `users` table (role-split migration
+   > sets — a cms DB structurally cannot grow one). Base `numberOfInstances: 2`; the
+   > single-node component collapses to 1 on the one-VPS shape.
    > The operator spreads instances across hosts with built-in pod anti-affinity
    > and creates `lumen-pg` (read/write) + `lumen-pg-repl` (read-only) Services — v2 naming (verified live).
 
@@ -599,7 +614,7 @@ netbird` for admin access):
 
 > Amended in practice 2026-11-13 → operational shape (single-node sizing,
 > `anor.gofar.id` door, family-lab roles, alert set) is written in
-> [`runbook/09-observability.md`](runbook/09-observability.md); the
+> [`runbook/10-observability.md`](runbook/10-observability.md); the
 > multi-worker budget table below stays the Part-C scale-out story.
 
 Scaffolded in Git: [`applications/observability/`](vortex/applications/observability/)
@@ -739,72 +754,57 @@ RED dashboards exist for every service even before apps instrument themselves.
 
 > **Layout fix:** the hub points at `apps/`, which must contain **`Application` CRs**, not
 > raw resources. Each per-app Application declares its own destination namespace.
+>
+> **Amended 2026-11-14 (env model, Phase 11 — this is the shipped shape):**
+> the fleet axis is now **three hubs / three planes**. `bootstrap/` holds
+> `apps-hub-foundation.yaml` (manual apply #1 → `apps/foundation/`: openbao,
+> external-secrets, secrets-plane, lumen-db, meilisearch, observability,
+> lumen-admin), `apps-hub-production.yaml` (#2 → `apps/production/`: lumen,
+> earendil, mellon, certificates) and `apps-hub-staging.yaml` (#3, optional →
+> `apps/staging/`: lumen, earendil, mellon). Entry order foundation → **vault
+> seed (runbook ch. 05)** → env hub(s): the seed-before-apps gate lives at the
+> entrypoint, and foundation wave 2 (lumen-admin + observability) is
+> structurally gated on the Ready store. `environments/<env>/<app>/` overlays
+> are the env axis (`nameSuffix` + `omicron/env` label per the Naming
+> contract) AND the only image-version homes (bases pin nothing). The trees
+> are ENVIRONMENT files, not cluster files — one cluster runs any subset;
+> moving an env between clusters is its hub CR's destination, zero manifest
+> edits. `bootstrap/apps-hub.yaml` (flat `apps/`) survives only as the
+> 3-node BLUEPRINT entrypoint for the future scale-out; the single-node
+> rehearsal hubs and `overlays/{dev,local,…}` died with the env model (git
+> history keeps them).
 
-Repository layout for `vortex` (a working scaffold lives in
-[`vortex/`](vortex/) in this project — see
-[README.md](README.md) for running it locally):
+Repository layout for `vortex` (the live repo — this IS the shipped tree;
+operating procedure: `runbook/` 04–06):
 
 ```text
 vortex/
-├── bootstrap/
-│   └── apps-hub.yaml              # root Application → path: apps/, recurse: false
-├── apps/                          # Application definitions ONLY
-│   ├── earendil-app.yaml          # SvelteKit SSR frontend (repo: sv-fzr)
-│   ├── lumen-app.yaml             # backend API (repo: fzr-backend) — cluster-internal
-│   ├── lumen-db-app.yaml          # Patroni PG (selfHeal off — DB guard)
-│   ├── observability-app.yaml     # Loki/VictoriaMetrics/Alloy/Grafana
-│   ├── meilisearch-app.yaml       # search — cluster-internal
-│   ├── openbao-app.yaml           # the values store (§5)
-│   ├── external-secrets-app.yaml  # ESO as an OCI Helm chart (Argo-managed, chart 2.15.0 pinned)
-│   └── secrets-plane-app.yaml     # ClusterSecretStore `bao` (wave 1)
+├── bootstrap/                     # manual-applied hub ENTRYPOINTS
+│   ├── apps-hub-foundation.yaml   # #1: syncs apps/foundation/ (values+data plane)
+│   ├── apps-hub-production.yaml   # #2: syncs apps/production/ (application plane)
+│   ├── apps-hub-staging.yaml      # #3: syncs apps/staging/ (same or another cluster)
+│   └── apps-hub.yaml              # 3-node BLUEPRINT hub (future scale-out shape)
+├── apps/{foundation,production,staging}/   # Application CRs ONLY, one dir per hub
 ├── applications/                  # raw manifests (bases), one kustomize dir per app —
-│   │                              # ESO-free so k3d works unchanged
-│   ├── earendil/                  # namespace/deployment/service/ingress
-│   ├── lumen/                     # namespace + http-server/worker deployments + service
-│   ├── lumen-db/                  # namespace + postgresql CR (lumen_staging/lumen_production)
-│   ├── observability/             # loki.yaml, victoria-metrics.yaml, grafana.yaml,
-│   │   └── alloy/                 # serviceaccount.yaml, alloy-daemonset.yaml,
-│   │                              # service.yaml, config.alloy (configMapGenerator)
-│   ├── meilisearch/               # deployment/pvc/service
-│   ├── openbao/                   # deployment/service/pvc + server.hcl
-│   └── secrets-plane/             # ClusterSecretStore bao (AppRole auth)
-├── overlays/                      # same bases + values sourced from Bao (kv/{app}/{env})
-│   ├── production/{earendil,lumen}/   # ExternalSecret (+ earendil envFrom patch)
-│   └── staging/{earendil,lumen}/      # twins: namespace + -staging suffix, shared DB-1
+│   │                              # ESO-free AND image-pin-free (shape only)
+│   ├── earendil/  mellon/  lumen/  lumen-db/  observability/  meilisearch/
+│   ├── openbao/   secrets-plane/  certificates/  external-secrets/
+├── components/                    # placement/cluster-SHAPE toggles, orthogonal to envs
+│   ├── single-node/               # collapses pools/replicas/Patroni to 1 node
+│   └── config-gate/               # PreSync epoch gate (Job + RBAC, ns-agnostic)
+├── environments/                  # THE ENV AXIS (suffix + omicron/env + ES + pins + trio)
+│   ├── foundation/                # openbao, external-secrets, secrets-plane, lumen-db,
+│   │                              # meilisearch, observability, lumen (== lumen-admin)
+│   ├── staging/                   # lumen, earendil, mellon — suffix -staging
+│   └── production/                # lumen, earendil, mellon — suffix -production
 └── platform/
     └── argocd/                    # Phase 6 overlay (pinned upstream + selector patches)
-        ├── kustomization.yaml
-        ├── namespace.yaml
-        ├── pinning-patch.yaml
-        └── resources-patches.yaml
 ```
 
-`bootstrap/apps-hub.yaml`:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: platform-apps-hub
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: "https://github.com/kanatabi/vortex.git"
-    targetRevision: HEAD
-    path: apps/
-    directory:
-      recurse: false
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: argocd
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-```
-
-`apps/lumen-app.yaml` (example):
+The hub CRs all share the shape the original draft introduced (Application →
+`path:` a folder synced **non-recursively**, `prune + selfHeal`; the
+`lumen-db` CR keeps `selfHeal: false` — DB guard). Example, the shipped
+`apps/production/lumen-app.yaml`:
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -812,12 +812,14 @@ kind: Application
 metadata:
   name: lumen
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
   source:
     repoURL: "https://github.com/kanatabi/vortex.git"
     targetRevision: HEAD
-    path: applications/lumen
+    path: environments/production/lumen
   destination:
     server: "https://kubernetes.default.svc"
     namespace: lumen
@@ -825,11 +827,19 @@ spec:
     automated: { prune: true, selfHeal: true }
 ```
 
-Apply once:
+Apply order (the entrypoints ARE the documented chicken-and-egg exception —
+GitOps cannot bootstrap the cluster hosting its own root apps):
 
 ```bash
-kubectl apply -f bootstrap/apps-hub.yaml
+kubectl apply -k platform/argocd/          # Argo itself, pinned (Phase 6)
+kubectl apply -f bootstrap/apps-hub-foundation.yaml
+# … runbook ch. 05: unseal → AppRoles → SEED every path the render contract names …
+kubectl apply -f bootstrap/apps-hub-production.yaml   # and/or -staging
 ```
+
+Adding an app = new `applications/<app>/` base (+ env overlays as needed) +
+a new Application CR in the hub dir its plane belongs to — never a hub edit,
+never raw manifests in a hub dir (their prune would delete them).
 
 ---
 
@@ -874,7 +884,35 @@ kubectl apply -f bootstrap/apps-hub.yaml
 > sanctioned ritual unpin→restore→save→re-pin). Helm installs now pin the binary by
 > sha256 after an audit found `get-helm-3` resolves a mutable pointer — "a pin that
 > pins nothing". Operational procedure: `runbook/` (00a = execution order).
-> with an older tag.
+> with an older tag. *(2026-11-14 note on the note: `apps-hub-apps.yaml` was renamed
+> `apps-hub-production.yaml` and the epoch PAIR grew into the env-scoped TRIO — see
+> the next amendment.)*
+>
+> **Amendment 2026-11-14 (env-deploy chains + the gate incident — supersedes
+> the single `deploy` environment above):** the tag-triggered pipeline now
+> runs **one CHAIN per target environment** — lumen:
+> `build → [gate-audit, deploy-plan-{foundation,staging,production}] →
+> deploy-{foundation,staging,production}`; earendil/mellon: the
+> staging/production pair. Each `deploy-<env>` parks on its OWN protected
+> environment (NEVER shared — approvals batch per environment), and the
+> ladder is the **approval ORDER** (staging before production). Bump
+> branches are env-scoped: `bump/<app>-<env>-<tag>` (legacy
+> `bump/<app>-<tag>` = production, DEPRECATED; an unparseable env BAILS the
+> auto-merger), and the fence accepts only `environments/<env>/**` files
+> with `images:`-stanza ∪ epoch-TRIO lines, moving an env's `name: lumen`
+> stanzas (the gate pins) in ONE commit. `workflow_dispatch`'s
+> `config-epoch` input is honored ONLY on a single-environment dispatch (the
+> trio's value is env-scoped: production's lumen trio is at `7`, the rest at
+> `0`).
+> **Why gate-audit exists (incident record, 2026-11-13):** v3.0.0/v2.0.0
+> fired while the `deploy-*` environments did not exist — GitHub
+> AUTO-CREATES a referenced-but-missing environment UNPROTECTED, so the
+> park silently no-oped and five bump PRs (#14–#18) opened unattended. The
+> fix is fail-closed: every pipeline ships a `gate-audit` job (environments
+> API via GITHUB_TOKEN) — a chain's deploy jobs `need` it, and a missing
+> environment OR missing required_reviewers is RED before anything parks.
+> "Protection must predate the workflows" is no longer a reminder; it is a
+> gate. Full lore: runbook ch. 09 §6.
 
 `.github/workflows/deploy.yml` in your application source repository:
 
@@ -993,6 +1031,20 @@ them into workloads.
 > here: CI workflow wiring (Phase 8's pipeline), the vortex manifests below, the
 > seeds, and cutover (Phase C). See `mellon/PLAN.md` journal.
 
+> **Addendum 2026-11-14 (what this phase became):** all of the "remaining"
+> shipped — M1–M6 merged, both portals live, and the deployment grew the
+> **role split**: ONE lumen binary, `LUMEN_ROLE=admin|cms` (unset = legacy
+> all, dev-only). `lumen-admin` runs on the FOUNDATION plane as the estate's
+> single Control Plane — the only session minter, the only `users` table
+> (role-split migration sets), the only Bao relay, no worker, no ingress, no
+> content routes; the per-env cms fleets are content-only and introspect
+> every admin write (`POST /admin/session/verify`, ≤30 s cache keyed by the
+> token hash, fail-closed 503). `kv/data/lumen/{env}` below predates this —
+> the live seed contract is §5.2's amended tree (and item 3's
+> `overlays/{staging,production}` is now `environments/*`). mellon's relay
+> became the routing table (§2's amended row). Lore + commands: runbook
+> ch. 05 §6, ch. 06 §2, vortex README's Naming/Render contracts.
+
 1. **Lumen (Go):** scaffold in `lumen/` — read API (§1) with the earendil contract tests
    as the acceptance gate, then Admin API (§8: post/photo/tag writes, publish = the §2
    unit of work, media uploads per the D1 resolution, Bao passthrough with the
@@ -1061,19 +1113,42 @@ real store; SOPS remains for **offline emergency seeds only** (§5.6).
 
 ### 5.2 OpenBao mount layout (env / app / version model)
 
+> **Amended 2026-11-14 (env model, Phase 11):** the mount gains a third
+> environment class — `shared`, the foundation plane — and `dev` is gone
+> with the retired `overlays/{dev,local}` trees. The layout below is the
+> live shape; **the ExternalSecret CRs are the render contract** (vortex
+> README §"ES = the render contract"; lumen `config keys --role admin|cms`
+> is the machine truth) and ESO fails the WHOLE render on a missing
+> property, so runbook ch. 05 seeds everything before any hub syncs.
+
 ```text
 kv/ (KV-v2 mount, max_versions=20, check-and-set enabled)
 ├── lumen/
-│   ├── staging     # v1..  DATABASE_URL, MEILI_*, LOG_LEVEL, ...
-│   └── production  # v1..
-└── earendil/
-    ├── staging     # v1..  ORIGIN=https://staging.ainurrofiq.com, API_BASE, ...
-    └── production  # v1..
+│   ├── shared      # lumen-admin (Control Plane): LUMEN_DB_URL (lumen_admin DSN),
+│   │               # LUMEN_SESSION_JWT_SECRET (the ONLY home of the signing key),
+│   │               # LUMEN_ADMIN_URL (read by both cms ESes from here)
+│   ├── staging     # v1..  cms plane: per-db DSN, LUMEN_MEILI_* (INDEX names MUST
+│   │               #       differ from production — posts-staging/photos-staging),
+│   │               #       LUMEN_MEDIA_* + LUMEN_MEDIA_PREFIX staging/
+│   └── production  # v1..  same shape, production/ prefix, index defaults posts/photos
+├── mellon/
+│   ├── shared      # ADMIN_URL (estate-wide upstream of the routing table)
+│   ├── staging     # CMS_URL (+ API_BASE transitional)
+│   └── production  # CMS_URL (+ API_BASE transitional)
+├── earendil/
+│   ├── staging     # v1..  ORIGIN=https://staging.gofar.id, API_BASE (SUFFIXED service!)
+│   └── production  # v1..  ORIGIN=https://gofar.id, API_BASE
+├── grafana/production · cert-manager/production · meilisearch/production   # foundation singletons
 ```
+
+The **values** of `API_BASE`/`CMS_URL` must name the SUFFIXED Services
+(`lumen-http-server-staging…`, `…-production…`) — `nameSuffix` rewrites
+metadata.name only, so the suffixed name is a seeded string, guaranteed to
+exist by the Naming contract (vortex README).
 
 - **App config set** = one path prefix per app; **environment** = leaf; **version** =
   native KV-v2 integer history (diff, rollback, soft-delete). Grouping by app reads
-  better in the portal and mirrors `overlays/<env>/<app>` in Git. ExternalSecret
+  better in the portal and mirrors `environments/<env>/<app>` in Git. ExternalSecret
   `remoteRef.key` is mount-relative: `lumen/production`.
   There are no free-form "tags" — the `env/app` path convention _is_ the tag.
 - Portal/admin UI integration talks to this same REST surface (§5.5).
@@ -1101,19 +1176,39 @@ spec:
   secretStoreRef: { name: bao, kind: ClusterSecretStore }
 ```
 
-The `ENV`/`PIN` placeholders are exactly what **kustomize overlays** substitute:
-`overlays/staging` rewrites key→`<app>/staging`, `overlays/production` → `<app>/production`.
-The app's base manifests never contain env-specific values, and `kustomize edit set image`
-(CI) + overlay pins (humans) touch disjoint files.
+The `ENV`/`PIN` placeholders were originally what **kustomize overlays**
+substituted; **amended 2026-11-14:** the mechanism shipped differently — each
+`environments/<env>/<app>/` overlay authors its own ExternalSecret whose
+`remoteRef.key` is already env-final (`lumen/staging`, never a template), and
+`spec.target.name` is AUTHORED to its final suffixed spelling because kustomize
+suffixes never rewrite spec fields (the Naming contract). The app's base
+manifests never contain env-specific values, and `kustomize edit set image`
+(CI, against the ENV OVERLAY — bases pin nothing) + humans touch disjoint
+files.
 
-> **Scaffolded:** [`overlays/production/earendil/`](vortex/overlays/production/earendil/)
-> (JSON6902 patch swaps the inline env block for the ESO-rendered `app-config` ConfigMap)
-> and [`overlays/production/lumen/`](vortex/overlays/production/lumen/)
-> (needs no patch — the base already declares `envFrom` `lumen-secrets` as
-> `optional: true`, so ESO just _materializes_ that Secret; k3d stays mock-friendly).
-> Going production = point that app's Application CR `source.path` at the overlay.
+> **Superseded scaffold note:** the [`overlays/production/…`] links in this
+> box's original draft are retired — the equivalents live at
+> [`environments/production/`](vortex/environments/production/) and
+> [`environments/staging/`](vortex/environments/staging/) (+ the
+> `environments/foundation/` plane, where lumen-admin's ES binds ONLY
+> `LUMEN_DB_URL` + `LUMEN_SESSION_JWT_SECRET`: the admin render contract).
+> "Going production" was already the norm; the Application CRs now point at
+> the env trees per hub (`apps/foundation|staging|production/`).
 
 ### 5.4 Promotion flow (staging → prod)
+
+> **Amended 2026-11-14 (supersedes the version-pin flow below):** the pin
+> became a LOCK (block mode, owner ruling 2026-11-13 — 403 on writes while
+> pinned, head keeps serving), and config promotion is now the
+> **epoch-TRIO bump** (pod annotation + gate `--declared` + ES annotation,
+> byte-equal, per-environment, one commit) shipped through the same
+> release-chain machinery as images (runbook ch. 06 §4). Staging and
+> production values are SEALED per env from the start (`kv/lumen/staging`
+> vs `kv/lumen/production` — distinct DSNs, distinct Meilisearch index
+> names, distinct media prefixes); promotion means writing production's
+> path deliberately, never sharing one path's version pin across planes —
+> index/prefix sharing is precisely the collapse the per-env keys exist to
+> prevent.
 
 1. `bao kv get -format=json kv/data/lumen/staging` → verify in staging.
 2. `bao kv put kv/data/lumen/production <same data>` → creates a _new production version_ (history preserved on both sides).
@@ -1168,8 +1263,9 @@ CR carries the first-sync checklist: kubeVersion vs k3s, `helm show values` key 
 (`ClusterSecretStore bao`, sync-wave 1 — self-heals via Argo retry while ESO CRDs land).
 Sequence: hub syncs openbao + external-secrets (wave 0) → _manual first-time_: init,
 unseal, enable `kv` v2 mount, create AppRoles/policies → seed the first values +
-`bao-approle-credentials` Secret → secrets-plane store goes green → overlays/production
-ExternalSecrets render → everything above that is Git-synced.
+`bao-approle-credentials` Secret → secrets-plane store goes green → the
+foundation wave-2 ES (lumen-admin) renders → the env hubs' ExternalSecrets
+render → everything above that is Git-synced.
 
 - **Unsealing:** after any Bao restart it is sealed and ESO renders nothing (running pods
   keep their injected env — failure is limited to new/changed pods). Blog-scale answer:

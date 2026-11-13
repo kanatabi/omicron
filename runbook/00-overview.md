@@ -1,22 +1,29 @@
 ---
 tags: [runbook, index]
-updated: 2026-11-13
+updated: 2026-11-14
 status: draft — chapter numbering IS execution order (M0→M6; 09–14 are day-2
   references). Claims marked rehearsed come from the k3d walk; every VPS step
   is only PROVEN once walked, and each chapter marks its own proof state.
+  Re-cut for the Phase 11 environment model (three planes, role split,
+  per-env deploy chains) on 2026-11-14.
 ---
 
 # 00 · Overview — what we're building and why
 
-**TL;DR:** four doors face the world, all through Cloudflare's guard layers
+**TL;DR:** four doors face the world (plus staging's two quiet twins), all
+through Cloudflare's guard layers
 (proxy · managed challenge · Access · R2), never directly: the blog
 (`gofar.id` + `www`), the portal (`console.gofar.id`), the dashboard
 (`anor.gofar.id` — the only door with a guest list), and photos
 (`img.gofar.id`, served from R2 without ever touching the server). Behind
-them, one small Linux server (~$12/month) runs the entire system: photos and
-backups live in R2 buckets, secrets live in an encrypted vault *inside* the
-cluster, and all config arrives from one public YAML repo via GitOps. You
-push code → approve a release → the internet updates itself.
+them, one small Linux server (~$12/month) runs the entire system, organized
+as **three planes**: a shared `foundation` (vault, database, search engine,
+monitoring, and the one Control Plane), a `staging` content world, and a
+`production` content world — any combination can co-tenant one cluster.
+Photos and backups live in R2 buckets, secrets live in an encrypted vault
+*inside* the cluster, and all config arrives from one public YAML repo via
+GitOps. You push code → approve a release → approve each environment's
+deploy → the internet updates itself.
 
 > **Ready to work?** [00a Run Order](00a-run-order.md) is the execution map —
 > what to type, on which machine, in what order. This chapter is the *why*.
@@ -54,9 +61,10 @@ flowchart TB
     end
 
     subgraph VPS["ONE VPS — k3s · firewall: 443 from Cloudflare only, 22 key-only, rest deny"]
-        T["Traefik — hostname routing:<br/>gofar+www → earendil · console → mellon · anor → grafana"]
-        A["earendil SSR · mellon portal · lumen API<br/>Postgres · Meilisearch · Grafana LGTM"]
-        B["OpenBao + ESO — values live ONLY here"]
+        T["Traefik — hostname routing:<br/>gofar+www → earendil · console → mellon · anor → grafana<br/>(staging + staging-console → the -staging twins)"]
+        P["FOUNDATION plane: Patroni (3 logical DBs) · Meilisearch (1 engine,<br/>per-env indexes) · Grafana LGTM · lumen-admin — the ONE Control Plane:<br/>sessions, users, Bao relay — no ingress, no content routes"]
+        A["ENV planes (staging / production, co-tenants):<br/>earendil SSR · mellon portal · cms lumen — suffixed names, env labels"]
+        B["OpenBao + ESO — values live ONLY here (kv/app/shared|staging|production)"]
         G["Argo CD — keeps reality = vortex"]
     end
 
@@ -64,20 +72,25 @@ flowchart TB
     U --> D2 --> T
     U -->|"photo loads"| R2
     A -->|"uploads + restic, PUT only"| R2
+    A -->|"session verify (30s cache, fail closed)"| P
     V --> G --> A
     I --> A
     B -->|"rendered env"| A
-    N["✗ the three-no's — no DNS record · no firewall port · no Ingress route:<br/>lumen API · OpenBao · Postgres · Meilisearch · Argo API · :6443"]
+    N["✗ the three-no's — no DNS record · no firewall port · no Ingress route:<br/>lumen API (admin or cms) · OpenBao · Postgres · Meilisearch · Argo API · :6443"]
     style N stroke-dasharray: 5 5
 ```
 
-Traffic, honestly, in five sentences: there are exactly **four public
-routes** (gofar+www, console, anor, img) and Traefik picks between them by
+Traffic, honestly, in five sentences: production has exactly **four public
+routes** (gofar+www, console, anor, img — staging adds its two twins on the
+same rules) and Traefik picks between them by
 hostname. `img` is the odd one: Cloudflare↔R2 only, the VPS never sees a
 photo request. `anor` is the only door with **Access** in front. Everything
-internal — lumen, Bao, Postgres, Meili, Argo's API, the kubelet's :6443 —
+internal — lumen (admin or cms), Bao, Postgres, Meili, Argo's API, the
+kubelet's :6443 —
 lives under the ✗ rule above. A browser reaches lumen **only** via the
-same-origin proxy inside the earendil/mellon pods, and there are **two TLS
+same-origin proxy inside the earendil/mellon pods (mellon's router picks
+WHICH lumen per path — sessions to the one Control Plane, content to its
+env's cms fleet), and there are **two TLS
 legs**: browser↔Cloudflare (CF's edge cert) and Cloudflare↔Traefik (our
 Let's Encrypt cert, Full strict). Responses travel back out the same path.
 
@@ -92,8 +105,9 @@ Let's Encrypt cert, Full strict). Responses travel back out the same path.
 > them) exists only in the vault inside the cluster. This is also why Argo
 > CD needs **no repo credentials**: there is nothing to protect in the clone.
 > The structure itself is checkable: `anvil`'s validate-all asserts every
-> config-shaped value is absent from Git, and its table reads **32 dirs
-> GREEN** against the production shape
+> config-shaped value is absent from Git, and its table reads **23 dirs
+> GREEN** against the shipped shape — the `applications/` bases plus every
+> `environments/{foundation,staging,production}/*` overlay
 > (`../anvil/bin/expected-kinds.txt`). Break the iron law and CI says so.
 
 ## The folder — milestones in order
@@ -107,7 +121,7 @@ Let's Encrypt cert, Full strict). Responses travel back out the same path.
 | 03 | [K3s](03-k3s.md) | M1 | the cluster — same k3s on k3d (first) and the VPS |
 | 04 | [GitOps & Argo](04-gitops.md) | M2 | the robot arrives; the public-vortex note |
 | 05 | [Secrets Vault](05-vault.md) | M3 | OpenBao + ESO bootstrap: values live only here |
-| 06 | [Apps & First Release](06-apps-first-release.md) | M4 | the apps hub wakes the estate; first green |
+| 06 | [Apps & First Release](06-apps-first-release.md) | M4 | the env hubs (production ± staging) wake the estate; first green |
 | 07 | [Go Public](07-go-public.md) | M5 | records, challenges, real certs, Access, img domain + Traffic Anatomy |
 | 08 | [Backups](08-backups.md) | M6 | restic → R2 + the drill — start it "when boring" |
 | 09 | [Releases](09-releases.md) | day-2 | the ritual: bump approval → evidence → deploy gate |
@@ -126,9 +140,11 @@ Tuesday, not on a build night.
 | Question | Settled | Where |
 |---|---|---|
 | Where | one VPS, 4 vCPU/8 GB/80 GB, Ubuntu 24.04 (Contabo first, SG/EU; sumopod/helipod valid; provider-neutral commands) | 01 |
-| Local rehearsal | **k3d on the 32 GB laptop is the mandatory rehearsal runtime** (same k3s image, production-shape hub); the separate-VM plan is demoted to optional-advanced; minikube is the historical playground (archived root `RUNBOOK.md`) | 00a, 03 |
+| Local rehearsal | **k3d on the 32 GB laptop is the mandatory rehearsal runtime** (same k3s image, the shipped env-hub shape — Track A runs staging AND production together to prove isolation); the separate-VM plan is demoted to optional-advanced; minikube is the historical playground (archived root `RUNBOOK.md`), repointed per the 2026-11-14 owner ruling to **staging** as the first live walk of the env model | 00a, 03 |
 | Level-2 rehearsal | optional named Cloudflare Tunnel from the laptop cluster = rehearse the REAL public path (proxy, challenges, Access, real LE certs via DNS-01) before the VPS exists; the Level-1 `/etc/hosts`→127.0.0.1 trick (still with real certs) is also valid | 00a |
-| How does software ship | released `vX.Y.Z` tags only; humans approve bump + deploy; merge never deploys | 09 |
+| How does software ship | released `vX.Y.Z` tags only; humans approve bump + ONE deploy park PER environment (the ladder is the approval order — staging before production); merge never deploys | 09 |
+| Environment topology | ONE cluster runs any mix of the three planes (`environments/{foundation,staging,production}` ↔ one hub each); moving an env to another cluster is its hub CR's destination + a vault seed there — zero manifest edits. The retired `overlays/*` trees live only in git history | 00a, 04 |
+| lumen roles | ONE binary, `LUMEN_ROLE=admin|cms`: `lumen-admin` (foundation) is the estate's single Control Plane — the only sessions, the only users table, the Bao relay; cms fleets are content-only and introspect every admin write (≤30 s cache, fail closed). mellon routes per path by its `routing.ts` table — no defaults | 05, 06, 07 |
 | Secrets | OpenBao only; Git holds templates only — the iron law above | 05 |
 | Pin semantics | **LOCK, block mode** (owner ruling 2026-11-13): a pinned vault path refuses every relay write — HTTP 403 `{"error":"pinned at v<N> — unpin first"}`, rendered verbatim by the portal; reads serve head; unpin→restore→save→re-pin is the only road back, and the PreSync config-gate refuses any sync that disagrees | 05 §7.1, 06 §4, 12 |
 | Public guard | Cloudflare proxy + managed challenges; **Access on `anor` only**; site + R2 buckets + tokens created early (M0), everything public pointed only at M5 | 01, 07 |
