@@ -862,6 +862,18 @@ kubectl apply -f bootstrap/apps-hub.yaml
 > The yaml below is the superseded draft — kept for the kustomize-edit
 > mechanics it explains; real wiring lives in each app repo's `.github/workflows/` and
 > `anvil/`. Rollback = human `git revert` of the bump commit, or re-dispatch release.yml
+>
+> **Amendment 2026-11-13 (evening, same day's second half):** the entrypoint split into
+> **two hubs** (`bootstrap/apps-hub-foundation.yaml` → `apps/foundation/`, applied first;
+> `bootstrap/apps-hub-apps.yaml` → `apps/applications/`, applied only after the vault
+> ritual — the store-Ready wave gate became an entrypoint boundary by owner design).
+> Config joined the released-artifacts doctrine: the `omicron/config.epoch` pair
+> (pod-template annotation + PreSync gate `--declared`, equality enforced STRUCTURALLY in
+> CI, no app names in any validator), gate = `lumen config check-epoch` BLOCKING
+> (owner ruling: developer must be aware), pin = LOCK (CAS writes 403 while pinned;
+> sanctioned ritual unpin→restore→save→re-pin). Helm installs now pin the binary by
+> sha256 after an audit found `get-helm-3` resolves a mutable pointer — "a pin that
+> pins nothing". Operational procedure: `runbook/` (00a = execution order).
 > with an older tag.
 
 `.github/workflows/deploy.yml` in your application source repository:

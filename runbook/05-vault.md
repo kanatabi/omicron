@@ -15,9 +15,9 @@ status: ritual incident-proven (rehearsal walk + two unseal drills); VPS =
 > paranoia.
 
 The manifests already exist (`vortex/applications/openbao|external-secrets|
-secrets-plane`, wired by chapter 04's waves). This chapter is the **manual
-bootstrap** they can't self-start: the vault cannot unlock itself (the docs
-call this the bootstrap paradox, INFRA §5.6).
+secrets-plane`, brought up by chapter 04's FOUNDATION hub). This chapter
+is the **manual bootstrap** they can't self-start: the vault cannot unlock
+itself (the docs call this the bootstrap paradox, INFRA §5.6).
 
 One door, two keys-hands: every step below runs in **either** of two
 equivalent variants — **A) `kubectl exec` + the `bao` CLI inside the pod**,
@@ -25,14 +25,18 @@ or **B) `kubectl port-forward` + plain `curl` from your laptop**. Read §2
 for the shape, then pick a variant per taste; both are given in full because
 the day the pod's shell misbehaves (it has), the HTTP API saved the walk.
 
-## 1. The vault comes up with the hub (ch. 04), sealed
+## 1. The vault comes up with the FOUNDATION hub (ch. 04), sealed
 
 You'll see: `openbao` pod Running in namespace `secrets` (Deployment
-`openbao`, Service `bao` — see `applications/openbao/openbao.yaml`), and
-ExternalSecrets red with `could not get secret data from provider`.
-**That is the expected state** — sealed vault = no values = red robots. The
-`bao` ClusterSecretStore stays not-Ready, which parks wave 2. It stops being
-scary at step 4.
+`openbao`, Service `bao` — see `applications/openbao/openbao.yaml`), the
+store's `bao` ClusterSecretStore **not-Ready**, and the vault itself
+SEALED. **That is the expected state** — sealed vault = no values =
+nothing renders. This ritual runs *between* the two manual applies: the
+apps hub stays unapplied until §8 says Go, which is exactly how the split
+makes seed-before-apps structural. (Apply hub #2 early anyway and its
+ExternalSecrets go red with `could not get secret data from provider` —
+the un-ordered shape the pair exists to prevent; finish here first.) It
+stops being scary at step 4.
 
 The quirk to know in both variants: the listener is `tls_disable = 1`
 (cluster-internal by design, §2 of the INFRA doc), so the CLI defaults to
@@ -254,7 +258,7 @@ STAGINGLESS_DB_PW=$(kubectl -n db get secret \
 
 Only now do you have everything worth seeding. ✅ pre-flight: that command
 printed a non-empty string, and `kubectl -n db get pods` shows
-`lumen-pg-0` Running (wave 1 did its job).
+`lumen-pg-0` Running (foundation wave 1 did its job).
 
 ## 6. Seed the values — `kv/{app}/production`, the CRs are the contract
 
@@ -302,6 +306,9 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$ME
 > key-by-key: `bao kv get -format=json kv/lumen/production`. **Never**
 > `bao kv delete` casually. The CI driftcheck does the same diff from the
 > Git side, so a mismatch you missed here becomes a red pipeline later.
+> (CLI writes with the root token are the operator's break-glass — the
+> 403 pin-lock (§7.1) guards the relay, not the mount; disagreement is
+> what driftcheck's amber and the config-gate are for.)
 
 > **Meilisearch's special case:** its Deployment reads
 > `search/meilisearch-master-key` (key `master-key`,
@@ -336,6 +343,33 @@ show the keys that unlock the portal's own plumbing. The rehearsal-era
 recovery Secret `lumen-admin-password` (archived RUNBOOK.md) follows the
 same rule — offline note, not vault row.
 
+### 7.1 The pin is a LOCK, not a label (owner ruling 2026-11-13, block mode)
+
+Every versioned path carries an optional pin — Bao `custom_metadata`'s
+`pinned_version`, toggled from mellon's Vault drawer. The semantics are
+**block mode**: while a path is pinned, lumen's relay refuses every write
+to it — **HTTP 403**, body `{"error":"pinned at v<N> — unpin first"}` —
+and the portal renders that copy verbatim, end to end (the browser client
+once rendered only 409s cleanly; fixed the same day the lock shipped).
+Reads are never affected: **head keeps serving** — the lock stops writes,
+not traffic. The ritual for changing config under a pin, in order:
+
+1. **unpin** — release the lock; the 403 was the feature telling you it held;
+2. **restore-draft** — Restore on the pinned version overlays its values
+   onto the CURRENT key set in the editor; a refused save keeps the dirty
+   editor, so nothing is retyped under fire;
+3. **save as vN** — head moves; the frozen pin number does NOT move with it;
+4. the portal then offers **"pin vN?"** — for restore-seeded saves only,
+   so the lock re-lands exactly on the content you just released.
+
+Downstream, the disagreement has its own alarm, and none of it is silent:
+`driftcheck` prints a pinned-below-head path amber
+(`pinned v2, head v3 (held intent)`) — intent vs content, the *disagreement
+alarm*, not a failure — and the PreSync config-gate (ch. 06 §4) refuses to
+sync against a mismatch until you align it. The whole contract in one line:
+**pin = lock, head = truth, restore = the only road back, gate = where you
+can't lie.**
+
 ## 8. Make the robots notice (materialize timing)
 
 ExternalSecrets created *before* the seed sit "Ready=false, next refresh in
@@ -348,9 +382,11 @@ kubectl rollout restart deploy/...             # every consumer pod: envFrom
                                                # binds ONLY at container start
 ```
 
-✅ end state: all ES `Synced=True`; `kubectl -n external-secrets get
-clustersecretstore bao` → Ready; wave 2 (ch. 04's diagram) un-parks and
-rolls. Chapter 06 picks the story up there.
+✅ end state: all rendered ES `Synced=True`; `kubectl -n external-secrets get
+clustersecretstore bao` → Ready. **Only now is the second manual apply
+safe** — `kubectl apply -f bootstrap/apps-hub-apps.yaml` (ch. 04 §3's act
+2) — and the application plane syncs onto real values at its very first
+render. Chapter 06 picks the story up there.
 
 ## 9. Day-2 rituals (in the Operations calendar because they bite)
 
@@ -367,7 +403,13 @@ rolls. Chapter 06 picks the story up there.
   unseal into it.)
 - **Rotation:** values change in Bao → ES re-renders on refresh (1h) → pods
   that read env at boot need `rollout restart` (selfHeal never reverts what
-  it doesn't track).
+  it doesn't track). A rotation into a **pinned** path is refused first —
+  that's §7.1's lock doing its job; unpin to rotate, re-pin after.
+- **Save refused with 403 `pinned at v<N> — unpin first`:** not an outage,
+  the lock (§7.1). The remedy is three verbs: **unpin → act → re-pin**
+  (unpin, restore-draft the version you mean or type the change, save as
+  vN, answer the portal's "pin vN?" offer). Readers never felt anything —
+  head kept serving the whole time.
 - **Vault reborn (lost unseal keys):** it happens. Destroy pod + PVC **and
   the node directory** (`/var/lib/rancher/k3s/storage/<ns>_openbao-…` —
   Retain + PV deletion does NOT wipe it; this trap bit twice in rehearsal,

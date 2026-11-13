@@ -125,7 +125,8 @@ wget -qO - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
 > **Why:** the build chapters should be typed twice — once where a mistake
 > costs `k3d cluster delete`, once on the real box. And the rehearsal must
-> run the **production shape** (`bootstrap/apps-hub-production.yaml`), not
+> run the **production shape** (the two-hub pair: `bootstrap/apps-hub-foundation.yaml`
+> then `bootstrap/apps-hub-apps.yaml`), not
 > a dev sketch — otherwise the first time you meet the real waves, the real
 > secrets-plane gating and the `certificates` app is production day. The
 > execution map is [00a](00a-run-order.md).

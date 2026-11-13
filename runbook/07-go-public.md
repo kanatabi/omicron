@@ -103,7 +103,8 @@ kubectl -n cert-manager wait --for=condition=Available deploy/cert-manager --tim
 Exactly pinned v1.16.2 — the version the prereq comment in
 `applications/certificates/kustomization.yaml` names. One-time manual apply,
 same class as Argo CD and the Zalando operator; the certificates app is
-already synced (ch. 04's wave 2) and has been *visibly waiting* for this
+already synced (ch. 04 — apps hub wave 1) and has been *visibly waiting*
+for this
 Namespace to exist.
 
 ### 3.2 The token — scoped, never global
@@ -284,6 +285,41 @@ video stills, gallery-heavy posts), this becomes a PR-shaped upgrade"* —
 sign endpoint + confirm step + CORS. Not before. Keeping it simple *is* the
 plan, and the plan writes its upgrade path down so simplicity is a choice,
 not a hole.
+
+## The config epoch — the contract under every vault write in this chapter
+
+Acts 3 and 4 put real values into the vault (`cf-token`, the grafana
+OIDC pair). Each save is a **versioned config-plane write** — head moves
+— and three contracts quietly hold the estate honest about it:
+
+- **The pin is a lock** (ch. 05 §7.1): while a path is pinned, the relay
+  refuses saves — 403 `{"error":"pinned at v<N> — unpin first"}`. The
+  root-token CLI puts above are the operator's break-glass road; the
+  gate downstream is what catches any disagreement.
+- **`components/config-gate`** — a PreSync Job shipped in the PRODUCTION
+  overlays of `lumen`, `earendil` and `mellon` (dev/local/minikube
+  shapes untouched) — runs `lumen config check-epoch --app <app> --env
+  production --declared N` before every sync of those apps. Pass iff
+  the declared epoch (pod annotation + gate arg, a pair CI keeps
+  byte-equal) equals vault head and no pin lock disagrees; failure
+  blocks the sync with exactly one remedy line. The full bump flow —
+  dispatch `release.yml` from the existing tag with the optional
+  `config-epoch` input — is [06 §4](06-apps-first-release.md). Why the
+  gate pulls the *lumen* image: it is the one estate config checker,
+  on deliberately the tag the backend itself runs, so a gate can never
+  read config with a stale decoder.
+- **`validate-all` is STRUCTURAL** (anvil CI): every assertion reads
+  rendered output and directory shape, never app names — the
+  Deployment inline-literal ban, ES+Deployment⇒`envFrom`,
+  `*migrate*`⇒PreSync, epoch-pair equality. No script knows lumen,
+  earendil or mellon exist; that's how the gate, the fence and the
+  assertions cover a new app the moment its YAML follows the convention
+  — the registry IS the convention (ch. 14).
+
+✅ check (cheap, do it once here): `kubectl -n lumen get jobs config-gate`
+→ `Complete` from the apps hub's first sync; and a deliberate half-bump
+draft PR turns `validate-manifests` red with a `FAIL epoch` line — prove
+the alarm, then throw the draft away.
 
 ## Traffic Anatomy — the whole estate in four pictures
 

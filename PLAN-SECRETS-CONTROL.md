@@ -689,4 +689,38 @@ manual curl of every new endpoint against the live dev plane.
   in-file justification: ACME contact email, alert recipient email.
   Docs v1 preserved untouched outside git:
   ~/Projects/omicron-docs-backup/pre-restructure-20261113-1618.
+- 2026-11-13 (11) — **Phase 9/9b/10a/10b executed: two hubs, config epoch,
+  pin-as-lock, structural everything.** Owner rulings baked: hub split NOW
+  (rehearsal must exercise final structure), gate BLOCKS (developer must be
+  aware), pin = hard LOCK (403), shared gate extensible by CONVENTION (no
+  registries anywhere), anvil scripts parameterized ($APP from workflows,
+  patterns not names). Waves: W1 parallel five agents — vortex (b53932d hub
+  pair + cd25518 components/config-gate PreSync gate, flagging the REAL
+  kustomize discovery that base image transforms don't reach
+  component-rendered Jobs ⇒ three lockstep newTag lines), anvil (bdf7a89:
+  validate-all STRUCTURAL — case statements dead, ES+Deployment⇒envFrom,
+  inline-literal ban, *migrate*⇒PreSync, epoch-pair HALF-BUMP equality;
+  helm sha256-pinned after proving get-helm-3 resolves a MUTABLE CDN
+  pointer — "a pin that pins nothing"; fence widened by pattern;
+  config-epoch threading), lumen (230783be: `config check-epoch` verb with
+  byte-pinned remedy strings + `--declared 0`=not-yet-under-contract
+  semantics + 403 write-lock; 13 gate subtests + write-lock legs + raw-403
+  wire test), mellon (9a543a2: errorText() fix — the pinned 403 was about
+  to render as `ApiError:` prefix, caught by tracing the relay chain hop by
+  hop rather than trusting "it surfaces verbatim"; post-restore "pin vN?"
+  offer; lock copy sweep incl. DESIGN.md D1 redefinition; T-wiz11/12 legs
+  written honest-plane-labeled, NOT run — dev plane absent), docs agent
+  (runbook two-hub conversion + 7.1 lock paragraph + config-bump flows +
+  cards 7-8 + NEW 14-onboarding; flagged its own out-of-scope stale files).
+  W2 convergence (me): lumen wiring verified on disk after truncated agent
+  report (459b771, 6/6 pins — and v2.1.0 tag proves the owner already
+  released the gate-capable image), vortex CI GREEN at run 28, stragglers
+  fixed (01-prerequisites + 10-observability), anvil +b77c142 closing the
+  vacuous-pass hole the epoch author confessed (OVERLAY-MUST-REPLACE
+  survival + gate-orphan rules, BOTH proven by surgical sabotage: build
+  green yet CI red now — exactly the class silence bugs), remedy strings
+  grep-proven identical docs↔code, AGENTS items 4/5/6 + kustomize gotchas
+  + INFRA evening amendment. Doctrine now one line: pin = lock, head =
+  truth, restore = only road back, gate = where you can't lie.
+  Rehearsal-ready: Wave 4 (owner-driven, k3d, two hubs, v2.1.0-capable).
 - — (append deltas here: contract changes, deviations, new rulings)

@@ -64,17 +64,28 @@ labels). `k3d image import` after rebuilding placeholder images.
    `latest` are banned from manifests. Merges gate and park three waiting bump
    jobs, EACH on its own protected environment (`release-patch|minor|major` —
    never shared: approvals batch per environment); approving ONE is the
-   release decision, and the PAT-pushed tag it emits (RELEASE_BOT_PAT,
-   Contents+Workflow perms) is the only deploy trigger
-   (amendment 2026-11-13, RUNBOOK A12).
-5. **App-of-apps shape:** `apps/` contains ONLY Argo `Application` CRs; raw manifests
-   under `applications/<name>/`; hub syncs `apps/` non-recursively. Adding an app = new
-   dir + new Application CR, never hub edits. Bases stay ESO-free (k3d invariant) —
+   release decision; the PAT-pushed tag it emits (RELEASE_BOT_PAT,
+   Contents+Workflow+Actions perms) triggers the deploy pipeline, whose
+   `deploy` job parks on a FOURTH environment (`deploy`) — evidence first
+   (deploy-plan), then the human's deploy click, then the bump PR (born
+   validated, auto-merge behind `DEPLOY_AUTOMERGE`). Config is likewise
+   released: the `omicron/config.epoch` pair (annotation + gate `--declared`)
+   bumps through the same pipeline; the in-cluster gate BLOCKS sync unless
+   declared==head and pin agrees — and a pin is a LOCK (lumen 403s writes
+   while set). (amendments 2026-11-13, runbook/06–09 + `runbook/00a` for order)
+5. **App-of-apps shape:** `apps/foundation/` + `apps/applications/` (and the
+   Part-C `apps/`) contain ONLY Argo `Application` CRs; raw manifests
+   under `applications/<name>/`; each hub syncs its folder non-recursively.
+   Adding an app = new dir + new Application CR, never hub edits. Bases stay ESO-free (k3d invariant) —
    per-env values ride `overlays/production/<app>`; going prod = repoint that app's
    Application `source.path`.
-6. **CI edits only `images:` in `applications/*/kustomization.yaml`** via
-   `kustomize edit set image <name>=...`. Keep the container's image name (e.g.
-   `lumen`) stable so that hook keeps working; GHCR names must be lowercase.
+6. **CI bump PRs edit only fence-covered lines, by pattern:** the `images:` stanza
+   in `applications/*/kustomization.yaml`, plus (epoch round) `overlays/production/<app>/`
+   files' `omicron/config.epoch` annotation and gate `--declared` arg, and the lumen
+   lockstep `newTag` lines the gate containers read. The fence accepts line SHAPES and
+   never app names; app identity arrives from each repo's workflow (`--app`, and the
+   app is also parsed from the bump branch name). Keep the container's image name (e.g.
+   `lumen`) stable so `kustomize edit set image` keeps working; GHCR names must be lowercase.
 7. **Observability contract: no sidecars.** Alloy is a worker-node DaemonSet; apps opt
    into scraping with `prometheus.io/{scrape,port,path}` pod annotations and serve
    `/metrics` on an unrouted admin port (9090) + structured stdout logs. Traces are OFF
@@ -104,7 +115,9 @@ labels). `k3d image import` after rebuilding placeholder images.
 - Argo's install manifests label every component `app.kubernetes.io/part-of=argocd` —
   the pinning patch uses that labelSelector on Deployment + StatefulSet so future
   components auto-pin. Don't regress to per-name pinning.
-- The app-of-apps hub (`bootstrap/apps-hub.yaml`) can't be GitOps-managed itself; that's
+- The app-of-apps hubs (`bootstrap/apps-hub-foundation.yaml` +
+  `bootstrap/apps-hub-apps.yaml`; Part C's `apps-hub.yaml` when it comes)
+  can't be GitOps-managed themselves; that's
   the intended manual bootstrap exception. Same for ESO/OpenBao first-time seeds (§5.6).
 
 ## Placeholders — what's real vs still open

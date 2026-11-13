@@ -3,7 +3,7 @@ tags: [runbook, observability]
 updated: 2026-11-13
 status: stack fully templated & pinned in vortex (base + prod overlay + the
   five alert rules + ESO feeds merged); the Application CR ships in
-  apps/production/ wave 2 — the stack's eyes open when the prod hub walks
+  apps/applications/ wave 2 — the stack's eyes open when the apps hub walks
 ---
 
 # 10 · Observability — the estate's eyes (Grafana LGTM + VictoriaMetrics)
@@ -56,12 +56,14 @@ flowchart LR
 `applications/observability/` is the base (alloy, victoria-metrics, loki,
 grafana, namespace, ingress, externalsecret — pinned images),
 `overlays/production/observability/` is the prod view, and
-`apps/production/observability-app.yaml` is the Argo Application (sync
+`apps/applications/observability-app.yaml` is the Argo Application (sync
 **wave 2** — the first wave gated on the Ready `bao` store, which
 Grafana's config feeds consume; Grafana degrades to defaults via
-`optional: true`, never a blocked wave). `apps/production/` also carries
+`optional: true`, never a blocked wave). `apps/applications/` also carries
 `certificates-app.yaml` now — the `anor` door's Certificate arrives in
-the same wave. The single-node rehearsal hub *deliberately* excludes the
+wave 1 of the same hub. The store gating that used to be "wave 2 waits"
+now lives at the entrypoint boundary: hub #2 (this chapter's app) is only
+applied after the M3 seed. The single-node rehearsal hub *deliberately* excludes the
 stack (a 2 GB node can't afford the eyes); on the VPS it's merged, not
 installed — *no manual installs.*
 

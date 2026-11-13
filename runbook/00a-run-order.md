@@ -18,8 +18,8 @@ status: execution map — Track A steps are the k3d-rehearsed path; Track B is
 Everything here runs on the laptop (the 32 GB box; k3d needs the headroom
 because the full production fleet fits in ~4 GB and you want slack, not
 swap). The point: **the rehearsal runs the PRODUCTION shape** — the same
-hub file, the same `overlays/production/*`, the same waves, the same vault
-bootstrap. See the why-box at the bottom.
+**two hub files** (foundation, then apps), the same `overlays/production/*`,
+the same waves, the same vault bootstrap. See the why-box at the bottom.
 
 - [ ] **A1 · install k3d** — [01 §4](01-prerequisites.md).
   `wget -qO - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash`
@@ -42,26 +42,33 @@ bootstrap. See the why-box at the bottom.
   https://github.com/kanatabi/vortex.git`. Plain HTTPS is fine — the repo
   is **public** and Argo therefore needs **no repo credentials** (the iron
   law, [00](00-overview.md): values live only in Bao).
-  ✅ after: `vortex/bootstrap/apps-hub-production.yaml` exists on disk.
+  ✅ after: `vortex/bootstrap/apps-hub-foundation.yaml` **and**
+  `vortex/bootstrap/apps-hub-apps.yaml` exist on disk (the hub pair —
+  there is no `apps-hub-production.yaml` anymore).
 
 - [ ] **A4 · install Argo CD (pinned)** — [04 §1](04-gitops.md):
   `kubectl apply -k platform/argocd/ --server-side --force-conflicts`.
   ✅ after: argocd namespace green; the controller is a StatefulSet — check
   `sts`, not `deploy`.
 
-- [ ] **A5 · apply the hub — production entrypoint** — [04 §2](04-gitops.md):
+- [ ] **A5 · apply the FOUNDATION hub — entrypoint #1 of two** —
+  [04 §3](04-gitops.md):
 
   ```bash
-  kubectl apply -f bootstrap/apps-hub-production.yaml
+  kubectl apply -f bootstrap/apps-hub-foundation.yaml
   ```
 
-  One manual apply, the documented chicken-and-egg exception (GitOps cannot
-  bootstrap the cluster that hosts its own root app). It syncs
-  `apps/production/` non-recursively: **10 Applications** in waves — 0:
-  openbao + external-secrets · 1: lumen-db + meilisearch + secrets-plane ·
-  2: lumen + earendil + mellon + certificates + observability.
-  ✅ after: wave 0 healthy; wave 2 red with `could not get secret data from
-  provider` — **that is the expected state** until A7, not a bug.
+  The first of the TWO manual applies — together with A9's, this pair is
+  the documented chicken-and-egg exception (GitOps cannot bootstrap the
+  cluster that hosts its own root apps). It syncs `apps/foundation/`
+  non-recursively: **5 Applications** in waves — 0: openbao +
+  external-secrets · 1: lumen-db + meilisearch + secrets-plane (the `bao`
+  store). **Do NOT apply the apps hub yet** — the split exists precisely
+  so the vault ritual (A7) happens *between* the entrypoints: the
+  seed-before-apps order becomes structural, not a wave number.
+  ✅ after: foundation wave 0 healthy; `openbao` pod Running but **SEALED**
+  and the `bao` ClusterSecretStore **not-Ready** — that is the expected
+  state until A7, not a bug.
 
 - [ ] **A6 · node-pool label** — [03 §3](03-k3s.md):
   `kubectl label node k3d-omicron-server-0 node-pool=platform --overwrite`.
@@ -69,22 +76,42 @@ bootstrap. See the why-box at the bottom.
   nothing Pending without it — label anyway: parity with the VPS and a
   free hedge for scale-out.) ✅ after: node shows the label.
 
-- [ ] **A7 · vault bootstrap (M3)** — [05 §2–§8](05-vault.md): init (3
+- [ ] **A7 · vault bootstrap (M3)** — [05 §2–§7](05-vault.md): init (3
   shares, threshold 2), unseal, policies + AppRoles, mint pairs, seed
-  `kv/<app>/production`, force ES sync, roll pods.
-  ✅ after: `bao status` unsealed; ClusterSecretStore `bao` Ready; every
-  ExternalSecret `Synced=True, Ready=True`.
+  `kv/<app>/production` — against the foundation hub's store.
+  ✅ after: `bao status` unsealed; ClusterSecretStore `bao` `Ready: True`.
 
-- [ ] **A8 · apps + first release (M4)** — [06](06-apps-first-release.md):
-  wave 2 rolls with real env; then ship one real `vX.Y.Z` through the
-  release machine ([09](09-releases.md)) into *this* cluster — the bump PR,
-  the pin, the Argo sync, rehearsed end to end.
-  ✅ after: `kubectl -n argocd get applications` all Synced/Healthy; and
+- [ ] **A8 · seeded-matrix check** (before the second hub opens) —
+  [05 §6–§7](05-vault.md): prove the seed matches the contract: the
+  `kv/metadata` listing shows every `kv/<app>/production` path §6 seeded,
+  and each path's key set diffs clean, key-by-key, against its
+  ExternalSecret's `data:` list — nothing extra lives there. (The portal
+  matrix row walk joins it after A9, once mellon exists — §7's
+  conformance check.) ✅ after: paths + keys == the CRs' declarations.
+
+- [ ] **A9 · apply the APPS hub — entrypoint #2 — and first release (M4)**
+  — [04 §3](04-gitops.md), [06](06-apps-first-release.md):
+
+  ```bash
+  kubectl apply -f bootstrap/apps-hub-apps.yaml
+  ```
+
+  Syncs `apps/applications/` non-recursively: **5 Applications**, waves
+  restarting per hub — 0: lumen (the dependency root) · 1: earendil +
+  mellon + certificates · 2: observability. Everything rolls onto real
+  values because the vault was seeded *before this hub existed* — that
+  ordering is the split's whole point, not luck. Then ship one real
+  `vX.Y.Z` through the release machine ([09](09-releases.md)) into *this*
+  cluster — the bump PR, the pin, the Argo sync, and a
+  config-only bump ([06 §4](06-apps-first-release.md)) — rehearsed end to
+  end.
+  ✅ after: `kubectl -n argocd get applications` lists all **ten**
+  (5 + 5), all Synced/Healthy; and
   the edge answers — `curl -s -o /dev/null -w '%{http_code}\n'
   http://localhost/` → **404 from Traefik** (edge up, no host matched; with
   `-H "Host: gofar.id"` you should get earendil instead).
 
-- [ ] **A9 · optional Level-2 rehearsal** — a **named Cloudflare Tunnel**
+- [ ] **A10 · optional Level-2 rehearsal** — a **named Cloudflare Tunnel**
   from the laptop cluster lets you rehearse the REAL public path before any
   VPS exists: proxy behavior, managed challenges, Access policies, and real
   Let's Encrypt certs (DNS-01 needs no open port — the `certificates` app
@@ -100,8 +127,8 @@ bootstrap. See the why-box at the bottom.
 |---|---|
 | [02](02-security.md) hardening (SSH, ufw, swap…) | those are the *VPS's* front-door locks — the laptop cluster has no public SSH and no firewall job |
 | DNS records + nameservers | nothing public is pointed; records land at M5 ([07](07-go-public.md)) |
-| Managed challenges + Access | edge-layer features of the public path — M5; A9 can optionally rehearse them |
-| cert issuance (default run) | the fleet tolerates certs not existing yet; A9/Level-1 makes issuance rehearsalable when you want it |
+| Managed challenges + Access | edge-layer features of the public path — M5; A10 can optionally rehearse them |
+| cert issuance (default run) | the fleet tolerates certs not existing yet; A10/Level-1 makes issuance rehearsalable when you want it |
 | restic → R2 ([08](08-backups.md)) | M6 "when boring" — a rehearsal cluster you can delete is not a backup target |
 
 > **Why we rehearse the PRODUCTION shape locally, not a dev sketch:**
@@ -109,8 +136,9 @@ bootstrap. See the why-box at the bottom.
 > `overlays/local` and shipping `overlays/production` means the first time
 > you meet the real waves, the real `certificates` app, and the real
 > secrets-plane gating is on production day. k3d runs the **same k3s
-> image** and the **same YAML chain** (hub → `apps/production/` →
-> `overlays/production/*` + `components/single-node`), so the only deltas
+> image** and the **same YAML chain** (both hubs → `apps/foundation/` +
+> `apps/applications/` → `overlays/production/*` +
+> `components/single-node` + `components/config-gate`), so the only deltas
 > left for the VPS are the host-level ones (02's locks, hostNetwork
 > publish) — cheap, boring, and exactly what Track B walks. An accident
 > here costs `k3d cluster delete omicron`; on the VPS it costs an afternoon.
@@ -126,12 +154,17 @@ bootstrap. See the why-box at the bottom.
   v1.37, label, local-path truth, Traefik hostNetwork variant. ✅ checkpoint
   green; same fleet shape A5 will recognize.
 - [ ] **B4 · M2** — [04](04-gitops.md): Argo install + apply
-  `bootstrap/apps-hub-production.yaml` (yes — the *production* hub; there is
-  no other entrypoint now). ✅ waves up, wave 2 waiting on the vault.
+  `bootstrap/apps-hub-foundation.yaml` — the FIRST of the hub pair (the
+  apps hub gets applied only after B5; two hubs, one vault ritual between
+  them — the production entrypoint IS this pair, no single-hub file
+  exists). ✅ foundation waves healthy, `bao` store NOT-Ready — the vault
+  is what's missing.
 - [ ] **B5 · M3** — [05](05-vault.md): init/unseal/AppRole/seed — **freshly
-  generated values**, reuse nothing from the rehearsal. ✅ all ES Synced.
-- [ ] **B6 · M4** — [06](06-apps-first-release.md): apps green; the first
-  production release rides the machine rehearsed in A8. ✅ four Ingress
+  generated values**, reuse nothing from the rehearsal — plus A8's
+  seeded-matrix check. ✅ store Ready, paths + keys match the CRs.
+- [ ] **B6 · M4** — [06](06-apps-first-release.md): apply
+  `bootstrap/apps-hub-apps.yaml`, apps green; the first production release
+  rides the machine rehearsed in A9. ✅ four Ingress
   routes exist, still no DNS pointing at the box.
 - [ ] **B7 · M5** — [07](07-go-public.md): records, proxy ON, challenges,
   real certs settle, Access on anor, img custom domain. ✅ public doors

@@ -69,7 +69,17 @@ a rumor, same doctrine as the restore drill.)
       drawers get moved); snapshot-restore half of the ch.08 drill
 - [ ] Version hygiene (deliberate, never auto): k3s channel, helm
       charts, Argo, ESO, cert-manager — bump one at a time in PRs a
-      human merges; each rides the ch.09 machine.
+      human merges; each rides the ch.09 machine. (Helm-pin anecdote,
+      keep it alive: `get-helm-3` *at tag v3.22.1* still resolved a
+      mutable CDN pointer — "a pin that pins nothing; today it happens
+      to say 3.22.1" — so CI installs the v3.22.1 tarball directly,
+      sha256-verified; when you bump helm, bump the version AND the
+      checksum.)
+- [ ] **Walk the gate** (~15 min, ch.05 §7.1 + ch.06 §4): pin a scratch
+      path, try a save — read the 403 copy; run unpin→restore→save and
+      take the "pin vN?" offer; then bump `--declared` to a wrong number
+      in a throwaway vortex PR and watch the epoch-pair assertion go red.
+      The lock, the road back, the no-lie gate: prove they still bite.
 
 ## Yearly / evergreen
 
@@ -94,10 +104,10 @@ flowchart TD
     Q1 -- "CF fine" --> INC["it's the estate, not the edge:\nincident cards below"]
 ```
 
-## Incident cards (six that already happened once)
+## Incident cards (eight — each one real, most already happened once)
 
 **1. Everything red, "could not get secret data from provider"**
-→ Bao sealed (host reboot? someone's fault?). Do ch.05 §6's ritual
+→ Bao sealed (host reboot? someone's fault?). Do ch.05 §9's unseal ritual
 (2 offline keys as ARGUMENTS, non-tty), bounce ESO. Symptom-check:
 `kubectl -n secrets exec openbao-0 -- bao status` — `sealed: true`.
 Trust `describe`'s Last Transition Time, not `get`'s "last sync", to date it.
@@ -124,8 +134,11 @@ fix together with the guard, ch.09 §4); `DEPLOY_AUTOMERGE` absent/off
 (**it is read from the ENV the workflow passes — if someone
 "simplifies" the script back to a variables-API call, GITHUB_TOKEN
 403s and the switch silently reads ABSENT = off**, by design); or the
-changed file isn't `applications/*/kustomization.yaml` (by design:
-human PRs are never auto-merged). Merge by hand; the PR tells you which.
+change walks outside the **fence of patterns** — files
+`applications/*/kustomization.yaml` + `overlays/production/<app>/*.yaml`
+(app parsed from the bump branch), lines in the `images:` stanza ∪ a
+`config.epoch` line ∪ a `--declared` line (by design: human PRs are
+never auto-merged). Merge by hand; the PR tells you which.
 
 **5. Search empty after engine bump / site 500s "503 from /api"**
 → Meilisearch refused the old data volume (ch.03 + the A11 recipe):
@@ -143,6 +156,22 @@ wrote secrets to a path the apps don't read. The contract is
 ExternalSecret `remoteRef` key matches a listed path, nothing else
 lives there. Fix = move the secret to the contract path (ch.05),
 *not* teaching the app to read the off-contract one.
+
+**7. Sync red: `config-gate: <app>/<env> declared N; vault head H, pin
+P|unset — …`** → the PreSync gate blocked the rollout because Git's
+declared epoch and the vault disagree — the block is the design
+working. One-line remedy: **do exactly what the machine printed**, it
+already contains the fix — declared ≠ head → *"align the epoch bump with
+the vault (materialize the pin via unpin→restore→save, or re-dispatch
+with the number the matrix shows)"*; pinned ≠ head → *"pin is a lock and
+it disagrees with head: unpin to release the head, or restore the pinned
+version's content as new head"* (flow: ch.06 §4).
+
+**8. Portal save refused: 403 `pinned at v2 — unpin first`** → not an
+outage — the pin is a LOCK and it just told you so (ch.05 §7.1, block
+mode). Remedy in three verbs: **unpin → act → re-pin** (restore-draft
+the version you mean, save as vN, answer the "pin vN?" offer). Head kept
+serving the whole time; readers never felt the freeze.
 
 ## The one meta-line
 

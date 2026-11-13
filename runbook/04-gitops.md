@@ -2,7 +2,7 @@
 tags: [runbook, gitops, argo]
 updated: 2026-11-13
 status: fully proven on the rehearsal cluster (walk ledger) — same commands
-  on the VPS; the production hub path is new since the restructure
+  on the VPS; the two-hub production pair is new since the restructure
 ---
 
 # 04 · GitOps & Argo CD — how software arrives, and in what order
@@ -15,9 +15,10 @@ status: fully proven on the rehearsal cluster (walk ledger) — same commands
 
 The apps' YAML already exists — bases under `vortex/applications/`,
 production views under `vortex/overlays/production/`, fleet pointers under
-`vortex/apps/production/`. This chapter is: install the robot, point it at
-the folder, and understand the order things wake up in (because some of that
-order *waits for chapter 05 on purpose*).
+`vortex/apps/foundation/` and `vortex/apps/applications/`. This chapter is:
+install the robot, point it at the folders, and understand the order things
+wake up in (because the *between-the-hubs* wait for chapter 05 is the whole
+design — §3).
 
 ## 1. A design decision to internalize first: `vortex` is PUBLIC
 
@@ -28,7 +29,7 @@ pin — is readable by anyone on the internet. That is deliberate:
   holds values), so a reader learns the *shape* of your estate, never its
   secrets.
 - **Argo needs no repo credentials.** Look at any CR in
-  `vortex/apps/production/` — e.g. `openbao-app.yaml` carries a plain
+  `vortex/apps/foundation/` — e.g. `openbao-app.yaml` carries a plain
   `repoURL: 'https://github.com/kanatabi/vortex.git'` with **no**
   `repoSecret` reference. Nothing to leak, nothing to rotate, nothing to
   lose. Private-repo GitOps means a credential that outlives your memory.
@@ -41,10 +42,12 @@ pin — is readable by anyone on the internet. That is deliberate:
 > `vortex`. Keep it as: "when Argo says repo-not-found, check visibility
 > before path."
 
-## 2. The three never-GitOps'd installs (bootstrap exceptions, say them out loud)
+## 2. The manual applies: two hubs + three pinned one-time installs (say them out loud)
 
 GitOps cannot install the foundations it needs to do GitOps — chicken and
-egg. Exactly **three** things are applied by hand, once, and pinned:
+egg. The honest count of manual applies on a production cluster is
+**five**: the two hub files of §3 (one documented *pair* — the entrypoints
+themselves) plus exactly **three** pinned one-time installs:
 
 | What | Pin | Command (from a cloned `vortex`) | Why it can't ride the hub |
 |---|---|---|---|
@@ -79,88 +82,109 @@ bug in this document — tell the next reader.
   Real admin logins afterwards ride the SSH tunnels (the Access-from-Laptop
   chapter); the portal/console surfaces stay non-public forever per GATE #10.
 
-## 3. The app-of-apps: ONE command starts the fleet
+## 3. The app-of-apps: the fleet starts in two acts (two hubs, M3 between)
 
-From a cloned `vortex`, after Argo is up:
+From a cloned `vortex`, after Argo is up, the entrypoint is a **pair**:
 
 ```bash
-kubectl apply -f bootstrap/apps-hub-production.yaml
+kubectl apply -f bootstrap/apps-hub-foundation.yaml   # act 1: the plane
+# → NOW run chapter 05's vault ritual against what this brought up
+kubectl apply -f bootstrap/apps-hub-apps.yaml          # act 2: the estate
 ```
 
-> **Why the hub shape:** the hub is a single Application pointing at
-> `apps/production/`, synced **non-recursively** — those files are
-> themselves Argo Applications. The hub can't manage itself, so this one
-> manual apply is the intended, documented exception (hub header says it
-> verbatim: "exactly one hub may own a cluster"). Adding an app = new YAML
+> **Why TWO hubs:** each hub is a single Application synced
+> **non-recursively** over its own dir — `apps/foundation/` (openbao,
+> external-secrets, secrets-plane, lumen-db, meilisearch) and
+> `apps/applications/` (lumen, earendil, mellon, certificates,
+> observability); those files are themselves Argo Applications. Neither
+> hub can manage itself, so the two manual applies ARE the documented
+> chicken-and-egg exception (the hub headers say it verbatim: "exactly
+> one foundation+apps pair may own a cluster"). The split's real product
+> is **ordering**: with one hub, "seed before apps" lived in sync-wave
+> numbers *inside* the fleet; with two, it lives in the entrypoints —
+> chapter 05 slots between the applies, so the application plane has
+> never existed yet when the vault is empty. Adding an app = new YAML
 > under `applications/<app>/` (plus an overlay) + a new Application CR in
-> `apps/production/`; the hub dir never gets raw manifests (its prune would
-> delete them).
+> the hub dir its role belongs to; the hub dirs never get raw manifests
+> (their prune would delete them).
 
-The production hub differs from the rehearsal one (`apps-hub-single-node.yaml`)
-in exactly the ways the header comment lists: source paths land on
-`overlays/production/*` — Bao values from `kv/{app}/production` and **real
-ACME TLS** via the certificates app, never the `selfsigned` component.
+The production PAIR differs from the rehearsal single-node hub
+(`apps-hub-single-node.yaml`) in exactly the ways the headers list:
+`overlays/production/*` sources — Bao values from `kv/{app}/production`
+and **real ACME TLS** via the certificates app, never the `selfsigned`
+component — plus the two-entrypoint order just described, which the
+one-file rehearsal hub can't express.
 
 ## 4. What wakes up in what order (the waits are features)
 
 The sync-wave numbers are **structural** — encoded in the
-`argocd.argoproj.io/sync-wave` annotation of every CR in
-`apps/production/`, not cosmetic:
+`argocd.argoproj.io/sync-wave` annotation of every CR in `apps/foundation/`
+and `apps/applications/`, not cosmetic. **Waves restart per hub** — each
+hub syncs its own fleet from 0:
 
-| Wave | Apps | Depends on |
-|---|---|---|
-| 0 | `openbao`, `external-secrets` | nothing — this is the plane everything else waits for |
-| 1 | `lumen-db` (Patroni), `meilisearch`, `secrets-plane` | wave 0 (ESO's CRDs must exist; storage exists) |
-| 2 | `lumen`, `earendil`, `mellon`, `certificates`, `observability` | **the `bao` ClusterSecretStore being Ready — which waits for chapter 05's seeding** |
+| Hub | Wave | Apps | Depends on |
+|---|---|---|---|
+| foundation | 0 | `openbao`, `external-secrets` | nothing — this is the plane everything else waits for |
+| foundation | 1 | `lumen-db` (Patroni), `meilisearch`, `secrets-plane` | wave 0 (ESO's CRDs must exist; storage exists) |
+| — | *between* | **chapter 05: unseal → AppRoles → seed** | the entrypoint order IS the gate |
+| apps | 0 | `lumen` | the seeded, Ready `bao` store — which existed **before this hub did** |
+| apps | 1 | `earendil`, `mellon`, `certificates` | wave 0 (they reach lumen in-cluster; certificates' `cf-token` feed is a store consumer) |
+| apps | 2 | `observability` | the estate serving around it |
 
 ```mermaid
 flowchart TD
-    HUB["bootstrap/apps-hub-production.yaml (the one manual apply)"] --> W0
-    subgraph W0["wave 0 — the plane"]
+    F["bootstrap/apps-hub-foundation.yaml (manual apply #1)"] --> W0
+    subgraph W0["foundation wave 0 — the plane"]
         BAO["openbao (vault, starts SEALED)"]
         ESO["external-secrets (controller + CRDs)"]
     end
     W0 --> W1
-    subgraph W1["wave 1 — state + store"]
+    subgraph W1["foundation wave 1 — state + store"]
         DB["lumen-db (Patroni cluster)"]
         MEILI["meilisearch"]
         STORE["secrets-plane: ClusterSecretStore 'bao'"]
     end
     CH5["ch.05 ritual: unseal → mount → AppRoles → SEED"] -.->|"gives the store a login + values"| STORE
-    STORE --> GATE{"store Ready?"}
-    GATE -->|"no → wave 2 parks 'Progressing' (design working)"| HOLD["⏸ waiting"]
-    GATE -->|"yes"| W2
-    subgraph W2["wave 2 — the estate"]
-        LUMEN["lumen"]
-        EAR["earendil"]
-        MEL["mellon"]
-        CERT["certificates"]
-        OBS["observability"]
+    STORE --> GATE{"store Ready + seeded?"}
+    GATE -->|"no → hub #2 stays in Git where it belongs (design working)"| HOLD["⏸ the split IS the gate"]
+    GATE -->|"yes"| A["bootstrap/apps-hub-apps.yaml (manual apply #2)"]
+    A --> V0
+    subgraph V0["apps waves 0–2 — the estate"]
+        LUMEN["lumen (w0 — dependency root)"]
+        EAR["earendil + mellon + certificates (w1)"]
+        OBS["observability (w2)"]
     end
 ```
 
-> **Why wave 2 gates on the store instead of "just start":** apps booted
+> **Why the SEED gates the second hub instead of "just start":** apps booted
 > with empty config crash-loop on `""` passwords and hide the real problem
-> (unseeded vault) under app-shaped errors. `secrets-plane-app.yaml` says it
-> flatly: the store's Ready condition "STRUCTURALLY forces the
-> seed-before-apps order of the runbook (a design, not a suggestion)". The
-> PreSync migrate Job (`lumen migrate`, schema-gates-deploy ruling) is the
-> same idea one level in: **a rollout blocked by a failed prerequisite is
-> the design working.**
+> (unseeded vault) under app-shaped errors. The foundation's
+> `secrets-plane-app.yaml` header says it flatly: the store "stays NOT-Ready
+> until runbook M3 seeds the vault, and the APPS hub — where the consumers
+> live — is applied by hand only after M3. The seed-before-apps order moved
+> from 'wave number inside one hub' to 'the two-hub entrypoint itself' (a
+> design, not a suggestion)" — and `apps/applications/lumen-app.yaml` names
+> the consequence verbatim: "the gate that used to be 'wave 2 waits for the
+> Ready store' is now the two-hub entrypoint order itself". The PreSync
+> migrate Job (`lumen migrate`, schema-gates-deploy ruling) is the same idea
+> one level in: **a rollout blocked by a failed prerequisite is the design
+> working.**
 
-**During the bootstrap this looks broken:** wave-2 apps OutOfSync, red
-ExternalSecrets (`could not get secret data from provider`), apps
-"Progressing" forever. That's chapter 05's to-do list rendered as dashboard
-noise. The order that makes it green: unseal → seed → force ES sync (`kubectl
-delete externalsecret …`, selfHeal recreates it fresh) → pods roll with real
-env.
+**Applied out of order, this looks broken:** apps hub in before the ritual
+finishes, and you get red ExternalSecrets (`could not get secret data from
+provider`) and "Progressing" forever — chapter 05's to-do list rendered as
+dashboard noise. The split exists so you never see that: in order, the apps
+plane's *first ever* sync already has values. (The repair walk for an
+accidental early apply is still the old one: unseal → seed → force ES sync
+(`kubectl delete externalsecret …`, selfHeal recreates it fresh) → pods roll
+with real env — ch. 05 §8.)
 
-**Certificates join wave 2, not 1 or 3** — and `certificates-app.yaml`
-carries the reasoning as a comment worth reading: it's the *earliest* wave
-structurally gated on the Ready store (its `cf-token` feed is a store
-consumer), while no app depends on it (an Ingress missing its TLS Secret is
-merely not-yet-terminating; Traefik picks the cert up the moment issuance
-lands).
+**Certificates rides the apps hub's wave 1, next to earendil and mellon** —
+and `certificates-app.yaml` carries the reasoning as a comment worth
+reading: it's the *earliest* wave in its hub structurally gated on the Ready
+store (its `cf-token` feed is a store consumer), while no app depends on it
+(an Ingress missing its TLS Secret is merely not-yet-terminating; Traefik
+picks the cert up the moment issuance lands).
 
 ### 4.1 The ignoreDifferences lesson (live walk, 2026-11-10)
 
@@ -181,8 +205,8 @@ ignoreDifferences:
 > **Why:** ESO's webhook *defaults* those fields server-side — they never
 > exist in Git, so without this the app is PERPETUALLY OutOfSync and
 > selfHeal thrashes the ExternalSecret forever. If you add a new
-> store-consuming app, copy the block. (Wave-0/1 apps without ES consumers
-> don't need it — compare `openbao-app.yaml`.)
+> store-consuming app, copy the block. (The foundation hub's apps consume no
+> ExternalSecrets, so they don't need it — compare `openbao-app.yaml`.)
 
 ## 5. The rules of the road (selfHeal = the robot always wins)
 
@@ -193,9 +217,9 @@ ignoreDifferences:
   `describe`, `logs`, `exec` — are always fine.)*
 - **Hand-seeded objects live outside Git's love** — the bootstrap-paradox
   Secrets of ch. 05 (`bao-approle-credentials`, `lumen-bao-credentials`),
-  the Patroni-generated DB credentials, and the three pinned installs above
-  are simply unknown to Argo. That's why they exist as *applied-once*
-  objects, not patches.
+  the Patroni-generated DB credentials, and the manual applies of §2–§3
+  (three pinned installs + the two hubs) are simply unknown to Argo.
+  That's why they exist as *applied-once* objects, not patches.
 - Steady-state check, any day of the week:
 
   ```bash
@@ -207,9 +231,11 @@ ignoreDifferences:
   (`images:` stanza) and are changed only by the release chain — that's the
   next-but-one chapter: [09 · Releases](09-releases.md).
 
-✅ **End-of-chapter check:** `kubectl -n argocd get applications` lists all
-ten apps from `apps/production/` (hub counts itself not — it manages
-everything under `apps/production/` except itself). Waves 0–1 should be
-Healthy; wave 2 *correctly* waits on the store until you finish chapter 05.
+✅ **End-of-chapter check:** `kubectl -n argocd get applications` lists the
+five foundation apps from `apps/foundation/` (each hub counts itself not —
+it manages everything under its dir except itself), waves 0–1 Healthy and
+the `bao` store Ready once chapter 05's ritual is done. Only then does the
+second apply go in — the full ten-app estate, Synced/Healthy, is chapter
+06's ✅.
 
 Next → [05 · Secrets Vault](05-vault.md)

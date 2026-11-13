@@ -1,7 +1,7 @@
 ---
 tags: [runbook, index]
 updated: 2026-11-13
-status: draft — chapter numbering IS execution order (M0→M6; 09–13 are day-2
+status: draft — chapter numbering IS execution order (M0→M6; 09–14 are day-2
   references). Claims marked rehearsed come from the k3d walk; every VPS step
   is only PROVEN once walked, and each chapter marks its own proof state.
 ---
@@ -107,7 +107,7 @@ Let's Encrypt cert, Full strict). Responses travel back out the same path.
 | 03 | [K3s](03-k3s.md) | M1 | the cluster — same k3s on k3d (first) and the VPS |
 | 04 | [GitOps & Argo](04-gitops.md) | M2 | the robot arrives; the public-vortex note |
 | 05 | [Secrets Vault](05-vault.md) | M3 | OpenBao + ESO bootstrap: values live only here |
-| 06 | [Apps & First Release](06-apps-first-release.md) | M4 | the production hub wakes the fleet; first green |
+| 06 | [Apps & First Release](06-apps-first-release.md) | M4 | the apps hub wakes the estate; first green |
 | 07 | [Go Public](07-go-public.md) | M5 | records, challenges, real certs, Access, img domain + Traffic Anatomy |
 | 08 | [Backups](08-backups.md) | M6 | restic → R2 + the drill — start it "when boring" |
 | 09 | [Releases](09-releases.md) | day-2 | the ritual: bump approval → evidence → deploy gate |
@@ -115,9 +115,10 @@ Let's Encrypt cert, Full strict). Responses travel back out the same path.
 | 11 | [Access from Laptop](11-access.md) | day-2 | tunnels, Tailscale, the break-glass road |
 | 12 | [Operations Calendar](12-operations.md) | day-2 | weekly/monthly/quarterly + incident cards |
 | 13 | [References](13-references.md) | — | official docs for every claim |
+| 14 | [Onboarding a New App](14-onboarding.md) | day-2 | the seven stops — portal doors vs Git's map |
 
 The numbering is the execution order: M0→M6 in one straight walk (00a holds
-the checkbox ledger). 09–13 are reference chapters — you read them on a
+the checkbox ledger). 09–14 are reference chapters — you read them on a
 Tuesday, not on a build night.
 
 ## Decisions already made (owner rulings — don't re-litigate in a hurry)
@@ -129,6 +130,7 @@ Tuesday, not on a build night.
 | Level-2 rehearsal | optional named Cloudflare Tunnel from the laptop cluster = rehearse the REAL public path (proxy, challenges, Access, real LE certs via DNS-01) before the VPS exists; the Level-1 `/etc/hosts`→127.0.0.1 trick (still with real certs) is also valid | 00a |
 | How does software ship | released `vX.Y.Z` tags only; humans approve bump + deploy; merge never deploys | 09 |
 | Secrets | OpenBao only; Git holds templates only — the iron law above | 05 |
+| Pin semantics | **LOCK, block mode** (owner ruling 2026-11-13): a pinned vault path refuses every relay write — HTTP 403 `{"error":"pinned at v<N> — unpin first"}`, rendered verbatim by the portal; reads serve head; unpin→restore→save→re-pin is the only road back, and the PreSync config-gate refuses any sync that disagrees | 05 §7.1, 06 §4, 12 |
 | Public guard | Cloudflare proxy + managed challenges; **Access on `anor` only**; site + R2 buckets + tokens created early (M0), everything public pointed only at M5 | 01, 07 |
 | Dashboard door | `anor.gofar.id` (alt name `beacon.gofar.id` — swap in the 4 places listed in 07) | 07, 10 |
 | Grafana auth | humans: Google → Cloudflare Access → Grafana OIDC (auto-provision **Viewer**; team `lab-friends` = Editors on the one `Learning` folder) **plus** a kept break-glass local admin: built-in `admin`, generated password in Bao `kv/grafana/production`, reachable only via the SSH-tunnel path; the login form stays enabled-but-never-seen-publicly | 10, 11 |
