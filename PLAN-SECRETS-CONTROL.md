@@ -651,4 +651,42 @@ manual curl of every new endpoint against the live dev plane.
   the frontmatter says so — Part B's first walk converts claims to proof;
   the calendar's first entry post-go-live is "update status markers after
   each chapter walks green."
+- 2026-11-13 (10) — **Phase 7: the runbook became milestones (docs v2) and
+  the production shape became REAL in vortex.** Owner's structural rulings,
+  each accepted and executed: activities are ordered by MILESTONES not
+  resources (00–13 renumbered M0→M6: prepare · k3s/k3d · gitops · vault ·
+  apps+first-release · go-public · maturity); **00a-run-order** is the
+  local rehearsal track — mandatory steps only (k3d on the owner's box
+  running the PRODUCTION shape: `bootstrap/apps-hub-production.yaml` is
+  the same entrypoint as the VPS), optional blocks for Level-1 hosts trick
+  and Level-2 named-tunnel full-path rehearsal; ufw/SSH/DNS explicitly
+  non-mandatory locally. Vault ordering fixed by owner insight: harvest
+  (Patroni-generated DB passwords) happens AFTER the data plane and
+  BEFORE seeding — with both ritual variants printed (exec+bao CLI and
+  port-forward+curl). **Portal doctrine promoted to rule**: every
+  kv/<app>/<env> path appears in mellon automatically (ListPaths is
+  dynamic — verified in code, no registries); seeded right == visible to
+  operators, and the matrix becomes the conformance check; the only
+  exceptions are the bootstrap-paradox credentials trio, printed as such.
+  Decision F closed: humans ride Google→Access→OIDC, break-glass admin
+  KEPT (generated, in Bao, tunnel-only, form enabled-but-invisible).
+  Media R2 closed GATE #9 earlier; presigned written as the explicit
+  not-yet PR-shaped upgrade; backups moved to M6 under an honest "when
+  everything else is boring" banner + the restic R2 endpoint grammar fixed
+  to one honest URL; Grafana ingress/cert/alerts became REAL manifests;
+  traffic anatomy got four diagrams incl. the owner-caught Grafana-route
+  correction and the tunnel variant; access chapter rebuilt k9s-first
+  (with the svc-port bug fixed: grafana is 3000, not 80).
+  Vortex grew the production shape across five merges (67bfe86 apps/
+  production+hub+6 overlays → b32064f certificates app → e39890 grafana
+  door → 09850a1 observability production → ae2683e validate-pin) + the
+  truth sweep f597cac (vortex PUBLIC, 404-lesson re-attributed — anvil) +
+  cc194ea (32-dir kinds table regen, parse-glob) + 9bd5c30 (meili-ns
+  comment: `search`, never `meilisearch` — a comment-as-contract bug that
+  would have seeded the 503-incident URL verbatim; caught by a docs agent
+  READING the CRs instead of trusting the brief — the process working
+  exactly as designed). Conscious literal exceptions now enumerated with
+  in-file justification: ACME contact email, alert recipient email.
+  Docs v1 preserved untouched outside git:
+  ~/Projects/omicron-docs-backup/pre-restructure-20261113-1618.
 - — (append deltas here: contract changes, deviations, new rulings)

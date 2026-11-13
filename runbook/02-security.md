@@ -6,6 +6,14 @@ status: commands rehearsed on VM; VPS walk = proof
 
 # 02 · VPS Hardening — locks before furniture
 
+> **🟦 VPS-ONLY.** The local rehearsal track (k3d — [00a
+> Run Order](00a-run-order.md), Track A) **deliberately skips this
+> chapter**: the laptop cluster has no SSH door facing the internet and
+> nobody logs into your k3d containers; these are the VPS's door locks.
+> Its VPS-parity note is in 00a: everything else on both tracks runs the
+> same shape, so ch.02 is exactly one of the two host-level deltas that
+> Track B walks for the first time.
+
 > **Why this chapter is FIRST:** a fresh Linux box with root+password SSH
 > open to the internet starts being scanned (and sometimes breached) within
 > **hours**. Every later chapter assumes these locks are already on.
