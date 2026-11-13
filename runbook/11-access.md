@@ -40,16 +40,21 @@ If you do one thing from this chapter, do this — a terminal UI over the
 same tunnel makes the whole estate legible:
 
 ```bash
-# 1) the kubeconfig, once (the file is root-readable on the server):
-ssh ops@<server-ip> 'sudo cat /etc/rancher/k3s/k3s.yaml' > ~/.kube/config
-# 2) point it at the tunnel + give the context a real name:
-sed -i 's|server:.*|server: https://127.0.0.1:6443|' ~/.kube/config
+# 1) fetch the server's kubeconfig to a SEPARATE file (NEVER overwrite
+#    ~/.kube/config — your k3d/minikube contexts live there):
+ssh ops@<server-ip> 'sudo cat /etc/rancher/k3s/k3s.yaml' > ~/.kube/config-omicron
+# 2) point the COPY at the tunnel (scoped to that file only):
+sed -i 's|server:.*|server: https://127.0.0.1:6443|' ~/.kube/config-omicron
+# 3) merge it into your kubeconfig (flattening keeps credentials inline)…
+KUBECONFIG=~/.kube/config:~/.kube/config-omicron kubectl config view --flatten > ~/.kube/config.tmp \
+  && mv ~/.kube/config.tmp ~/.kube/config && chmod 600 ~/.kube/config
+#    …and give the context a real name:
 kubectl config rename-context default omicron
-# 3) keep the tunnel up (one terminal, Ctrl-C closes the road):
+# 4) keep the tunnel up (one terminal, Ctrl-C closes the road):
 ssh -N -L 6443:127.0.0.1:6443 ops@<server-ip> &
-# 4) prove it, then launch:
-kubectl get nodes        # Ready within seconds, through the tunnel
-k9s                      # reads THE SAME ~/.kube/config — zero k9s-side setup
+# 5) prove it, then launch:
+kubectl config use-context omicron && kubectl get nodes   # Ready within seconds, through the tunnel
+k9s                       # reads THE SAME ~/.kube/config — zero k9s-side setup
 ```
 
 k3s writes its own kubeconfig with `127.0.0.1:6443` already, so step 2
@@ -60,10 +65,14 @@ point: one recipe, no snowflake configs.
 
 A tunnel = "pretend a cluster-only door is on my laptop." ClusterIP
 targets aren't reachable by `ssh -L` alone, so each recipe runs
-port-forward **on the server** and tunnels **to it**. Helper on the
-server (`/usr/local/bin/tunnel`, one-time):
+port-forward **on the server** and tunnels **to it**.
+
+The three doors (service ports cited from the manifests that define
+them). The helper itself, installed on the server once:
 
 ```bash
+ssh ops@<server-ip>
+sudo tee /usr/local/bin/tunnel >/dev/null <<'EOF'
 #!/usr/bin/env bash
 # usage: tunnel <svc> <ns> <node-bind-port> <svc-port>  — localhost-bound
 # NOTE the LAST TWO are SEPARATE arguments — bind and service port are
@@ -71,10 +80,10 @@ server (`/usr/local/bin/tunnel`, one-time):
 # them (that is how the grafana line below got fixed).
 kubectl -n "$2" port-forward "svc/$1" "127.0.0.1:$3:$4" &
 FPID=$!; trap "kill $FPID" EXIT INT TERM; wait $FPID
+EOF
+sudo chmod +x /usr/local/bin/tunnel
+exit
 ```
-
-The three doors (service ports cited from the manifests that define
-them):
 
 | Want | Server runs | Laptop runs | Then open |
 |---|---|---|---|

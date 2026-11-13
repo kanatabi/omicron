@@ -29,6 +29,8 @@ Three layers people constantly mix up. Keep them separate:
 ### 1.1 Hand the zone to Cloudflare (once)
 
 1. Cloudflare dashboard → **Add a site** → `gofar.id` → **Free plan**.
+   *(The site was already added in [01 §2a](01-prerequisites.md) — if you
+   followed that chapter, skip this step; this act only cuts the zone over.)*
 2. Cloudflare shows two nameservers (e.g. `ana.ns.cloudflare.com`).
 3. At your **registrar**, replace the current nameservers with those two.
 4. Wait (minutes to hours). ✅ check:
@@ -170,7 +172,7 @@ is the whole TLS story, synced by the `certificates` app:
 ✅ checks:
 
 ```bash
-kubectl get certificate -A                          # all three Ready=True
+kubectl get certificate -A                          # all five Ready=True
 kubectl get order -A                                # dns01 challenge solved
 echo | openssl s_client -connect 127.0.0.1:443 -servername gofar.id 2>/dev/null | openssl x509 -noout -issuer
 ```
@@ -210,9 +212,15 @@ secret; those are *values*, so they go to the vault, not a dashboard-living
 Grafana config:
 
 ```bash
+# The admin password was GENERATED at ch. 05 §6.5 seeding — you never wrote
+# it down, and that's fine: read it back from the vault (variant A's X; on
+# variant B swap the read for the curl -field equivalent):
+GF_ADMIN_PW=$(X "export VAULT_TOKEN=$ROOT; bao kv get -field=GF_SECURITY_ADMIN_PASSWORD kv/grafana/production")
+[ -n "$GF_ADMIN_PW" ] || echo "⚠️ read came back empty — check the vault path before continuing"
+
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/grafana/production \
   GF_SERVER_ROOT_URL=https://anor.gofar.id \
-  GF_SECURITY_ADMIN_PASSWORD=<generated at ch. 05 seeding> \
+  GF_SECURITY_ADMIN_PASSWORD=$GF_ADMIN_PW \
   GF_AUTH_GENERIC_OAUTH_CLIENT_ID=<from Access> \
   GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=<from Access>"
 ```

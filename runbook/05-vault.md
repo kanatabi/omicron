@@ -78,8 +78,8 @@ sequenceDiagram
     Note over L,V: pick A or B per step — same calls, same order, never both at once
     L->>A: bao operator init -key-shares=3 -key-threshold=2
     A->>V: POST /v1/sys/init
-    V-->>L: keys + root token land in /root/bao-init.json
-    L->>L: scp /root/bao-init.json → laptop → offline store<br/>(BEFORE deleting the server copy!)
+    V-->>L: keys + root token land in $HOME/bao-init.json<br/>(the machine running kubectl — laptop on Track A, VPS on Track B)
+    L->>L: copy it to the laptop → password manager + paper, two spots<br/>(BEFORE deleting the working copy!)
     L->>A: bao operator unseal <KEY> (×2, key as ARGUMENT)
     A->>V: POST /v1/sys/unseal
     L->>B: kubectl -n secrets port-forward svc/bao 8200:8200
@@ -102,8 +102,15 @@ X() { kubectl -n secrets exec -i deploy/openbao -- \
 ### 3.1 Init — do it ONCE, carefully
 
 ```bash
-X 'bao operator init -key-shares=3 -key-threshold=2 -format=json' > /root/bao-init.json
+X 'bao operator init -key-shares=3 -key-threshold=2 -format=json' > "$HOME/bao-init.json"
+chmod 600 "$HOME/bao-init.json"
 ```
+
+> **Where this file lives:** the redirect runs on **the machine where you
+> run `kubectl`** — your laptop on Track A, the VPS (as `ops`) on Track B.
+> `$HOME` is correct in both; a literal `/root/…` would fail for `ops` and
+> is a leftover from the root-session era. Everything below (§3.2, §3.3)
+> reads the same `$HOME` path, so stay in this one shell.
 
 > **Why 3 shares / threshold 2:** any single paper is worthless alone,
 > **any two of the three open it**. One paper on one server = one fire =
@@ -114,10 +121,11 @@ X 'bao operator init -key-shares=3 -key-threshold=2 -format=json' > /root/bao-in
 **The extraction step — do NOT skip, in this order:**
 
 ```bash
-# FROM YOUR LAPTOP, while the init file still exists on the server:
-scp <server>:/root/bao-init.json ~/Desktop/   # then straight into your
-                                              # password manager AND/OR
-                                              # paper, in two physical spots
+# If you ran init ON THE LAPTOP: the file is already here — skip to the copy.
+# If you ran init ON THE VPS (Track B), pull it from your laptop first:
+scp ops@<server>:bao-init.json ~/Desktop/   # (relative path = ops's $HOME)
+# THEN — either machine — straight into your password manager AND/OR
+# paper, in two physical spots
 ```
 
 > **The backup bucket never holds unseal keys — that's what "offline"
@@ -125,16 +133,17 @@ scp <server>:/root/bao-init.json ~/Desktop/   # then straight into your
 > keys lived in a root file they'd ride that bucket, and anyone with the one
 > backup credential could open the vault that guards the other ones. The
 > keys' only homes: your laptop's transfer copy, then offline storage.
-> **Delete `/root/bao-init.json` ONLY after the offline copies exist** —
+> **Delete `$HOME/bao-init.json` ONLY after the offline copies exist** —
 > and remember which two of the three keys you kept; any pair works, the
 > third is spare.
 
 ### 3.2 Unseal (twice)
 
 ```bash
-X "bao operator unseal $(python3 -c "import json;print(json.load(open('/root/bao-init.json'))['unseal_keys_b64'][0])")"
-X "bao operator unseal $(python3 -c "import json;print(json.load(open('/root/bao-init.json'))['unseal_keys_b64'][1])")"
-# → "Sealed: false" on the second call. NOW delete /root/bao-init.json.
+INIT="$HOME/bao-init.json"   # set once; §3.3 reuses it
+X "bao operator unseal $(python3 -c "import json;print(json.load(open('$INIT'))['unseal_keys_b64'][0])")"
+X "bao operator unseal $(python3 -c "import json;print(json.load(open('$INIT'))['unseal_keys_b64'][1])")"
+# → "Sealed: false" on the second call. NOW delete the init file (after the offline copies exist — §3.1's box).
 ```
 
 > **Non-tty lesson (incident-proven):** piping a key into `unseal` on stdin
@@ -146,7 +155,7 @@ X "bao operator unseal $(python3 -c "import json;print(json.load(open('/root/bao
 ### 3.3 Mounts, auth, policies
 
 ```bash
-ROOT=$(python3 -c "import json;print(json.load(open('/root/bao-init.json'))['root_token'])")
+ROOT=$(python3 -c "import json;print(json.load(open('$INIT'))['root_token'])")
 X "export VAULT_TOKEN=$ROOT; bao kv enable version=2 kv"     # the values store
 X "export VAULT_TOKEN=$ROOT; bao auth enable approle"        # machine logins
 
@@ -335,6 +344,30 @@ clustersecretstore.yaml`).
 **Seed order: `shared` first** (lumen-admin boots with foundation wave 2,
 before either env hub), then staging, then production.
 
+**Variables this section depends on — check before the first `bao kv put`:**
+every seed block writes what a shell variable *currently* holds; if your
+terminal died since §3–§5, an empty variable seeds an **empty string**
+(the worst failure: it renders, then misbehaves). Re-establish per the
+table, then run the guard.
+
+| Variable | Set in | What it must hold | Re-establish |
+| :-- | :-- | :-- | :-- |
+| `X()` (the exec wrapper) | §3 | the `kubectl exec` one-liner | re-run §3's block |
+| `ROOT` | §3.3 | Bao root token | if the init file still exists: re-run §3.3's first line; else unseal ritual §9 + `bao login` |
+| `ADMIN_DB_PW` `STAGING_DB_PW` `PROD_DB_PW` | §5 | the Patroni-generated passwords | re-run §5's three kubectl reads |
+| `MEILI_KEY` | this § (below) | the shared search key | re-run this §'s `export MEILI_KEY=…` (it re-derives from the vault in §6.5's shape if you already seeded) |
+
+```bash
+# ⚠️ GENERATE the shared search key ONCE, here — §6.2 and §6.5 both use it.
+# (If you already seeded and just need it back: skip the export and read it
+# in §6.5's note — the vault holds it at kv/meilisearch/production.)
+export MEILI_KEY=$(openssl rand -hex 32)
+# paste-safe guard: WARN, don't exit — a dead terminal must not close itself
+for v in ROOT ADMIN_DB_PW STAGING_DB_PW PROD_DB_PW MEILI_KEY; do
+  [ -n "${!v}" ] || echo "⚠️  \$$v is EMPTY — re-establish it (table above) BEFORE seeding"
+done
+```
+
 ### 6.1 `kv/lumen/shared` — the Control Plane's identity (3 keys)
 
 | kv path | Keys | Declared by |
@@ -485,8 +518,8 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$ME
 > `bases/meilisearch/deployment.yaml`) — and **no ExternalSecret
 > renders that Secret yet** (the manifest comment says "eventually via
 > ExternalSecret/OpenBao"; today it's `optional: true` so the pod can boot
-> unkeyed, which production must not do). So: pick ONE `$MEILI_KEY` (the
-> same one every cms path gets as `LUMEN_MEILI_KEY` — the engine is shared,
+> unkeyed, which production must not do). So: use the ONE `$MEILI_KEY`
+> from §6's preamble (the same one every cms path gets as `LUMEN_MEILI_KEY` — the engine is shared,
 > the INDEXES are the per-env separation), create the k8s Secret by hand
 > (`kubectl -n search create secret generic meilisearch-master-key --from-literal=master-key=$MEILI_KEY`),
 > AND mirror it into `kv/meilisearch/production` so it shows in the matrix
@@ -555,6 +588,13 @@ kubectl delete externalsecret -n <ns> <name>   # for each ES — Argo selfHeal
                                                # recreates it, fresh objects sync NOW
 kubectl rollout restart deploy/...             # every consumer pod: envFrom
                                                # binds ONLY at container start
+```
+
+Paste-ready enumeration (lists every ES with its namespace, ready to
+copy into the delete/restart lines):
+
+```bash
+kubectl get externalsecret -A --no-headers | awk '{print $1, $2}'
 ```
 
 ✅ end state: all rendered ES `Synced=True`; `kubectl -n external-secrets

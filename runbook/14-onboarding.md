@@ -109,7 +109,11 @@ Four things, in order, and none of them names the app in a script:
    `environments/production/earendil/` (a foundation-plane app copies
    `environments/foundation/lumen/` — note its dir name is the APP name
    while resources keep explicit `lumen-admin-*` names: dir==app keeps
-   the bump tooling name-free). Then the Application CR in the right
+   the bump tooling name-free). **If the app serves the public, the
+   overlay authors its own `ingress.yaml` too** (hosts/backend/TLS
+   stated final, annotation-free — post-ingress-retirement a copy
+   without it renders no door; see the earendil/mellon overlays for the
+   shape). Then the Application CR in the right
    hub dir: `apps/foundation/`, `apps/staging/`, or `apps/production/`.
    The `bao` store, the issuerRef and the `lumen-bao-credentials`
    bootstrap family stay LITERAL everywhere — single-instance or

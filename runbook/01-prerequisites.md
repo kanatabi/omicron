@@ -104,9 +104,19 @@ mode, no Access application — that is one M5 sitting, in order, in
 Install these before Track A (ch. 03 + 11 assume them):
 
 ```bash
-# Ubuntu/Debian — adjust for macOS (brew) or the package manager you use.
-sudo apt update && sudo apt install -y kubectl helm restic age
-# kustomize (v5.8+): single static binary
+# Ubuntu/Debian amd64 — adjust for macOS (brew) or your package manager.
+# kubectl + helm are NOT in the stock Ubuntu repos (plain `apt install`
+# fails) — the curl installers below are the official ones; restic + age
+# ARE stock packages.
+sudo apt update && sudo apt install -y restic age
+# kubectl — official binary, latest stable:
+curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+  && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+# helm — PINNED v3.22.1, same tarball CI installs (get-helm-3 resolves a
+# mutable CDN pointer; the ESO render + anvil's battery expect this version):
+curl -fsSL https://get.helm.sh/helm-v3.22.1-linux-amd64.tar.gz | tar xz \
+  && sudo mv linux-amd64/helm /usr/local/bin/ && rm -rf linux-amd64
+# kustomize (v5.8.1): single static binary
 curl -sL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.8.1/kustomize_v5.8.1_linux_amd64.tar.gz" \
   | tar xz && sudo mv kustomize /usr/local/bin/
 # k3d — the local rehearsal runtime (needs Docker running)
@@ -116,7 +126,7 @@ wget -qO - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 | Tool | What we use it for |
 |---|---|
 | `kubectl` | talk to the cluster (laptop-direct in Track A; over a tunnel in production, ch.11) |
-| `helm` | install the pinned charts (Traefik) — *version matters*: the manifests are tested against helm 3.x |
+| `helm` | render the ESO chart wrapper (`kubectl kustomize --enable-helm`) + install the pinned Traefik chart — pin **v3.22.1**: the render path and anvil's battery both expect it |
 | `kustomize` | render the YAML folder that *is* the truth; `kubectl kustomize` also works |
 | `restic` + `age` | encrypted backups and any file encryption (ch.08) |
 | `k3d` | the mandatory local cluster — same k3s engine as the VPS ([03](03-k3s.md)) |
@@ -150,8 +160,10 @@ Two demotions, so the history stays honest:
   ruling 2026-11-14 gives it one redo: it currently runs the RETIRED tree
   (Argo errors about `overlays/local/…` — expected) and holds only
   disposable `kv/*/dev` scratch, and it gets **repointed to STAGING**
-  (foundation hub → seed → staging hub) as the first live walk of the env
-  model. Don't build the FIRST Track A on it — k3d is that — but don't
+  (foundation hub → seed → staging hub) as the first walk of the **new**
+  env model (its pre-Phase-11 walk is the archived log; k3d owns the
+  first Track A of this re-cut). Don't build the FIRST Track A on it —
+  k3d is that — but don't
   read its current redness as estate breakage either.
 
 ## 6. Before continuing — checklist
@@ -166,8 +178,8 @@ Two demotions, so the history stays honest:
       Object Read & Write tokens minted and stored **offline** (seeded in
       ch.05)
 - [ ] the `gofar.id` mailbox is reachable (LE + alert recipient)
-- [ ] toolbelt installed: `helm version` reads 3.x, `k3d version` prints,
-      Docker running
+- [ ] toolbelt installed: `helm version` reads **v3.22.1**, `k3d version` prints,
+      `kubectl version --client` prints, Docker running
 - [ ] the rehearsal cluster is up — run [03 §1](03-k3s.md)'s command block,
       `kubectl get nodes` shows `Ready`
 - [ ] an *offline* place for keys: password manager and/or paper — it now

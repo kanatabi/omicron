@@ -46,7 +46,7 @@ pin — is readable by anyone on the internet. That is deliberate:
 > `vortex`. Keep it as: "when Argo says repo-not-found, check visibility
 > before path."
 
-## 2. The manual applies: the hub SET + three pinned one-time installs (say them out loud)
+## 2. The manual applies: the hub SET + four pinned one-time installs (say them out loud)
 
 GitOps cannot install the foundations it needs to do GitOps — chicken and
 egg. The honest count of manual applies on a production cluster is
@@ -54,13 +54,14 @@ egg. The honest count of manual applies on a production cluster is
 production, staging, or both; the entrypoint SET is the documented
 *pair-or-more* — the 3-node blueprint `bootstrap/apps-hub.yaml` is a
 single-file alternative for the future scale-out shape, not this estate's
-today), plus exactly **three** pinned one-time installs:
+today), plus exactly **four** pinned one-time installs:
 
 | What | Pin | Command (from a cloned `vortex`) | Why it can't ride the hub |
 |---|---|---|---|
 | **Argo CD** | v3.6.1 | `kubectl apply -k platform/argocd/ --server-side --force-conflicts` | the robot can't host itself |
 | **Zalando postgres-operator** | v1.13.0 | `kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/v1.13.0/manifests/operator-manifests.yaml` (pinned in the header comment of `bases/lumen-db/postgresql.yaml`) | the CRD that defines `postgresql.yaml` must exist before any app applies it |
 | **cert-manager** | v1.16.2 | `kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml` (prereq comment in `bases/certificates/kustomization.yaml`) | its CRDs gate the certificates app; Namespace ships with the install, deliberately untracked |
+| **Traefik (helm chart)** | chart 42.3.2 | [03 §6](03-k3s.md)'s `helm install traefik … --version 42.3.2` (per-runtime flags there) | the edge must be up before any Ingress resolves; helm, not `kubectl apply` |
 
 Anything else you catch yourself `kubectl apply`-ing to the cluster is a
 bug in this document — tell the next reader.
@@ -237,11 +238,10 @@ ignoreDifferences:
 > `observability-app.yaml` and `lumen-admin-app.yaml` carry it — the other
 > five foundation CRs consume no ExternalSecrets, compare
 > `openbao-app.yaml`.)
-> **OPEN (disk truth, 2026-11-14):** `apps/staging/lumen-app.yaml` renders
-> `lumen-secrets-staging` but does NOT carry the block — by this chapter's
-> own rule it should. Watch it for perpetual-OutOfSync thrash; the fix is a
-> human PR to vortex (copy the block from `apps/staging/mellon-app.yaml`),
-> not a doc edit.
+> **RESOLVED (2026-11-14):** the lumen staging CR now carries the block
+> (human PR landed — all nine store-consuming CRs match, including
+> `apps/staging/lumen-app.yaml`). The rule below is uniform again: every
+> store-consuming app carries it.
 
 ## 5. The rules of the road (selfHeal = the robot always wins)
 

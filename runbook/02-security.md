@@ -1,6 +1,6 @@
 ---
 tags: [runbook, security]
-updated: 2026-11-13
+updated: 2026-11-14
 status: commands rehearsed on VM; VPS walk = proof
 ---
 
@@ -18,12 +18,15 @@ status: commands rehearsed on VM; VPS walk = proof
 > open to the internet starts being scanned (and sometimes breached) within
 > **hours**. Every later chapter assumes these locks are already on.
 
-All commands run **on the server** as root (or prefix `sudo`), unless said.
+> **Posture for this chapter:** run §1 **as root** (your provider gave you
+> that session). From §2 on you are **`ops`**, and everything that writes
+> system files is prefixed `sudo` (it prompts for *your* password). Never
+> log in as root again after §1.
 
 ## 1. Create your admin user (stop using root)
 
 ```bash
-adduser ops && usermod -aG sudo ops
+adduser ops && usermod -aG sudo ops   # adduser prompts you to set a password — that's the sudo password from now on
 # copy YOUR laptop public key in (from laptop: cat ~/.ssh/id_ed25519.pub)
 mkdir -p /home/ops/.ssh && echo "ssh-ed25519 AAAA... you@laptop" > /home/ops/.ssh/authorized_keys
 chown -R ops:ops /home/ops/.ssh && chmod 700 /home/ops/.ssh && chmod 600 /home/ops/.ssh/authorized_keys
@@ -38,15 +41,15 @@ chown -R ops:ops /home/ops/.ssh && chmod 700 /home/ops/.ssh && chmod 600 /home/o
 ## 2. SSH config — close the guesses
 
 ```bash
-cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
-cat > /etc/ssh/sshd_config.d/20-homelab.conf <<'EOF'
+sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+sudo tee /etc/ssh/sshd_config.d/20-homelab.conf >/dev/null <<'EOF'
 PermitRootLogin no
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 MaxAuthTries 3
 LoginGraceTime 20
 EOF
-sshd -t && systemctl reload ssh    # `sshd -t` BEFORE reload = syntax-check first
+sudo sshd -t && sudo systemctl reload ssh    # `sshd -t` BEFORE reload = syntax-check first
 ```
 
 > **Why each line:** root-login/passwords are the two doors brute-forcers
@@ -63,14 +66,15 @@ stays open to the world (that's normal; it's key-only now), Kubernetes
 ports are never public.
 
 ```bash
-apt install -y ufw
-# update this list monthly — Cloudflare publishes it:
-curl -sL https://api.cloudflare.com/client/v4/ips | python3 -c "import sys,json;[print(p['cidr']) for p in json.load(sys.stdin)['result'] if ':' not in p['cidr']]" > /etc/cloudflare-v4.txt
-for c in $(cat /etc/cloudflare-v4.txt); do ufw allow from "$c" to any port 80,443 proto tcp; done
-ufw allow 22/tcp
-ufw deny 6443  # k8s API: tunnels/Tailscale only, never the internet
-ufw default deny incoming && ufw default allow outgoing
-ufw enable && ufw status numbered
+sudo apt install -y ufw
+# update this list monthly — Cloudflare publishes it (card 9 in ch.12
+# automates the refresh; the refresh script re-runs this same loop):
+curl -sL https://api.cloudflare.com/client/v4/ips | python3 -c "import sys,json;[print(p['cidr']) for p in json.load(sys.stdin)['result'] if ':' not in p['cidr']]" | sudo tee /etc/cloudflare-v4.txt >/dev/null
+for c in $(cat /etc/cloudflare-v4.txt); do sudo ufw allow from "$c" to any port 80,443 proto tcp; done
+sudo ufw allow 22/tcp
+sudo ufw deny 6443  # k8s API: tunnels/Tailscale only, never the internet
+sudo ufw default deny incoming && sudo ufw default allow outgoing
+sudo ufw enable && sudo ufw status numbered
 ```
 
 > **Why deny 6443:** the Kubernetes control plane on a public IP is the most
@@ -85,9 +89,9 @@ ufw enable && ufw status numbered
 ## 4. Auto-security-updates + intrusion tiredness
 
 ```bash
-apt install -y unattended-upgrades fail2ban
-dpkg-reconfigure --priority=low unattended-upgrades   # say yes
-systemctl enable --now unattended-upgrades fail2ban
+sudo apt install -y unattended-upgrades fail2ban
+sudo dpkg-reconfigure --priority=low unattended-upgrades   # say yes
+sudo systemctl enable --now unattended-upgrades fail2ban
 ```
 
 > **Why:** the boring 90% of breaches are unpatched known holes; `fail2ban`
@@ -96,13 +100,13 @@ systemctl enable --now unattended-upgrades fail2ban
 ## 5. Swap + kernel knobs (the box has one disk and one job)
 
 ```bash
-fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
-echo '/swapfile none swap sw 0 0' >> /etc/fstab
-cat > /etc/sysctl.d/90-omicron.conf <<'EOF'
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
+sudo tee /etc/sysctl.d/90-omicron.conf >/dev/null <<'EOF'
 vm.swappiness=1          # RAM first; swap is the safety net, not the habit
 fs.inotify.max_user_instances=812   # k3s + collectors eat inotify
 EOF
-sysctl --system
+sudo sysctl --system
 ```
 
 > **Why swap:** without it, one memory spike OOM-kills the vault or the DB
