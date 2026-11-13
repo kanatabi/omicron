@@ -101,7 +101,20 @@ mode, no Access application — that is one M5 sitting, in order, in
 
 ## 4. Your laptop's toolbelt
 
-Install these before Track A (ch. 03 + 11 assume them):
+Install these before Track A (ch. 03 + 11 assume them). Pick the block
+for your laptop's distro — **Arch users: everything except `helm` is in
+the official repos**, one `pacman` line (see the note on the helm pin):
+
+```bash
+# ARCH (amd64) — official repos only:
+sudo pacman -S --needed kubectl kustomize k3d restic age docker
+sudo systemctl enable --now docker
+sudo usermod -aG docker "$USER"    # then log out + back in (or `newgrp docker`)
+# helm — PINNED v3.22.1 tarball on EVERY distro (pacman's `helm` tracks
+# latest; the ESO render path + anvil's battery expect the pinned version):
+curl -fsSL https://get.helm.sh/helm-v3.22.1-linux-amd64.tar.gz | tar xz \
+  && sudo mv linux-amd64/helm /usr/local/bin/ && rm -rf linux-amd64
+```
 
 ```bash
 # Ubuntu/Debian amd64 — adjust for macOS (brew) or your package manager.
@@ -179,7 +192,8 @@ Two demotions, so the history stays honest:
       ch.05)
 - [ ] the `gofar.id` mailbox is reachable (LE + alert recipient)
 - [ ] toolbelt installed: `helm version` reads **v3.22.1**, `k3d version` prints,
-      `kubectl version --client` prints, Docker running
+      `kubectl version --client` prints, Docker running (Arch: your user is
+      in the `docker` group — a permission denied here means re-login)
 - [ ] the rehearsal cluster is up — run [03 §1](03-k3s.md)'s command block,
       `kubectl get nodes` shows `Ready`
 - [ ] an *offline* place for keys: password manager and/or paper — it now

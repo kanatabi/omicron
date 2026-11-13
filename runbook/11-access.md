@@ -114,7 +114,8 @@ the value carried from the rehearsed walk).
 > self-host-the-control-plane escape hatch.
 
 ```bash
-# both machines, once:
+# both machines, once (Arch: `sudo pacman -S tailscale` works too — same
+# upstream binary, distro-managed instead of the curl script):
 curl -fsSL https://tailscale.com/install.sh | sh && tailscale up
 tailscale ip -4    # e.g. 100.x.y.z — a stable private address
 ```
