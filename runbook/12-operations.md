@@ -22,7 +22,7 @@ updated: 2026-11-13
 - [ ] **Restore drill** (ch.10 §4) — the one line that keeps backups honest
 - [ ] **Media smoke** (ch.06 §3): upload → `img.gofar.id` loads → delete
 - [ ] **Cloudflare-only firewall** (ch.02 §3): re-pull CF IP ranges into
-      `/etc/cloudflower-v4.txt` (they change occasionally), `ufw reload`
+      `/etc/cloudflare-v4.txt` (they change occasionally), `ufw reload`
 - [ ] Cert-manager: nothing due (auto-renews) — just confirm alerts green
 - [ ] "Under Attack mode" spot check: still OFF? (ch.04 Act 2 — the panic
       switch is never a lifestyle)
