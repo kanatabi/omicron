@@ -723,4 +723,48 @@ manual curl of every new endpoint against the live dev plane.
   + INFRA evening amendment. Doctrine now one line: pin = lock, head =
   truth, restore = only road back, gate = where you can't lie.
   Rehearsal-ready: Wave 4 (owner-driven, k3d, two hubs, v2.1.0-capable).
+- Phase 11 (environment model, waves W1 + convergence, 2026-11-13):
+  planes foundation|staging|production in ONE cluster with resource
+  SUFFIXES + omicron/env labels (separating later = Argo destination
+  edit only); one Bao (env paths inside), one Patroni 3 logical DBs,
+  one Meilisearch (per-env index names), one R2 bucket (per-env key
+  prefixes), unified VM+Loki+Grafana with env labels from day one;
+  session truth = lumen-admin ONLY (cms introspects verify, 32B secret
+  never leaves admin; revocation ≤30s cache, fail-closed 503). W1
+  merges: lumen ec16db5 (LUMEN_ROLE route/migration/worker split,
+  verify endpoint, config keys), vortex 430168d (environments tree,
+  3 hubs, 3-DB Patroni, lumen-admin, selfsigned/dev/local retired),
+  mellon 1c07144 (dual upstreams + routing table, 132 tests), earendil
+  1474ce8 (ORIGIN env-bound — the one hardcoded origin found), anvil
+  ba595ce (env grammar, TRIO extractor, env-scoped fence; unparseable
+  env BAILS). Convergence (me): table regenerated (23 dirs green with
+  CI-identical helm v3.22.1); LUMEN_ADMIN_URL FAIL resolved by MOVING
+  the value into the ES, NOT by exempting the detector (service URLs
+  live in Bao — MEILI_URL precedent; estate-wide source lumen/shared,
+  split-cluster = one-line remoteRef flip); every ES data list re-diffed
+  against `lumen config keys` (SESSION_JWT purged from cms planes, the
+  invented INDEX_PREFIX renamed to INDEX_PHOTOS+MEDIA_PREFIX, admin ES
+  slimmed to its two real bindings, mellon ESes gained ADMIN_URL+CMS_URL
+  with API_BASE kept transitionally + written drop rule, earendil ESes
+  re-got ORIGIN — WITH its reader, exactly the removal rule); release.yml
+  env chains wired in all three repos (lumen 3, earendil/mellon 2;
+  config-epoch honored ONLY on single-env dispatch — trios carry per-env
+  values); NEW ESTATE FACT from a /tmp fixture: a base `images:` stanza
+  SILENTLY OUTRANKS every env overlay (inner transform rewrites the name
+  before the outer can match) — bases de-pinned (vortex 01937c2), env
+  trees are the only version homes, which also CLOSES the cross-env
+  lockstep question anvil had flagged (answer: same-env is complete);
+  environments/foundation/lumen-admin/ → .../lumen (dir==app for the
+  bump tool; resources keep lumen-admin names); 7 pinning overlays
+  canonicalized (no-op kustomize edit reflows ~150 lines — proven
+  render-BYTE-IDENTICAL per dir) so bump PRs stay fence-minimal (a
+  v9.9.9 staging plan = 3 single-line newTag diffs + the trio when
+  --config-epoch rides, all inside environments/staging/); pins rotated
+  bdf7a894→728231b (v6 env-model) in all four repos. OWNER TODO before
+  first tag: create+protect GitHub environments deploy-foundation|
+  staging|production per repo (unprotected = the approval silently never
+  parks); re-seed Bao (new keys: LUMEN_ADMIN_URL@lumen/shared,
+  MEILI_INDEX_PHOTOS, MEDIA_PREFIX, mellon ADMIN_URL/CMS_URL, earendil
+  ORIGIN) BEFORE syncing any hub — ESO fails the whole render on a
+  missing property.
 - — (append deltas here: contract changes, deviations, new rulings)

@@ -76,13 +76,19 @@ labels). `k3d image import` after rebuilding placeholder images.
 5. **App-of-apps shape:** `apps/foundation/` + `apps/applications/` (and the
    Part-C `apps/`) contain ONLY Argo `Application` CRs; raw manifests
    under `applications/<name>/`; each hub syncs its folder non-recursively.
-   Adding an app = new dir + new Application CR, never hub edits. Bases stay ESO-free (k3d invariant) —
-   per-env values ride `overlays/production/<app>`; going prod = repoint that app's
-   Application `source.path`.
+   Adding an app = new dir + new Application CR, never hub edits. Bases stay ESO-free (k3d invariant)
+   AND carry NO image pins (2026-11-13 convergence: a base `images:` stanza
+   outranks every env overlay in kustomize — fixture-proven; env trees are
+   the only version homes); per-env values ride `environments/<env>/<app>`;
+   moving an env to another cluster = that app's Argo destination edit only.
 6. **CI bump PRs edit only fence-covered lines, by pattern:** the `images:` stanza
-   in `applications/*/kustomization.yaml`, plus (epoch round) `overlays/production/<app>/`
-   files' `omicron/config.epoch` annotation and gate `--declared` arg, and the lumen
-   lockstep `newTag` lines the gate containers read. The fence accepts line SHAPES and
+   in `environments/<env>/*/kustomization.yaml` (same-env lockstep: a lumen bump
+   moves every `name: lumen` stanza of that env — its gate pins — in ONE commit,
+   never another env's), plus the epoch TRIO: pod-template `omicron/config.epoch`
+   annotation + gate `--declared` arg + ExternalSecret `omicron/config.epoch`
+   annotation, byte-equal, all three in the same commit. Branch grammar
+   `bump/<app>-<env>-<tag>` (legacy `bump/<app>-<tag>` = production, deprecated);
+   the path fence is env-scoped from the branch. The fence accepts line SHAPES and
    never app names; app identity arrives from each repo's workflow (`--app`, and the
    app is also parsed from the bump branch name). Keep the container's image name (e.g.
    `lumen`) stable so `kustomize edit set image` keeps working; GHCR names must be lowercase.
