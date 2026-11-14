@@ -9,7 +9,7 @@ updated: 2026-11-15
 > learning home for the repo. Any change that alters the stack, anatomy,
 > contract, commands, conventions, or state recorded here must update this
 > note in the SAME round — and [LEARNING.md](LEARNING.md) if it minted a
-> lesson. See [../doc-map.md](../doc-map.md) §"Context sync".
+> lesson. See [../doc-map.md](../../doc-map.md) §"Context sync".
 
 ## 1. Role in the estate
 
@@ -111,7 +111,7 @@ per-request (§2: "the FE renders payloads as-is").
 mirror), `GET /bao/{app}/{env}` (`?version=N`, `?meta` adds
 `pinnedVersion`), `PUT/DELETE /bao/{app}/{env}/pin`, plus `GET
 /bao/summary` (the estate matrix, C1). Full frozen semantics:
-[../decisions/secrets-control-plane.md](../decisions/secrets-control-plane.md).
+[../decisions/secrets-control-plane.md](../../decisions/secrets-control-plane.md).
 
 ## 5. Conventions that bite
 
@@ -175,7 +175,7 @@ Same ladder as every app repo (anvil; tag `vX.Y.Z` → image
 places — the foundation `lumen-admin` (wave 2, after the `bao` store is
 Ready) and each env's cms (wave 0 of its env's hub, the dependency root) —
 and the **epoch TRIO** gate pins the config/render agreement. Detail:
-[../architecture/releases-and-ci.md](../architecture/releases-and-ci.md).
+[../architecture/releases-and-ci.md](../../architecture/releases-and-ci.md).
 
 ## 9. State & history (walked)
 

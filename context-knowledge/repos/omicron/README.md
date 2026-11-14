@@ -8,7 +8,7 @@ updated: 2026-11-15
 > **Sync duty (workspace rule, 2026-11-15):** this note is the vault's
 > learning home for the workspace itself. Changes to the root docs, the
 > runbook shape, or the submodule set must update this note in the SAME
-> round. See [../doc-map.md](../doc-map.md) §"Context sync".
+> round. See [../doc-map.md](../../doc-map.md) §"Context sync".
 
 ## 1. Role in the estate
 
@@ -70,12 +70,12 @@ touched several); never edit child files from the superproject side.
 
 ## 4. The workspace's own rules (pointers)
 
-The root [AGENTS.md](../../AGENTS.md) is the authoritative list — the
+The root [AGENTS.md](../../../AGENTS.md) is the authoritative list — the
 short form: two sanctioned public surfaces + the dashboard door and NEVER
 a public API; values never in Git; explicit placement with a ~100 Mi
 master-slack warning; only released v-tags deploy; CI bump PRs fenced by
 line shape; observability without sidecars; the doc tier
-([doc-map.md](../doc-map.md)).
+([doc-map.md](../../doc-map.md)).
 
 ## 5. State & history (walked)
 

@@ -9,7 +9,7 @@ updated: 2026-11-15
 > learning home for the repo. Any change that alters the stack, anatomy,
 > contract, commands, conventions, or state recorded here must update this
 > note in the SAME round — and [LEARNING.md](LEARNING.md) if it minted a
-> lesson. See [../doc-map.md](../doc-map.md) §"Context sync".
+> lesson. See [../doc-map.md](../../doc-map.md) §"Context sync".
 
 ## 1. Role in the estate
 
@@ -32,7 +32,7 @@ flowchart LR
 
 Why this shape: **SEO needs SSR** (crawlable articles), **security needs
 the proxy** (lumen has no public route — see
-[../architecture/network-and-doors.md](../architecture/network-and-doors.md)),
+[../architecture/network-and-doors.md](../../architecture/network-and-doors.md)),
 and **simplicity needs one data source** (real-first, owner ruling
 2026-11-09: the runtime always fetches lumen; unset `API_BASE` falls back
 to the local dev default `http://localhost:8080`).
@@ -178,7 +178,7 @@ Merges run gates only. A release = anvil ladder approval → tag `vX.Y.Z` →
 image `ghcr.io/kanatabi/earendil:vX.Y.Z` → bump PR into
 `vortex/environments/<env>/earendil` → Argo syncs → the pods carry it.
 The door: `gofar.id` + `www` via Traefik, DNS-01 TLS. Full flow:
-[../architecture/releases-and-ci.md](../architecture/releases-and-ci.md).
+[../architecture/releases-and-ci.md](../../architecture/releases-and-ci.md).
 
 ## 9. State & history (walked)
 
@@ -194,7 +194,7 @@ The door: `gofar.id` + `www` via Traefik, DNS-01 TLS. Full flow:
   the ledger: [LEARNING.md](LEARNING.md).
 - **2026-11-15** — `PLAN.md` became the owner's local-only journal
   (gitignored); the superseded single-node ARCHITECTURE draft moved to the
-  vault [archive](../archive/earendil-ARCHITECTURE.md).
+  vault [archive](../../archive/earendil-ARCHITECTURE.md).
 
 ## 10. When you change this repo — the sync checklist
 

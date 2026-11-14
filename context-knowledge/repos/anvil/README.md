@@ -9,7 +9,7 @@ updated: 2026-11-15
 > learning home for the repo. Any change that alters the scripts, actions,
 > contracts, or state recorded here must update this note in the SAME
 > round — and [LEARNING.md](LEARNING.md) if it minted a lesson. See
-> [../doc-map.md](../doc-map.md) §"Context sync".
+> [../doc-map.md](../../doc-map.md) §"Context sync".
 
 ## 1. Role in the estate
 
@@ -68,7 +68,7 @@ flowchart LR
 The load-bearing rules and the incidents that minted them (one
 environment per bump job; gate-audit fail-closed; the never-triggering
 `GITHUB_TOKEN` tag; settle) are told in full in
-[../architecture/releases-and-ci.md](../architecture/releases-and-ci.md)
+[../architecture/releases-and-ci.md](../../architecture/releases-and-ci.md)
 — read that before touching any of the ladder scripts.
 
 ## 4. The bump PR anatomy (what anvil writes to vortex)

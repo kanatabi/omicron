@@ -9,7 +9,7 @@ updated: 2026-11-15
 > learning home for the repo. Any change that alters the shape, contracts,
 > or state recorded here must update this note in the SAME round — and
 > [LEARNING.md](LEARNING.md) if it minted a lesson. See
-> [../doc-map.md](../doc-map.md) §"Context sync".
+> [../doc-map.md](../../doc-map.md) §"Context sync".
 
 ## 1. Role in the estate
 
@@ -21,7 +21,7 @@ in vortex, it doesn't exist; if it is, the cluster converges to it.
 Three properties are non-negotiable (root AGENTS non-negotiables):
 
 - **No real values in Git** — schema and `ExternalSecret` templates only;
-  values live in OpenBao ([secrets-and-vault.md](../architecture/secrets-and-vault.md)).
+  values live in OpenBao ([secrets-and-vault.md](../../architecture/secrets-and-vault.md)).
 - **Placement is explicit** — every Deployment carries `node-pool` affinity
   and (where 2-replica) hostname anti-affinity.
 - **Pinned, released versions only** — exact versions for everything;
@@ -83,7 +83,7 @@ new `bases/<name>/` + a CR in the folder its hub syncs — never a hub edit.
   (`-staging`) / production (`-production`); co-tenancy via env-restricted
   selectors; app namespaces rendered ONCE by the foundation lumen-admin
   tree (`$patch: delete` elsewhere). Deep-dive:
-  [../architecture/environments-model.md](../architecture/environments-model.md).
+  [../architecture/environments-model.md](../../architecture/environments-model.md).
 - **The ES render contract** — every ExternalSecret's `data:` list mirrors
   the role's real binds; `LUMEN_ROLE` stays inline on pods (identity, not
   config).
@@ -105,7 +105,7 @@ bin/validate-all.sh <path-to-vortex>   # anvil's battery (from the anvil repo)
 `bases/external-secrets` and its chains need `--enable-helm`; the
 remote-pinned Argo overlay needs network on first fetch. The battery adds
 the rendered-loss baseline + structural invariants + the TRIO rule —
-detail: [../architecture/gitops.md](../architecture/gitops.md).
+detail: [../architecture/gitops.md](../../architecture/gitops.md).
 
 ## 6. How it ships (and doesn't)
 

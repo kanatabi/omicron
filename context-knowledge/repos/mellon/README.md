@@ -9,7 +9,7 @@ updated: 2026-11-15
 > learning home for the repo. Any change that alters the stack, anatomy,
 > contract, commands, conventions, or state recorded here must update this
 > note in the SAME round — and [LEARNING.md](LEARNING.md) if it minted a
-> lesson. See [../doc-map.md](../doc-map.md) §"Context sync".
+> lesson. See [../doc-map.md](../../doc-map.md) §"Context sync".
 
 ## 1. Role in the estate
 
@@ -106,7 +106,7 @@ flowchart LR
 The full threat analysis (credential stuffing, stolen bearer, direct Bao
 assault, AppRole extraction, lost-update, content mutation, the TOFU
 window) lives in the vault archive:
-[../archive/mellon-THREAT-NOTE.md](../archive/mellon-THREAT-NOTE.md) —
+[../archive/mellon-THREAT-NOTE.md](../../archive/mellon-THREAT-NOTE.md) —
 owner re-review (GATE #5) is the open item it records.
 
 ## 6. Running it
@@ -140,7 +140,7 @@ logout).
 Same anvil ladder (tag → image `ghcr.io/kanatabi/mellon` → bump PR). The
 door (`console.gofar.id`) rides the production Traefik edge with the
 console middlewares installed at the edge since Phase 3 —
-[network-and-doors.md](../architecture/network-and-doors.md) has the full
+[network-and-doors.md](../../architecture/network-and-doors.md) has the full
 layering; HUMAN-GATE #10 is the go-live checklist.
 
 ## 9. State & history (walked)
