@@ -131,10 +131,13 @@ detail: [../architecture/gitops.md](../../architecture/gitops.md).
   semantics (`1b2d7b7`).
 - **2026-11-15** — the production-hub walk: the gate hook ordering bug
   (`hook-weight` is not an Argo annotation — the RBAC landed after the Job
-  that needed it; fixed to `sync-wave` waves -4/-3/-2/-1, `e817cf8`) — the
-  hub's first apply turned the manifests into a RUNNING fleet; the in-repo
-  INFRA copy retired (stale fork — link, don't copy); AGENTS.md added;
-  README slimmed.
+  that needed it; fixed to `sync-wave` waves -4/-3/-2/-1, `e817cf8`); the
+  epoch trio re-declared to the vault head's number (the gate's witness —
+  `3e1de06`); the edge given hostPort 80/443 (servicelb-disabled k3d
+  shape) — **lumen cms went Synced/Healthy; earendil/mellon park at the
+  Ingress wave until ch.07's `cf-token` seed** (the wave-2 hold, by
+  design); the in-repo INFRA copy retired (stale fork — link, don't
+  copy); AGENTS.md added; README slimmed.
 - **Open:** staging DNS records + vault seeds (when staging first goes
   live); the transition `overlays/` patterns' removal condition.
 

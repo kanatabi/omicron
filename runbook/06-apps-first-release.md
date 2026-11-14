@@ -178,6 +178,18 @@ same overlay files, **byte-equal** (anvil's structural class-4 check fails
 any half-bump — 2-of-3 is red). The config-only bump exists for exactly
 that: **no new image** — values and their declared epoch land together.
 
+> **The gate's ordering annotation is `sync-wave` (walked 2026-11-15).**
+> Hook resources (the gate's own RBAC trio, the janitor's) must ride
+> PreSync at a LOWER `argocd.argoproj.io/sync-wave` than the hook Job they
+> serve. `argocd.argoproj.io/hook-weight` — used here first — is **not an
+> Argo annotation** (Helm's `helm.sh/hook-weight` is the mapped alias);
+> it was silently ignored, the RBAC landed at wave 0 after the Job's -1,
+> and every app namespace wedged on `serviceaccount "config-gate-…-"
+> not found`. The first "fix" also claimed a walk it never had — the
+> 11-14 round was saved by the manual kubectl-create workaround. Verify
+> hook ordering against Argo's syncResult (the applied-hook list), never
+> against "the app went green".
+
 1. GitHub → the app's `release.yml` → **Run workflow**: dispatch from the
    EXISTING latest tag, choose the target environment(s), and fill the
    optional `config-epoch` input with the number the portal matrix shows

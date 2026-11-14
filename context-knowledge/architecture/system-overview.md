@@ -25,15 +25,14 @@ Secrets live in **OpenBao** inside the cluster; Git never holds a value. The
 whole estate runs on **one small VPS (~$12/month)** today, with a 3-node
 shape declared as the scale-out blueprint.
 
-> **Declared vs serving (2026-11-15):** every diagram in this folder shows
-> the DECLARED shape. The staging and production hubs are **not yet
-> applied** — no pod is running, the webapp is not serving. Proven so far:
-> the release ladder (ch.09, live 2026-11-14), the vault ritual and the
-> seed contract (ch.05, on the rehearsal cluster), the DNS domain cutover
-> (2026-11-11). The remaining walk — Argo → foundation hub → vault seeds →
-> grafana gate → observability hub → production + staging hubs → first
-> instance checks → go-public — is
-> [`runbook/00a-run-order.md`](../../runbook/00a-run-order.md).
+> **Declared vs serving (2026-11-15, first production-hub walk):** every
+> diagram in this folder shows the DECLARED shape. Real now: the foundation
+> plane, observability, and the production **lumen cms fleet (green)**.
+> Parked by design: earendil/mellon hold at their Ingress wave (the TLS
+> secrets wait on ch.07's `cf-token` seed; no address ⇒ no health ⇒ wave 2
+> never applies). The remaining walk — ch.07's token mint + seed → certs →
+> the doors — is [`runbook/00a-run-order.md`](../../runbook/00a-run-order.md) →
+> [`07-go-public.md`](../../runbook/07-go-public.md).
 
 ## The big picture
 

@@ -141,11 +141,21 @@ needed; `k3d image import` is only for testing unrebuilt changes).
 
 ### 3a. Traefik (edge router — the pinned chart, runbook/03 §6)
 
+The walked k3d shape needs **hostPort** (servicelb is disabled in §2A, so a
+LoadBalancer Service never gets an address — the pod binds node 80/443
+directly, where the k3d loadbalancer forwards):
+
 ```bash
 helm repo add traefik https://traefik.github.io/charts && helm repo update
 helm install traefik traefik/traefik --version 42.3.2 -n ingress --create-namespace \
+  --set service.spec.type=LoadBalancer \
+  --set ports.web.hostPort=80 \
+  --set ports.websecure.hostPort=443 \
   --set providers.kubernetesCRD.enabled=true \
   --set 'additionalArguments[0]=--metrics.prometheus'
+# the FULL walked flag set (redirections, metrics labels, OTLP feed,
+# access logs) — runbook/03 §6; verify Ingress addresses appear after
+# the certs issue (ch.07's cf-token seed)
 ```
 
 ### 3b. Argo CD via the platform overlay (exactly what the VPS walk does)

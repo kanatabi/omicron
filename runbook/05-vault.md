@@ -600,6 +600,17 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$ME
 # minted in ch. 07 §3.2, which seeds this path itself. Skip until then.
 ```
 
+> **The epoch's witness is the vault head (walked 2026-11-15).** The
+> config-gate compares the trio's `--declared` against the vault path's
+> CURRENT KV-v2 head version — and refuses any disagreement. Consequence:
+> **experiments on the seeds move the head and re-wedge the gate** — the
+> owner's seeding round bumped `kv/lumen/production` to head 7 (the trio
+> was declared to match), the re-seed reset it to head 1, and the first
+> production-hub apply wedged on `declared 7; vault head 1`. The remedy is
+> the gate's own message: re-dispatch the trio to the number the matrix
+> shows (`/secrets/summary`), or experiment on `kv/lumen/dev` instead.
+> Real config bumps move the vault write and the trio TOGETHER.
+
 **Grafana — the FOUR-KEY put.** Walked 2026-11-14: leaving this as
 prose-only got a fresh cluster's sync op WEDGED (ch.12 card 11) — an
 ExternalSecret errors on ANY missing declared key, so the interim state

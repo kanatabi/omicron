@@ -12,18 +12,19 @@ infrastructure decision record, the operating runbook, and the knowledge vault
 ([kanatabi](https://github.com/kanatabi)); GitLab `arkoi/omicron/*` trees exist
 as mirrors where protection rules allow.
 
-> **Status honesty (2026-11-15):** the estate described here is what the
-> manifests DECLARE — not what is currently running. The staging and
-> production hubs are **not yet applied to any cluster**; the webapp is not
-> serving. What IS done: the DNS-side domain cutover (verified 2026-11-11 —
-> `ainurrofiq.com` 301s in), the release ladder proven live (runbook ch.09:
-> lumen v4.0.1, mellon v3.0.1, earendil v1.2.0 rode the full chain
-> 2026-11-14), and the runbook chapters rehearsed on the laptop cluster.
-> What remains is the walk that turns declaration into service —
-> [`runbook/00a-run-order.md`](../runbook/00a-run-order.md): Argo CD →
-> foundation hub → the M3 vault ritual → grafana four-key verify →
-> observability hub → production + staging hubs → the first-instance checks
-> (ch.06) → go-public (M5).
+> **Status honesty (2026-11-15, after the first production-hub walk):** the
+> estate described here is what the manifests DECLARE — and the walk to
+> realize it is PART-WAY done. Applied and green: Argo CD, the foundation
+> plane (incl. `lumen-admin`), observability, and the production **lumen
+> cms fleet (Synced/Healthy)**. Parked by design: **earendil and mellon sit
+> at their Ingress wave** — their TLS secrets wait on ch.07's `cf-token`
+> seed (the certificates app rides Degraded until then), and Argo's health
+> gate holds their Deployments (wave 2) until the Ingress has an address.
+> Not applied: the staging hub. Done earlier: the DNS-side domain cutover
+> (2026-11-11), the release ladder proven live (ch.09, 2026-11-14). What
+> remains: ch.07 (token mint + seed → certs → the fleet's last mile → the
+> doors open) → the first-instance checks → go-public (M5) —
+> [`runbook/00a-run-order.md`](../runbook/00a-run-order.md).
 
 ## The five repos
 
@@ -50,7 +51,9 @@ as mirrors where protection rules allow.
 
 Two sanctioned public surfaces, never a public API (INFRA §2, amended
 2026-11-08; dashboard door added 2026-11-13) — **all currently DECLARED, none
-serving until the hubs are applied**:
+serving until the ch.07 token seed issues the certs and the wave-2 hold
+lifts** (see runbook ch.04's wave-2 note; lumen's cms fleet IS green — it
+needs no door):
 
 - `gofar.id` + `www.gofar.id` — earendil, content reads
 - `console.gofar.id` — mellon, TLS + the GATE #10 checklist (break-glass

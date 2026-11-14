@@ -79,9 +79,12 @@ line shape; observability without sidecars; the doc tier
 
 ## 5. State & history (walked)
 
+- **2026-11-15** — the first production-hub walk (k3d): lumen cms green;
+  earendil/mellon parked at the Ingress wave pending ch.07's `cf-token`
+  seed (the wave-2 hold); the hook-ordering + epoch-head lessons walked
+  and ledgered.
 - **2026-11-11** — the DNS-side domain cutover verified (the doors are
-  declared; serving awaits the hub walk — 2026-11-15 status); first full
-  runbook walk (Part A) on the rehearsal cluster.
+  declared); first full runbook walk (Part A) on the rehearsal cluster.
 - **2026-11-13/14** — the environment-model re-cut (three planes, role
   split, per-env deploy chains); the release-ladder incidents.
 - **2026-11-15** — the doc-consolidation round: this vault created, the

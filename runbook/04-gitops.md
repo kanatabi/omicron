@@ -208,6 +208,16 @@ The sync-wave numbers are **structural** — encoded in the
 | staging | 0 | `lumen` (cms, `-staging` suffix) | the same store, `kv/lumen/staging` half |
 | staging | 1 | `earendil`, `mellon` (`-staging`) | wave 0 (certificates ride the PRODUCTION hub and render staging's Certs too — one issuer dir, both envs) |
 
+> **The wave-2 hold (walked 2026-11-15):** earendil's and mellon's
+> Deployments ride wave **2** ("after the ES renders — never boots dark"),
+> but Argo waits for EVERY earlier wave's health first — and the Ingress is
+> only Healthy once it has an address, which it only gets when Traefik can
+> claim its route — which needs the TLS secret — which needs `cf-token` —
+> which is seeded in ch. 07. So on the FIRST env-hub apply, `lumen` goes
+> green while **earendil/mellon park at the Ingress wave (Progressing, no
+> pods) until ch. 07's token mint — by design, not by failure.** The
+> certificates app rides Degraded the same way (ch. 05's skip note).
+
 ```mermaid
 flowchart TD
     F["bootstrap/apps-hub-foundation.yaml (manual apply #1)"] --> W0

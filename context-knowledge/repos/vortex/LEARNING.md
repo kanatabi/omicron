@@ -9,6 +9,26 @@ The standing traps live in the repo's
 [AGENTS.md §9](https://github.com/kanatabi/vortex/blob/main/AGENTS.md); this
 ledger records walked events, newest first.
 
+- **2026-11-15 — the epoch's witness is the vault HEAD.** The production
+  hub's first apply wedged a THIRD way: the gate refused
+  `declared 7; vault head 1` — the trio's 7 was the owner's
+  seeding-experiment alignment (each experimental write had bumped
+  `kv/lumen/production`'s head; the re-seed reset it to 1), not a
+  dev-vault carryover as first written up. Re-declared to the number the
+  matrix shows (`3e1de06`). The rule: experiments on the seeds move the
+  head and re-wedge the gate — re-dispatch the trio to match, or
+  experiment on `kv/lumen/dev`; real config bumps move the vault write
+  and the trio TOGETHER.
+- **2026-11-15 — the k3d edge needs hostPort, and the Ingress address is a
+  health gate.** With `--disable=servicelb`, a LoadBalancer Service never
+  gets an address; the chart's `ports.web.hostPort: 80/443` binds the
+  Traefik pod to the node ports (the k3d LB's target). And Argo's Ingress
+  health wants `status.loadBalancer` populated — which Traefik writes only
+  once it can CLAIM the route — which needs the TLS secret — which waits
+  on ch.07's `cf-token` seed. Chain: no cert → no router → no address →
+  earendil/mellon park at the Ingress wave, Deployments (wave 2) never
+  roll, by design until go-public. The first "fleet is up" check must be
+  staged accordingly.
 - **2026-11-15 — `argocd.argoproj.io/hook-weight` does not exist.** The
   config-gate's RBAC trio + the janitor's Job/RBAC were annotated with it
   ("walked 2026-11-14" — but the walk had been saved by the manual

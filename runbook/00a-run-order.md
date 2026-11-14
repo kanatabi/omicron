@@ -166,6 +166,15 @@ same waves, the same vault bootstrap. See the why-box at the bottom.
   `-H "Host: gofar.id"` you get production earendil, with
   `-H "Host: staging.gofar.id"` the staging twin).
 
+  > **Staged expectations (walked 2026-11-15):** right after the hub
+  > applies, `lumen` goes Synced/Healthy — but **earendil/mellon park at
+  > their Ingress wave (Progressing, no pods) and `certificates` rides
+  > Degraded** — by design: the TLS secrets wait on ch. 07's `cf-token`
+  > seed (ch. 04's wave-2 hold). The Host-based curl checks pass only
+  > AFTER ch. 07's token mint issues the certs; the 404-from-Traefik
+  > check (edge up) passes immediately. The fleet's last mile IS the
+  > go-public walk.
+
 - [ ] **A10 · the isolation proof (the point of running both here)** — the
   rehearsal must SHOW, not assume, that staging and production are separate
   planes on one cluster:
