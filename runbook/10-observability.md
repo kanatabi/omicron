@@ -43,19 +43,23 @@ status: >-
 ```mermaid
 flowchart LR
     subgraph PRODUCE["Producers opt in — 3 pod annotations, no sidecars"]
-        L["lumen fleets :9090 /metrics<br/>(admin + cms per env — omicron/env stamped)"]
+        L["lumen fleets (admin + cms per env — omicron/env stamped)<br/>annotated for :9090 /metrics — the listener itself is<br/>still OPEN backlog (§4.5 ladder, rung 2)"]
         G["grafana :3000 /metrics"]
-        K["kubelet / cAdvisor"]
+        K["kubelet / cAdvisor / k3s certs —<br/>via the API-server proxy"]
+        T["traefik — scraped (traefik_*) ·<br/>OTLP :4317 push: semconv metrics<br/>+ access logs (§4.7)"]
+        S["master host — journald"]
     end
     A["Alloy DaemonSet\n(one per node)"]
-    L -->|prometheus.io/scrape| A
-    G -->|prometheus.io/scrape| A
+    L -->|"prometheus.io/scrape"| A
+    G -->|"prometheus.io/scrape"| A
+    T -->|"scrape + OTLP push"| A
     K --> A
-    A --> VM["VictoriaMetrics\nmetrics, 30d / 10Gi"]
-    A --> LK["Loki\nlogs, 7d / 15Gi"]
+    S -->|"loki.source.syslog :5514/udp"| A
+    A -->|"metrics"| VM["VictoriaMetrics\nmetrics, 30d / 10Gi"]
+    A -->|"logs"| LK["Loki\nlogs, 7d / 15Gi"]
     VM --> GR["Grafana\nanor.gofar.id"]
     LK --> GR
-    GR --> AL["5 estate alert rules"]
+    GR --> AL["5 estate alert rules\n(rule 1 LIVE on k3s certs since 2026-11-15)"]
     AL --> MAIL["contact point ops-email\ndev@gofar.id"]
 ```
 
@@ -69,7 +73,7 @@ view (placement collapse + the alerting file), and
 rides its **own hub, `bootstrap/apps-hub-observability.yaml`, applied by
 hand as the manual GATE** (2026-11-14 hub split): only after (a) the
 foundation hub's apps are Synced/Healthy, (b) chapter 05's ritual is
-done, and (c) §6.5's **grafana four-key put is verified** — an
+done, and (c) ch.05 §6.5's **grafana four-key put is verified** — an
 ExternalSecret errors on ANY missing declared key, so a fresh apply
 before the seed wedges the sync op (the wedge that ate a day; card 11).
 The single stack serves **BOTH staging and production from day one**:
@@ -474,7 +478,7 @@ datasources nor the dashboards were created in the UI:
 **Enable checklist — metrics for a NEW app** (paste-safe, in order):
 
 1. The app **listens on `/metrics` on the unrouted admin port 9090**
-   (never an Ingress — §2's doctrine; structured stdout logs ride the
+   (never an Ingress — §4's doctrine; structured stdout logs ride the
    labeled log tail automatically, §4.6).
 2. The pod template carries the three annotations (the §4 block):
    `prometheus.io/scrape: "true"`, `prometheus.io/port: "9090"`,
@@ -594,29 +598,43 @@ rules**, each against its target metric:
 
 | Rule | Expression (abridged) | Fires when |
 |---|---|---|
-| TLS certificate expires < 21 days | `certmanager_certificate_expiration_timestamp_seconds - time() < 1814400` | renewal is broken, not merely near |
+| k3s control-plane certificate expires < 21 days | `min(k3s_certificate_expiration_seconds) < 1814400` | rotation is broken — a node that never restarts (LIVE 2026-11-15) |
 | Backups stale (no success in 36h) | `time() - backup_last_success_timestamp_seconds > 129600` | one missed nightly window + grace (source: ch.08's timer) |
 | OpenBao is sealed | `bao_monitor_sealed == 1` | the reboot incident's symptom, in advance |
 | Pod restart spike (>5 in 30m) | `increase(kube_pod_container_status_restarts_total[30m]) > 5` | crashloop past rollout noise |
 | Disk usage above 80% | `node_filesystem_avail_bytes / … > 80` (tmpfs/overlay excluded) | the quiet killer on an 80 GB box |
 
-> **Inert-by-design, stated honestly:** every rule carries
-> `noDataState: OK`. As of the 2026-11-14 metrics round the picture is:
-> cert-manager's pods ARE annotated and their metrics **flow** (3
-> `certmanager_*` families verified in VictoriaMetrics) — but this
-> cert-manager version exports **no
-> `certmanager_certificate_expiration_timestamp_seconds`**, so the TLS
-> rule sits NoData→OK until its export name is re-verified against the
-> installed version. The restart-spike rule needs kube-state-metrics and
-> the disk rule node-exporter (both Phase 5 backlog), the restic timer is
-> ch.08/M6 work, and Bao's telemetry gauge needs enabling + an
-> authenticated scrape. So the five sit green. **This is provisioning
-> that becomes alive the moment each source lands — zero further Git
-> change — not five broken promises.** One known blind spot, printed rather than
-> hidden: a *sealed* Bao serves no metrics, so the sealed case arrives
-> as NoData→OK; the belt-and-braces upgrade is `noDataState: Alert` once
-> an always-on exporter (blackbox or node script on `/sys/seal-status`)
-> exists. The gap is not silent.
+> **One rule LIVE, four inert by design, stated honestly:** as of
+> 2026-11-15 rule 1 is real, and its road there taught the chapter's
+> sharpest lesson. First: this cert-manager (pinned v1.16.2) exports
+> **no `certmanager_certificate_expiration_timestamp_seconds`**
+> (verified against VictoriaMetrics — only
+> `certmanager_clock_time_seconds*` and
+> `certmanager_controller_sync_call_count` exist), so the original TLS
+> rule sat NoData→OK forever; it was re-pointed to the LIVE
+> `k3s_certificate_expiration_seconds` (the kubelet job scrapes it via
+> the API-server proxy, §4.5). Second: that gauge counts **seconds
+> REMAINING, not an expiry epoch** — proven by the countdown drift test
+> (`max_over_time - min_over_time` over a 3h window = exactly 10800s on
+> all 22 series) — so the first re-point's `… - time()` arithmetic was
+> always-true (it evaluated to ≈ −20,407 "days") and the rule sat
+> Firing from its first eval; caught in the functional check minutes
+> before `for: 30m` would have paged, fixed to the bare threshold. The
+> lesson that survives both mistakes: **evaluate the shipped expression
+> against live VM before calling a rule done.** The other four carry
+> `noDataState: OK` and stay green today: the restart-spike rule needs
+> kube-state-metrics and the disk rule node-exporter (both Phase 5
+> backlog), the restic timer is ch.08/M6 work, and Bao's telemetry
+> gauge needs enabling + an authenticated scrape. **This is
+> provisioning that becomes alive the moment each source lands — zero
+> further Git change — not four broken promises.** One known blind
+> spot, printed rather than hidden: a *sealed* Bao serves no metrics,
+> so the sealed case arrives as NoData→OK; the belt-and-braces upgrade
+> is `noDataState: Alert` once an always-on exporter (blackbox or node
+> script on `/sys/seal-status`) exists. Still open on rule 1 too: the
+> PUBLIC door certs (LE-issued: anor / console / blog) have no
+> in-cluster gauge — a blackbox prober on the doors is the Phase 5
+> follow-up. The gaps are not silent.
 
 **Delivery:** one ContactPoint `ops-email` → **`dev@gofar.id`**. Yes,
 that's a literal address in Git — the *second documented exception* to

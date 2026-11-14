@@ -1,6 +1,6 @@
 ---
 tags: [runbook, index]
-updated: 2026-11-14
+updated: 2026-11-15
 status: >-
   draft — chapter numbering IS execution order (M0→M6; 09–14 are day-2
   references). Claims marked rehearsed come from the k3d walk; every VPS step
