@@ -9,6 +9,21 @@ The standing traps live in the repo's
 [AGENTS.md §9](https://github.com/kanatabi/vortex/blob/main/AGENTS.md); this
 ledger records walked events, newest first.
 
+- **2026-11-15 — `argocd.argoproj.io/hook-weight` does not exist.** The
+  config-gate's RBAC trio + the janitor's Job/RBAC were annotated with it
+  ("walked 2026-11-14" — but the walk had been saved by the manual
+  `kubectl create serviceaccount` workaround, not the annotation). Argo
+  silently ignored it: the gate Job (real `sync-wave: -1`) sorted BEFORE its
+  own ServiceAccount (implicit wave 0), and the production-hub apply wedged
+  in all three app namespaces — `pods "config-gate-production-" is
+  forbidden: serviceaccount "config-gate-production" not found`. The fix
+  (`e817cf8`) moved hook RBAC to PreSync sync-wave -2/-4 under their Jobs'
+  -1/-3 — and the failed sync self-healed on the next automated pass. Two
+  lessons in one: (1) the ordering key within a phase is SYNC-WAVE (Helm's
+  `helm.sh/hook-weight` maps onto it; no argocd-prefixed hook-weight
+  exists); (2) **an annotation fix that never applied looks identical to one
+  that did** — verify against Argo's `syncResult` (the hook list), not
+  against "the app went green" (the manual workaround makes it green).
 - **2026-11-15 — evaluate the SHIPPED expr against the live store before
   calling an alert rule done.** Alert #1 shipped an always-true expr
   (`rate()` against a gauge) because it was reasoned, not evaluated. The

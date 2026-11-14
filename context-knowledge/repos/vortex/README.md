@@ -129,8 +129,12 @@ detail: [../architecture/gitops.md](../../architecture/gitops.md).
 - **2026-11-14/15** — observability rounds: pod-log label contract, OTLP
   semconv door, the TLS-alert expr corrected to remaining-seconds
   semantics (`1b2d7b7`).
-- **2026-11-15** — the in-repo INFRA copy retired (stale fork — link,
-  don't copy); AGENTS.md added; README slimmed.
+- **2026-11-15** — the production-hub walk: the gate hook ordering bug
+  (`hook-weight` is not an Argo annotation — the RBAC landed after the Job
+  that needed it; fixed to `sync-wave` waves -4/-3/-2/-1, `e817cf8`) — the
+  hub's first apply turned the manifests into a RUNNING fleet; the in-repo
+  INFRA copy retired (stale fork — link, don't copy); AGENTS.md added;
+  README slimmed.
 - **Open:** staging DNS records + vault seeds (when staging first goes
   live); the transition `overlays/` patterns' removal condition.
 
