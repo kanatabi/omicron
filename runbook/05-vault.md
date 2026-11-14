@@ -242,8 +242,31 @@ X "export VAULT_TOKEN=dummy; bao write -format=json -field=token auth/approle/lo
 # a real token string back = alive; a 400 = you just saved yourself an hour
 ```
 
-✅ check the store noticed: `kubectl -n external-secrets get clustersecretstore bao`
-→ `Ready: True` once values exist (§6 forces it if timing beats you).
+✅ **check the store noticed** — run it as an ordered check, not a single
+glance (walk-proven 2026-11-14: the naive `get` alone confuses — the
+store can sit `InvalidProviderConfig` for minutes for perfectly
+explained reasons):
+
+```bash
+# 1. the credentials Secret exists with exactly the two keys:
+kubectl -n external-secrets get secret bao-approle-credentials \
+  -o jsonpath='{.data}' | python3 -m json.tool    # keys: role-id, secret-id
+# 2. the login proof above returned a token (the pair is alive)
+# 3. KICK the ESO controller — its FIRST validation of this store ran while
+#    the vault was still SEALED and the creds Secret did not exist yet; that
+#    failed verdict is cached with an error backoff, and without a kick
+#    `Ready` can lag by many minutes:
+kubectl -n external-secrets rollout restart deploy/external-secrets
+# ~30s later:
+kubectl -n external-secrets get clustersecretstore bao   # → READY: True
+```
+
+> **Reading the status, honestly:** `InvalidProviderConfig` at this stage
+> is the *expected pre-conditions state* (sealed vault / creds not yet
+> created at first validation) — the backoff talking, not a broken spec.
+> If it survives the kick, `kubectl describe clustersecretstore bao`'s
+> events name the real cause: auth denied = the pair in the Secret is
+> wrong (re-mint block 1 above); connection refused = store/server check.
 
 ## 4. Variant B — `port-forward` + plain `curl` (no pod shell needed)
 
