@@ -30,8 +30,8 @@ decision records, and the walked-lessons ledger.
 | [doc-map.md](doc-map.md) | which doc lives where, and the README/AGENTS/DESIGN/PLAN tier doctrine |
 | [glossary.md](glossary.md) | the estate's vocabulary |
 | [decisions/](decisions/README.md) | tracked decision records (the binding-contract kind) |
-| [architecture/](architecture/README.md) | system explainers, one concern each |
-| [repos/](repos/omicron/README.md) | one card + one lesson ledger per repo |
+| [architecture/](architecture/README.md) | detailed system explainers, one concern each (mermaid throughout, runbook pointers) |
+| [repos/](repos/omicron/README.md) | one detailed learning note + one lesson ledger per repo — learn a repo from here alone |
 | [archive/](archive/earendil-ARCHITECTURE.md) | verbatim snapshots of removed docs, provenance headers on |
 
 ## Conventions

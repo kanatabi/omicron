@@ -43,6 +43,11 @@ real public ghcr v-tags (no placeholder builds / image imports anymore).
 - The workspace root is the submodule superproject: changes here are only pins (gitlinks),
   `.gitmodules`, and root docs. Bump a pin after pushing the child:
   `git add <child> && git commit`.
+- **Context sync (2026-11-15):** every child change that alters its stack, anatomy,
+  contract, commands, conventions, or state updates its vault learning note
+  (`context-knowledge/repos/<name>/README.md`, + `LEARNING.md` when the change minted
+  a lesson) in the SAME round — the vault is the estate's learning home; see
+  `context-knowledge/doc-map.md` for the trigger list.
 
 ## Non-negotiable conventions
 

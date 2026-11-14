@@ -40,6 +40,31 @@ Archive rule: content verbatim + a provenance header (where it came from, when
 and why it moved, what supersedes it). Repo-relative links inside an archived
 body are historical.
 
+## The context-sync rule (workspace doctrine, 2026-11-15)
+
+**Every change in a child repo is synced with `context-knowledge/` in the
+SAME round.** The vault is the estate's learning home — a maintainer
+(human or agent) must be able to learn the current truth about any repo
+from [repos/<name>/README.md](repos/omicron/README.md) alone, and to see
+the walked incidents in `repos/<name>/LEARNING.md`. A stale vault note is
+a lie the next maintainer will trust.
+
+What triggers a sync (any one suffices):
+
+- the repo's **stack, anatomy, contract surface, commands, env vars, or
+  conventions** changed → update `repos/<name>/README.md`;
+- the change **minted a lesson** (an incident, a trap, a walked discovery)
+  → add a dated entry to `repos/<name>/LEARNING.md`;
+- the change is **decision-level** (affects placement, doors, epochs,
+  release rules) → also the root INFRA doc / the relevant
+  [architecture/](architecture/README.md) note / the decision record;
+- the change is **operational** → also the runbook chapter that walks it.
+
+The sync is part of the change's round (same sitting, same review), the
+way tests are: "the code landed but the vault didn't" is an incomplete
+round. Each repo note carries a sync-duty box naming its own checklist;
+each repo's AGENTS.md states the duty for agents working there.
+
 ## This vault's own rule
 
 The vault ([INDEX.md](INDEX.md)) never becomes a second home for a repo doc —
