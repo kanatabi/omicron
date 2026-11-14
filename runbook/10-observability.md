@@ -91,6 +91,42 @@ cheaper to keep than logs. Traces stay OFF (no Tempo — deliberate).
 
 ## 4. The no-sidecar contract (how anything gets in)
 
+The whole estate's data flow, at a glance — every ingest route, its sink,
+and where Grafana meets them (§4.5–§4.8 are the drill-downs):
+
+```mermaid
+flowchart LR
+    subgraph SRC["sources"]
+        POD["app pods — structured stdout"]
+        SYS["master host — journald"]
+        ANN["annotated pods — /metrics on the admin port"]
+        KUBE["kubelet + cAdvisor + /metrics/resource"]
+        TRA["traefik — OTLP push"]
+    end
+    subgraph LOGROUTE["logs"]
+        TAIL["loki.source.file — the labeled pod_logs tail"]
+        SYSLOG["loki.source.syslog — :5514/udp"]
+        OLOG["otelcol.exporter.loki"]
+    end
+    subgraph METROUTE["metrics"]
+        PULL["prometheus.scrape<br>annotated-pods · kubelet · cadvisor · kubelet-resource"]
+        PUSH["otelcol receiver + the semconv_only filter"]
+    end
+    POD --> TAIL
+    SYS --> SYSLOG
+    TRA -->|"logs"| OLOG
+    TRA -->|"OTLP metrics"| PUSH
+    ANN --> PULL
+    KUBE -->|"via the API-server proxy"| PULL
+    TAIL --> LOKI["Loki :3100"]
+    SYSLOG --> LOKI
+    OLOG --> LOKI
+    PULL --> VM["VictoriaMetrics :8428"]
+    PUSH --> VM
+    LOKI --> GR["Grafana<br>datasources provisioned by uid:<br>loki · victoria-metrics"]
+    VM --> GR
+```
+
 Any pod that should be watched gets:
 
 ```yaml
@@ -368,6 +404,130 @@ those families would exist TWICE with different label sets and every
 unfiltered `sum(rate(...))` would double-count. Pull owns all
 `traefik_*`; the push owns only the semconv metrics. Traces stay OFF (no
 Tempo, §1) — this is metrics-OTLP only.
+
+### 4.8. How a metric reaches Grafana — the scrape path, the enable checklist, the missing-metric ladder (walked 2026-11-15)
+
+§4.5 lists WHAT Alloy scrapes; §4.7 covers the OTLP push. This section is
+the HOW, end to end — so a future "metric is missing" hour is a ladder to
+walk, not an archaeology dig.
+
+**The scrape path for an app pod** (from `config.alloy`, walked
+2026-11-14):
+
+```mermaid
+flowchart TD
+    ANN["pod carries the three annotations<br>prometheus.io/scrape · prometheus.io/port · prometheus.io/path"]
+    REL["discovery.relabel pod_metrics<br>KEEP only annotated pods · rewrite __address__ to the<br>annotated port · copy env / namespace / pod from pod metadata"]
+    SC["prometheus.scrape pod_metrics<br>job = annotated-pods · every 60s"]
+    RW["prometheus.remote_write vm"]
+    VM["VictoriaMetrics :8428<br>every series inherits namespace · pod · env"]
+    DS["Grafana datasource — provisioned,<br>uid victoria-metrics, set as default"]
+    Q["Explore · dashboards · alert rules"]
+    ANN --> REL --> SC --> RW --> VM --> DS --> Q
+    K["kubelet trio via the API-server proxy (§4.5)<br>kubelet · cadvisor · kubelet-resource"] --> RW
+    T["traefik OTLP push :4317 (§4.7)<br>the semconv_only filter drops its traefik_* families<br>so the pull stays the only source"] --> RW
+```
+
+Five things worth knowing about that path:
+
+- **A scrape is a full dump.** Nothing filters by metric name — every
+  series the endpoint exposes lands in VM, inheriting
+  `namespace` / `pod` / `env`. Filtering happens at QUERY time.
+- **The port rewrite is spelled out deliberately.** The relabel rule
+  rewriting `__address__` carries `replacement = "$1:$2"`: relabel's
+  `$1` DEFAULT silently discards capture 2 (the port), and the first
+  cut scraped every annotated pod on port 80 — `up=0` estate-wide
+  (walked 2026-11-14).
+- **The scrape interval is the default 60s.** A brand-new counter takes
+  up to a minute (plus Grafana's refresh) to appear — don't debug a
+  metric that hasn't had its first scrape yet.
+- **env attribution has no shortcut.** There is no per-environment
+  `external_labels` on the Alloy fleet — the `env` label exists only
+  because the pipeline copies each pod's `omicron/env` label. A pod
+  without it gets no env label (system components do exactly this, by
+  design).
+- **Labels come from pod metadata at scrape time.** Changing a pod
+  label changes the metric labels on the next scrape; the old series
+  age out on their own.
+
+**How Grafana gets them — provisioning, not clicking.** Neither the
+datasources nor the dashboards were created in the UI:
+
+- Datasources are **provisioned** from the `grafana-datasources`
+  ConfigMap (`bases/observability/grafana.yaml`), mounted at
+  `/etc/grafana/provisioning/datasources`: **Loki with `uid: loki`** and
+  **VictoriaMetrics with `uid: victoria-metrics`** (type prometheus) as
+  the default.
+- Dashboards are provisioned the same way (the `grafana-dashboards`
+  ConfigMap → `/etc/grafana/provisioning/dashboards`) — the **Estate
+  overview** board (folder `Estate`) is a checked-in artifact, not a
+  hand-built one.
+- The explicit `uid`s are a reviewable contract: a provisioned
+  datasource without a uid gets a GENERATED one, and **alert rules bind
+  datasources BY uid** — an unuided datasource silently orphans its
+  alerts.
+- The doctrine this teaches: a new datasource or dashboard is a
+  **vortex edit** (ConfigMap → Argo sync), never a UI click.
+  UI-created things live in Grafana's PVC and die with the pod;
+  provisioned things survive and are reviewable.
+
+**Enable checklist — metrics for a NEW app** (paste-safe, in order):
+
+1. The app **listens on `/metrics` on the unrouted admin port 9090**
+   (never an Ingress — §2's doctrine; structured stdout logs ride the
+   labeled log tail automatically, §4.6).
+2. The pod template carries the three annotations (the §4 block):
+   `prometheus.io/scrape: "true"`, `prometheus.io/port: "9090"`,
+   `prometheus.io/path: "/metrics"`.
+3. The pod template carries **`omicron/env: shared|staging|production`**
+   (every env overlay's labels transformer stamps it) — no label, no
+   env attribution.
+4. The pod has its **ServiceAccount CR** (owner ruling — every app/pod
+   carries one).
+5. Verify, in this order:
+
+```bash
+# 1. annotations present?
+kubectl -n <ns> get pod <pod> -o jsonpath='{.metadata.annotations}' | tr ',' '\n' | grep prometheus
+# 2. the app actually answers there?
+kubectl -n observability exec deploy/grafana -- \
+  curl -s -o /dev/null -w '%{http_code}\n' http://<podIP>:9090/metrics
+# 3. the scrape job is up in VictoriaMetrics?
+kubectl -n observability port-forward svc/victoria-metrics 18428:8428
+curl -s -G http://127.0.0.1:18428/api/v1/query \
+  --data-urlencode 'query=up{job="annotated-pods"}' | python3 -m json.tool
+# 4. the family you expect exists?
+curl -s http://127.0.0.1:18428/api/v1/label/__name__/values \
+  | python3 -c "import json,sys; print([n for n in json.load(sys.stdin)['data'] if 'myapp' in n])"
+# 5. then Grafana: Explore → VictoriaMetrics → query it.
+```
+
+**"A metric is missing" — the ladder** (walk each rung top-down; every
+rung has a walked example somewhere in this estate):
+
+1. **Is the pod annotated at all?** No annotations → the relabel `keep`
+   drops it → not even an `up` series exists. (Command: step 5.1 above.)
+2. **Does the app actually LISTEN on the annotated port?** *Walked
+   example:* lumen's pod carries the annotations but its server binds
+   only `:8080` — no 9090 listener yet, so its `up` is 0 despite a
+   perfect contract (backlog, §4.5).
+3. **Does the endpoint answer without auth?** *Walked example:*
+   meilisearch's `/metrics` returns **401** — gated behind the master
+   key; the annotation contract has no auth story yet (§4.5).
+4. **Is the target `up` but your series absent?** Check the lazy trap
+   first (§4.5): router/entrypoint/service request series instantiate on
+   the FIRST request — traefik showed only the three global families
+   until probed.
+5. **Is it in VM but not in Grafana?** Wrong datasource is the classic:
+   the provisioned VM datasource is `uid: victoria-metrics` — a query
+   against Loki (or against a UI-created datasource pointing elsewhere)
+   shows nothing. Then check the time range and the `env=` filter: a
+   series filtered to an env the pod never carried is invisible.
+6. **Still nothing?** Read Alloy's own log — a relabel/scrape config
+   error shows there (`kubectl -n observability logs ds/alloy`) — and
+   prove the config Argo ships matches what you think you wrote
+   (`kubectl kustomize environments/foundation/observability`, run from
+   vortex).
 
 ## 5. The door: `anor.gofar.id` — plumbing as verified in vortex
 
