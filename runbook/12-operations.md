@@ -137,7 +137,7 @@ flowchart TD
     Q1 -- "CF fine" --> INC["it's the estate, not the edge:\nincident cards below"]
 ```
 
-## Incident cards (ten — each one real, most already happened once)
+## Incident cards (eleven — each one real, most already happened once)
 
 **1. Everything red, "could not get secret data from provider"**
 → Bao sealed (host reboot? someone's fault?). Do ch.05 §9's unseal ritual
@@ -252,6 +252,44 @@ the box empty). Dispatching from `main` REQUIRES typing the tag; a
 fail-closed guard makes an empty box there RED before checkout —
 released `vX.Y.Z` or nothing. This re-run door is the recovery path
 for BOTH classes above (cf. card 3's redeploy door).
+
+**11. Argo app stuck OutOfSync/Progressing forever — sync op wedged
+"Running" (walked 2026-11-14, observability; four ops + a CR recreate)**
+→ A sync operation that cannot complete BLOCKS ALL later operations on
+that app (nothing new fires while one is "Running"), and it cannot
+complete whenever ANY resource of a wave waits on a health that will
+never come. Three never-healthy resources bit in ONE app — each alone
+is a wedge; check for all three before declaring victory:
+
+- **Unseeded ExternalSecret** (`could not get secret data from
+  provider`): the CR is wave 0 and its health NEVER passes until the
+  store has every declared key (ch.05 §6.5's grafana block now has the
+  four-key put). Seed first — A7's rule is load-bearing.
+- **An orphan PVC** (`WaitForFirstConsumer`, never Bound): loki.yaml
+  shipped a standalone PVC the STS never referenced (it uses its own
+  volumeClaimTemplates). An unbound PVC is never healthy → deleted
+  from Git and the cluster; the STS provisions its own.
+- **A k3d Ingress** (empty `status.loadBalancer`): on k3d an Ingress is
+  PERMANENTLY Degraded — and Argo waits for the LAST wave's health
+  too, so no wave placement escapes it. The design answer:
+  `argocd.argoproj.io/skip-health-check: "true"` on the ingress (the
+  door still applies; a real VPS LB makes it healthy anyway).
+
+Diagnosis order: controller log
+(`waiting for healthy state of …` names the hostage), `get pvc`
+(WaitForFirstConsumer?), `get externalsecret` (Ready?). Remedies, in
+order of escalation: fix the seed / delete the orphan → terminate the
+wedged op (`kubectl -n argocd patch application <app> --type merge -p
+'{"status":{"operationState":{"phase":"Failed"}}}'` — the
+Failed-transition is what lets the automated policy fire a fresh op);
+if a forbidden STS patch loops (`Forbidden: updates to statefulset
+spec…` — patch-vs-create semantics, kubectl-apply-created STS), orphan
+the STS and cycle the child CR (finalizers → null, delete, the hub
+recreates it) so Argo CREATEs instead of PATCHes. And NEVER hand-apply
+a BASE render on an env-model app — the base carries placement
+(doctrine #3); the env overlay collapses it (`components/single-node`);
+base-rendered workloads can't schedule on k3d. Hand-apply the
+**env-tree** render only.
 
 ## The one meta-line
 

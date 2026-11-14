@@ -597,12 +597,37 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/production \
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$MEILI_KEY"
 # cert-manager's CF_API_TOKEN is NOT seedable here — the scoped token is
 # minted in ch. 07 §3.2, which seeds this path itself. Skip until then.
-# grafana's four keys land here too — but GF_AUTH_GENERIC_OAUTH_* don't
-# exist until Cloudflare Access hands you the OIDC app (ch. 07); seed
-# GF_SERVER_ROOT_URL + a generated GF_SECURITY_ADMIN_PASSWORD now, re-put
-# the path WITH all keys once Access exists (a put replaces — never
-# half-list). The door itself (Grafana at anor.gofar.id) wakes in ch. 07.
 ```
+
+**Grafana — the FOUR-KEY put.** Walked 2026-11-14: leaving this as
+prose-only got a fresh cluster's sync op WEDGED (ch.12 card 11) — an
+ExternalSecret errors on ANY missing declared key, so the interim state
+needs all four, with placeholders for the OAuth pair until ch. 07's
+Cloudflare Access hands you the real OIDC app. A put REPLACES the map —
+when ch. 07 lands, re-put ALL FOUR keys:
+
+```bash
+GF_PW=$(openssl rand -base64 24)   # → password manager IMMEDIATELY
+X "export VAULT_TOKEN=$ROOT; bao kv put kv/grafana/production \
+   GF_SERVER_ROOT_URL=https://anor.gofar.id \
+   GF_SECURITY_ADMIN_PASSWORD=$GF_PW \
+   GF_AUTH_GENERIC_OAUTH_CLIENT_ID=PLACEHOLDER-UNTIL-CH07-CLOUDFLARE-ACCESS \
+   GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=PLACEHOLDER-UNTIL-CH07-CLOUDFLARE-ACCESS"
+# verify the key set, then force ESO's hand:
+kubectl -n observability annotate externalsecret grafana-config \
+  grafana-secrets reconcile.external-secrets.io/force="true" --overwrite
+```
+
+> ⚠️ **The admin password binds ONLY at grafana's first boot** (the boot
+> creates the admin user). Grafana has never booted before this gate →
+> today's seed is the clean path. If grafana ALREADY booted (the harvest
+> branch): the live admin is the default `admin/admin` — align it to the
+> vault value with
+> `kubectl -n observability exec deploy/grafana -- grafana cli admin reset-admin-password "$PW"`
+> (`$PW` = the value read back from the vault).
+> With OAuth placeholders the rendered config keeps
+> `GF_AUTH_GENERIC_OAUTH_ENABLED=true` (manifest constant) → a **dead SSO
+> button** on the login screen until ch. 07; the admin door is unaffected.
 
 > ⚠️ **`bao kv put` REPLACES the whole path's map** (incident: a mid-list
 > failure stripped the rest). **One invocation per path, listing every key**
