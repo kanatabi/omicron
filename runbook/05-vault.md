@@ -242,6 +242,41 @@ X "export VAULT_TOKEN=dummy; bao write -format=json -field=token auth/approle/lo
 # a real token string back = alive; a 400 = you just saved yourself an hour
 ```
 
+**The PORTAL pair — the doc's old version skipped it with one comment line,
+and the estate stopped until it existed (walked 2026-11-14):** the
+config-gate Job (PreSync) of EVERY gated app + `lumen-admin` authenticate
+to Bao with it; without the Secret below, every gate exits 2
+"plane unreachable" and its app's sync fails — `admin-secrets` and
+`deploy/lumen-admin` are never born. NOTE the binding difference: these
+consumers read it via **`envFrom`**, so the keys ARE the env names — three
+keys, not the ESO pair's `role-id`/`secret-id`:
+
+```bash
+# 1. mint the PORTAL pair (the portal role from §3.4):
+PORTAL_RID=$(X "export VAULT_TOKEN=$ROOT; bao read -format=json -field=role_id auth/approle/role/portal/role-id" | tr -d '\r\n\" ')
+PORTAL_SID=$(X "export VAULT_TOKEN=$ROOT; bao write -force -format=json -field=secret_id auth/approle/role/portal/secret-id" | tr -d '\r\n\" ')
+# 2. the paradox Secret — envFrom maps key names 1:1 to env names:
+kubectl -n lumen create secret generic lumen-bao-credentials \
+  --from-literal=LUMEN_BAO_ADDR=http://bao.secrets.svc.cluster.local:8200 \
+  --from-literal=LUMEN_BAO_ROLE_ID=$PORTAL_RID \
+  --from-literal=LUMEN_BAO_SECRET_ID=$PORTAL_SID
+# 3. prove the pair (same dummy-token trick):
+X "export VAULT_TOKEN=dummy; bao write -format=json -field=token auth/approle/login role_id=$PORTAL_RID secret_id=$PORTAL_SID"
+```
+
+**EVERY namespace that hosts a gated app needs a copy** (same values — one
+portal pair serves the estate): `lumen` now, and `earendil` + `mellon`
+BEFORE the env hubs apply (§8) — their PreSync gates run there:
+
+```bash
+for ns in earendil mellon; do
+  kubectl -n "$ns" create secret generic lumen-bao-credentials \
+    --from-literal=LUMEN_BAO_ADDR=http://bao.secrets.svc.cluster.local:8200 \
+    --from-literal=LUMEN_BAO_ROLE_ID=$PORTAL_RID \
+    --from-literal=LUMEN_BAO_SECRET_ID=$PORTAL_SID
+done
+```
+
 ✅ **check the store noticed** — run it as an ordered check, not a single
 glance (walk-proven 2026-11-14: the naive `get` alone confuses — the
 store can sit `InvalidProviderConfig` for minutes for perfectly
@@ -679,21 +714,50 @@ can't lie.**
 ## 8. Make the robots notice (materialize timing)
 
 ExternalSecrets created *before* the seed sit "Ready=false, next refresh in
-~1h". Don't wait:
-
-```bash
-kubectl delete externalsecret -n <ns> <name>   # for each ES — Argo selfHeal
-                                               # recreates it, fresh objects sync NOW
-kubectl rollout restart deploy/...             # every consumer pod: envFrom
-                                               # binds ONLY at container start
-```
-
-Paste-ready enumeration (lists every ES with its namespace, ready to
-copy into the delete/restart lines):
+~1h". Don't wait. **Enumerate FIRST — the list tells you which case each
+ES is in** (walked 2026-11-14):
 
 ```bash
 kubectl get externalsecret -A --no-headers | awk '{print $1, $2}'
 ```
+
+**Case A — an ES that exists** (walked: `grafana-config`,
+`grafana-secrets` in `observability`): delete it — Argo selfHeal recreates
+it, and the fresh object syncs NOW (the old one was created pre-seed and
+errors with backoff). Then restart its consumer (`envFrom` binds ONLY at
+container start):
+
+```bash
+kubectl -n observability delete externalsecret grafana-config
+kubectl -n observability delete externalsecret grafana-secrets
+kubectl -n observability rollout restart deploy/grafana
+```
+
+**Case B — an expected ES is MISSING from the list** (walked:
+`admin-secrets` in `lumen`): its Argo Application never synced — its
+config-gate PreSync Job failed during the sealed-vault era and Argo
+exhausted its retries. Kick a fresh sync operation (the refresh annotation
+alone won't do it after a Failed op — use the Argo UI's Sync button, or the
+annotate + sync):
+
+```bash
+kubectl -n argocd annotate application lumen-admin argocd.argoproj.io/refresh=normal --overwrite
+```
+
+The gate re-runs against the now-seeded vault (`--declared 0` = not yet
+under contract: passes iff no pin) and the sync is born post-seed — **it
+syncs on creation; NO delete, NO restart needed**. Verify:
+
+```bash
+kubectl -n lumen get externalsecret,deploy,secret
+```
+
+> **Fresh-cluster note (walked):** the gate's first run needs two hand-made
+> things this chapter provides — the `lumen-bao-credentials` Secret (§3.5)
+> and, pre-pin-fix, the `config-gate` ServiceAccount (created by the sync
+> phase that the hook itself was blocking — `kubectl -n lumen create
+> serviceaccount config-gate` once, then re-sync; the vortex fix adding
+> hook-wave annotations to the component's RBAC retires this).
 
 ✅ end state: all rendered ES `Synced=True`; `kubectl -n external-secrets
 get clustersecretstore bao` → Ready; foundation wave 2 (lumen-admin +
