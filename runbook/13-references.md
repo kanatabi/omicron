@@ -77,7 +77,7 @@ updated: 2026-11-14
 | Question | Where |
 |---|---|
 | Why any of this is shaped this way | `../INFRA_ARCHITECTURE.md` (the decision record) |
-| What's proven vs open (walk ledger) | `../PLAN-SECRETS-CONTROL.md` + each chapter's frontmatter `status:` (the promotion ritual, ch.12) |
+| What's proven vs open (walk ledger) | [`../context-knowledge/decisions/secrets-control-plane.md`](../context-knowledge/decisions/secrets-control-plane.md) (decision + §8 log) + each chapter's frontmatter `status:` (the promotion ritual, ch.12) |
 | How this folder is numbered & why (reading order, waves, the 04–07 split) | `00-overview.md` + this folder's git history |
 | Working rules for agents/devs | `../AGENTS.md` (workspace) + each child repo's AGENTS/DESIGN |
 | Rehearsal-era detail (minikube quirks, the A-numbered recipes like A11) | `../RUNBOOK.md` (**archived** rehearsal log — reference, not procedure) |

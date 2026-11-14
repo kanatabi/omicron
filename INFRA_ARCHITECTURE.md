@@ -1079,7 +1079,8 @@ them into workloads.
    `fzr-portal` AppRole held server-side).
 2. **Mellon (SvelteKit):** scaffold per its DESIGN — relay-only, session from lumen,
    editor + true-to-prod preview, secrets control plane (CAS + history + pin-as-intent
-   D1 + restore-by-overlay D2 + app onboarding; PLAN-SECRETS-CONTROL.md).
+   D1 + restore-by-overlay D2 + app onboarding;
+   `context-knowledge/decisions/secrets-control-plane.md`).
    Light/dark parity day one. DONE on branches; merges per owner review.
 3. **Vortex:** `bases/lumen/` + `bases/mellon/` (ESO-free bases) with
    `overlays/{staging,production}/…` and `apps/` Application CRs. Mellon gets its
@@ -1267,7 +1268,8 @@ PUT    /v1/kv/data/<app>/<env>  (cas=0)     # create-if-absent = onboard (trio) 
   `kv/data/+/*`, plus `read`/`list`/`patch` on `kv/metadata/+/*` (the `patch` capability
   is NEW with the secrets control plane - section 5.6 seeds and `scripts/dev-plane.sh`
   both carry it; app-scoped roles still preferred where practical) - no root, no
-  destroy, no `sys/`. Namespaces are DATA (apps-are-data, root `PLAN-SECRETS-CONTROL.md`):
+  destroy, no `sys/`. Namespaces are DATA (apps-are-data, the vault decision record
+  `context-knowledge/decisions/secrets-control-plane.md`):
   onboarding any app requires no policy change, only the trio default applied through
   cas=0 creates.
 - Go client: `hashicorp/vault/api` works unmodified against OpenBao (wire-compatible).

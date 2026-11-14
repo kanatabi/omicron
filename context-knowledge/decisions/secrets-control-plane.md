@@ -1,6 +1,6 @@
 # PLAN — Secrets Control Plane (apps are data)
 
-**Status:** Phases A + B EXECUTED on `feature/secrets-control-plane` (lumen + mellon) — awaiting owner review/merge. Phase C deferred. **Repos:** `lumen/` (API), `mellon/` (UI), `vortex/` (deferred).
+**Status:** Phases A + B **MERGED** — lumen `846f98b` (A-series + merge), mellon `a224950` (portal cockpit/compare/mobile), both on `main`; the 2026-11-13 round added the epoch gate + pin write-lock (lumen `28e7811`) and the estate matrix feed (C1, lumen `9544ce4` → mellon `/secrets/summary`). Phase C is mostly landed (C1/C3/C5 ✓; C2 on branch `feature/c2-pin-driftcheck`) — **C4 (vortex prod seeds) remains open**. **Repos:** `lumen/` (API), `mellon/` (UI), `vortex/` (C4).
 **Doc owner:** this file is the contract — update task checkboxes and the Decision Log here, not in chat transcripts.
 
 ## 0. Mission
