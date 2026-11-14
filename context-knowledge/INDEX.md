@@ -31,7 +31,7 @@ decision records, and the walked-lessons ledger.
 | [glossary.md](glossary.md) | the estate's vocabulary |
 | [decisions/](decisions/README.md) | tracked decision records (the binding-contract kind) |
 | [architecture/](architecture/README.md) | detailed system explainers, one concern each (mermaid throughout, runbook pointers) |
-| [repos/](repos/omicron/README.md) | one detailed learning note + one lesson ledger per repo — learn a repo from here alone |
+| [repos/](repos/omicron/README.md) | detailed learning notes + lesson ledgers — learn a repo from here alone; extra focused files (API surfaces, subsystem walkthroughs) as sections outgrow their note |
 | [archive/](archive/earendil-ARCHITECTURE.md) | verbatim snapshots of removed docs, provenance headers on |
 
 ## Conventions

@@ -83,8 +83,7 @@ Composition happens only in `cmd/lumen`.
 
 ## 4. The contract surface
 
-**Public (§1 — earendil's `BlogApi` mirrors this exactly; FE types move in
-ONE coordinated change):**
+**Public API (§1) — earendil's `BlogApi` mirrors this exactly; the FE types move in ONE coordinated change:**
 
 | Route | What |
 | :-- | :-- |
@@ -95,23 +94,56 @@ ONE coordinated change):**
 | `GET /api/search` · `GET /api/search/suggest` | Meilisearch-backed results + suggest |
 | `GET /api/feed.xml` | RSS |
 
-**Admin (§8 — mellon's contract; session bearer required):** `POST
-/admin/session` (login), `POST /admin/session/verify`, `DELETE
-/admin/session` (logout = `token_version` bump = instant revocation across
-replicas), the TOFU wizard (`GET /admin/setup` one-bit probe; `POST
-/admin/setup/register` — one transaction under `pg_advisory_xact_lock`,
-exactly one winner ever, `410 Gone` terminal), user creation, admin
-CRUD for posts/photos/tags (PUT/DELETE), admin search. The publish path is
-a **unit of work with PURE derivations** — content-derived values
-(readTime, excerpt, ordering) are computed at PUBLISH time, never
-per-request (§2: "the FE renders payloads as-is").
+**Admin API (§8) — mellon's contract; session bearer required:**
 
-**Bao relay (§9 — the frozen contract):** `GET /bao/paths`, `POST
-/bao/apps`, `POST /bao/{app}/envs`, `PUT /bao/{app}/{env}` (CAS + key-set
-mirror), `GET /bao/{app}/{env}` (`?version=N`, `?meta` adds
-`pinnedVersion`), `PUT/DELETE /bao/{app}/{env}/pin`, plus `GET
-/bao/summary` (the estate matrix, C1). Full frozen semantics:
-[../decisions/secrets-control-plane.md](../../decisions/secrets-control-plane.md).
+| Area | Route | Semantics |
+| :-- | :-- | :-- |
+| Sessions | `POST /admin/session` | login → `{ token, expiresIn }` — HS256 JWT, 12 h, **no refresh** |
+| | `POST /admin/session/verify` | re-check a bearer (the 428 forced-change gate lives here) |
+| | `DELETE /admin/session` | logout = `token_version` bump = **instant revocation across replicas** |
+| Setup (TOFU) | `GET /admin/setup` | one-bit probe — is the estate unclaimed? (nothing enumerable) |
+| | `POST /admin/setup/register` | the wizard: ONE transaction under `pg_advisory_xact_lock` — exactly one winner ever, losers get `410 Gone` (terminal) |
+| Users | `POST /admin/users` | admin-created accounts (server-generated once-only temp passwords) |
+| Posts | `GET /admin/posts?status&tag&sort&dir&page&q` | paged envelope (the desk/list) |
+| | `GET /admin/posts/:slug` | the editor's door — FULL detail incl. raw markdown |
+| | `POST /admin/posts` | create draft |
+| | `PUT /admin/posts/:slug` | update draft (optimistic-locked `rev`) |
+| | `POST /admin/posts/:slug/publish` | **the §2 unit of work** — PURE derivations (readTime, excerpt, ordering) computed at PUBLISH time, never per-request; the status machine draft → published |
+| | `POST /admin/posts/:slug/unpublish` | the status machine in reverse |
+| | `DELETE /admin/posts/:slug` | soft-delete (media retained for the GC window) |
+| Photos | `GET /admin/photos?collection&gallery&from&to&sort&dir&page&q` | paged envelope (the darkroom) |
+| | `POST /admin/photos` (multipart) | **the media relay** (§5): probe dims, hash-name, stream to object storage |
+| | `PATCH /admin/photos/:id` | curation metadata (alt / collection / gallery) |
+| | `GET /admin/photos/:id` | the detail page's door |
+| | `GET /admin/photos/:id/references` | posts embedding the photo (the used-in guard) |
+| | `DELETE /admin/photos/:id` | removes the library row; the OBJECT keeps (GC window) |
+| Collections | `GET /admin/collections` · `POST /admin/collections` | curation vocabulary (slugified names) |
+| Tags | `GET /admin/tags` · `POST /admin/tags` | vocabulary (BE-curated; the name is canonical) |
+| | `GET /admin/tags/search?q&page&pageSize` | desk bar: ENGINE fuzzy over the whole vocabulary |
+| | `PATCH /admin/tags/{name}` | rename (propagates via id-keyed FKs) / feature toggle |
+| | `PATCH /admin/tags/bulk` | `{names[], featured}` — one transaction |
+| | `DELETE /admin/tags/{name}` | refuses `409` while ANY live post references it |
+| Search | `GET /admin/search?q` | cross-resource: `{ posts, photos, tags }` |
+
+**Bao relay (§9) — the frozen contract (D1–D5; apps-are-data):**
+
+| Route | Semantics |
+| :-- | :-- |
+| `GET /admin/bao/paths` | list mounts/paths, policy-scoped — the app picker's feed |
+| `GET /admin/bao/summary` | the ESTATE MATRIX (C1): every app × env — head version, pin state, key counts, empty-key signals |
+| `POST /admin/bao/apps` | onboard an app: `{app, envs?}` — slug `^[a-z][a-z0-9-]{1,31}$`, seeds the `dev/staging/production` trio (`409` if it exists) |
+| `POST /admin/bao/{app}/envs` | add an env, seeded to the canonical KEY-SET union of its siblings |
+| `GET /admin/bao/{app}/{env}` | read head — or `?version=N` (a pin NEVER reroutes reads, D1) |
+| `GET /admin/bao/{app}/{env}?meta` | version list + `pinnedVersion` (the history panel's CAS numbers) |
+| `PUT /admin/bao/{app}/{env}` | CAS write (`{data, cas}`) + the **key-set MIRROR** fan-out (sibling writes CAS against their own heads — stale ⇒ `409 mirror stale`) |
+| `PUT /admin/bao/{app}/{env}/pin` | set the pin — **a LOCK**: writes to the path answer `403 pinned at vN — unpin first` until unpinned |
+| `DELETE /admin/bao/{app}/{env}/pin` | clear the pin (the release ritual's first step) |
+
+Invariants that hold across every row: no `sys/` routes; no destroy
+surface (D5 — teardown is an operator drill); logging is
+`op + app + env + version + key-counts`, NEVER values. Full frozen
+semantics + the append-only decision log:
+[secrets-control-plane.md](../../decisions/secrets-control-plane.md).
 
 ## 5. Conventions that bite
 

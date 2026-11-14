@@ -65,6 +65,13 @@ way tests are: "the code landed but the vault didn't" is an incomplete
 round. Each repo note carries a sync-duty box naming its own checklist;
 each repo's AGENTS.md states the duty for agents working there.
 
+**File policy per repo (2026-11-15):** two files are the DEFAULT —
+`README.md` (the learning note) + `LEARNING.md` (the ledger) — not a cap.
+When a section outgrows its note (an API surface, a subsystem walkthrough,
+a run of tables), give it a focused file in the same directory (e.g.
+`repos/lumen/api-surface.md`) and link it from the note's contents; the
+sync duty covers extra files the same as the note itself.
+
 ## This vault's own rule
 
 The vault ([INDEX.md](INDEX.md)) never becomes a second home for a repo doc —
