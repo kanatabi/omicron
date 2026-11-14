@@ -137,7 +137,7 @@ flowchart TD
     Q1 -- "CF fine" --> INC["it's the estate, not the edge:\nincident cards below"]
 ```
 
-## Incident cards (nine — each one real, most already happened once)
+## Incident cards (ten — each one real, most already happened once)
 
 **1. Everything red, "could not get secret data from provider"**
 → Bao sealed (host reboot? someone's fault?). Do ch.05 §9's unseal ritual
@@ -224,6 +224,34 @@ the audit reads `ENV_AUDIT_PAT` — missing, expired, or under-granted
 then re-run. Full record + the walked resolution: ch.09 §6. Bump PRs
 born of an unparked chain are INVALID evidence: merge only after a
 human park, or deliberately supersede them.
+
+**10. Deploy job red after 30 min: "bump PR did not merge" — but no PR
+was ever opened (walked 2026-11-14, lumen staging v4.0.2)** → two
+failure classes, now separately named by the deploy job (anvil
+`set-image-pr.sh` guards both — re-pin `6e210f5`):
+
+- **Push rejected:** `! [remote rejected] bump/… (failed)` with EMPTY
+  `remote:` lines. GitHub-side and TRANSIENT — that day one push in ~9
+  failed; the repo had no rulesets (API-verified `[]`), the PAT was
+  alive (a `gh pr list` dedupe check ran clean seconds earlier), and
+  same-PAT sibling pushes from the same run succeeded minutes apart.
+  The script now retries ×3/15s and REDs with the raw git error and
+  the true state: **branch NOT on GitHub, pin NOT on main. Recovery:
+  workflow_dispatch re-run of that env** — transients don't repeat
+  (proven: the re-run rode green end-to-end).
+- **PR-create failed:** the bump branch IS on GitHub but no PR exists
+  (the old zombie: `gh pr create` failed unguarded with `GraphQL: Head
+  sha can't be blank…` and the await loop polled the nonexistent PR
+  for the full deadline). RED is immediate now. Recovery: open the PR
+  by hand, or dispatch re-run — the run dedupes by branch (reuse, not
+  duplicate).
+
+**Dispatch UX note:** the release workflow's `tag` input is OPTIONAL
+when you dispatch FROM the tag's ref (the ref name provides it — leave
+the box empty). Dispatching from `main` REQUIRES typing the tag; a
+fail-closed guard makes an empty box there RED before checkout —
+released `vX.Y.Z` or nothing. This re-run door is the recovery path
+for BOTH classes above (cf. card 3's redeploy door).
 
 ## The one meta-line
 

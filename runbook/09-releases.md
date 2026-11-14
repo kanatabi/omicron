@@ -39,9 +39,9 @@ merge PR → ci.yml: gates run (+ the live API contract suite on earendil)
                     else the whole chain goes RED before anything parks
        then ONE CHAIN PER TARGET ENVIRONMENT —
        lumen: foundation | staging | production · earendil/mellon: staging | production:
-         deploy-plan-<env> → the EVIDENCE job: pin now→proposed, exact
-                            rendered diff, full manifest validation,
-                            writes NOTHING
+         deploy-plan-<env> → the EVIDENCE job: pin now→proposed (markdown
+                            summary: pin table, fenced bump diff, verdicts),
+                            full manifest validation, writes NOTHING
          deploy-<env> → PARKS on protected environment deploy-<env>  ← the
                         deploy decision, ONE environment per chain —
                         sharing one env batch-approves all parks at once
@@ -51,8 +51,28 @@ merge PR → ci.yml: gates run (+ the live API contract suite on earendil)
        → vortex CI validates independently (job `validate-manifests`)
        → auto-merge: all guards green + DEPLOY_AUTOMERGE=on → merged
          (variable off/absent = the human merges each bump PR by hand)
+       → the deploy job AWAITS THE MERGE (anvil 6e210f5, bounded poll):
+         its green means the pin LANDED on vortex main — "PR opened" was
+         never evidence (the merge rides vortex's auto-merge workflow,
+         asynchronously; a flaked CI or failed guard used to leave a green
+         run with no pin). A transient push rejection or a failed PR-create
+         REDs immediately with the true state + recovery (card 10, ch.12)
   → Argo syncs within its poll (~3 min) → that env's pods roll. Done.
 ```
+
+**Pipelines NEVER queue behind open ones (owner ruling 2026-11-14,**
+*"whichever pipeline the developer wants to continue is their call"*): the
+old `ci-refs/heads/main` concurrency group made every new release cycle
+wait until the previous cycle's still-open run was cancelled by hand.
+Fixed: main pushes get a UNIQUE concurrency group (github.sha) — runs
+never queue; PR runs keep a per-PR group with cancel-in-progress (a new
+commit supersedes its own run's older revision). Parks on the
+`release-*`/`deploy-*` environments COEXIST by GitHub design (environments
+don't serialize deployments — two chains can park on `deploy-staging` at
+once, each with its own review): approve whichever chain you want to
+continue. No cancelling, no reaping; the only janitor is GitHub's own
+**30-day park auto-fail**. A run stays open (amber) while any of its parks
+waits — that's inherent and blocks nothing.
 
 **The ladder is the approval ORDER, not a different machine:** the tag
 lights every chain's park at once; you walk them bottom-up —
@@ -66,9 +86,10 @@ tag, legitimately and visibly.
 (POST refused; warn-only did its job — releases still shipped). Its
 diagnostics round is deferred **with the failing-call evidence frozen**
 (the fix will start from proof, not guesswork). Until then, the habit
-is: **approve one, decline two by hand**. They
-expire in 24h anyway; a forgotten sibling just holds the run "Waiting"
-and can stall the ci queue behind it.
+is: **approve one, decline two by hand**. Unapproved siblings expire on
+GitHub's own 30-day park auto-fail and — since the concurrency re-group
+of 2026-11-14 — hold nothing back: their run stays amber, and no future
+pipeline ever queues behind it.
 
 ## 2. First release of a fresh repo
 
@@ -89,8 +110,13 @@ purpose — the estate's software is exactly as versioned as you want).
 - **Redeploying an OLD version** (incident rollback): two doors —
   (a) `git revert` the bump commit → human PR → Argo (the honest audit
   trail), or (b) "Run workflow" on `release.yml` with the old `vX.Y.Z`
-  typed in and ONE environment chosen (redeploy = release; the image
-  still exists, it's immutable). A `config-epoch` input is honored only
+  and ONE environment chosen (redeploy = release; the image
+  still exists, it's immutable). **The tag input is OPTIONAL when you
+  dispatch FROM the tag's ref** (the ref name provides it — leave the
+  box empty); from a branch like `main` you must type it, and a
+  fail-closed guard makes an empty box there RED before checkout —
+  released `vX.Y.Z` or nothing (never a branch name). A `config-epoch`
+  input is honored only
   on a SINGLE-environment dispatch — the trio's value is env-scoped and
   the chains' values legitimately differ (production's lumen trio is at
   `7`, the rest of the estate at `0`). Never `kubectl`-patch an image
