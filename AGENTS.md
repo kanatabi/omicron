@@ -176,5 +176,8 @@ against the 2.15.0 CRD); no cluster-specific literals in Git anymore.
 - Production phases, unseal drills, quorum rationale: `INFRA_ARCHITECTURE.md`
 - Local end-to-end test script (placement, failover, selfHeal, proxy): `README.md` §5
 - Manifest-repo rules in short form: `vortex/README.md`
-- earendil's older single-node notes (`earendil/ARCHITECTURE.md`, `DESIGN.md`, `PLAN.md`) are
-  pre-revision drafts — the root INFRA doc supersedes them on conflicts.
+- earendil's older single-node notes: `DESIGN.md` remains its living spec;
+  the retired `ARCHITECTURE.md` draft is archived in
+  `context-knowledge/archive/`; `PLAN.md` files are the owner's local-only
+  journals (gitignored, 2026-11-15). All are pre-revision drafts — the root
+  INFRA doc supersedes them on conflicts.

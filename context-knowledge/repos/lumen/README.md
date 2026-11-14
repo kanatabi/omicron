@@ -26,7 +26,7 @@ the OpenBao passthrough (`/admin/bao/*`).
   (sessions/users/TOFU/Bao relay, no ingress); `cms` instances serve content
   per environment; the role is deployment identity, never a Bao value.
 - The `/admin/bao/*` surface is the frozen
-  [secrets-control-plane.md](../decisions/secrets-control-plane.md) contract —
+  [secrets-control-plane.md](../../decisions/secrets-control-plane.md) contract —
   apps-are-data, key-set mirror, pin-as-lock.
 - Cluster-internal only, ever; browsers ride the SSR/portal same-origin
   relays.

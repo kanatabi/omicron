@@ -30,6 +30,6 @@ public face at `gofar.id` + `www.gofar.id` (cutover verified live 2026-11-11;
   rides the same-origin `/api/*` SSR proxy.
 - Diagrams: BE ships raw fences, FE renders client-side (Route B).
 - The superseded single-node ARCHITECTURE draft lives in this vault:
-  [../archive/earendil-ARCHITECTURE.md](../archive/earendil-ARCHITECTURE.md).
+  [../archive/earendil-ARCHITECTURE.md](../../archive/earendil-ARCHITECTURE.md).
 
 Lesson ledger: [LEARNING.md](LEARNING.md).

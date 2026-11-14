@@ -28,4 +28,4 @@ ledger records walked events. Newest first.
 - **2026-11-13 — the wizard joined the threat surface.** The setup wizard's
   unauthenticated write path earned first-class TOFU analysis (V7) after this
   note's original scope was written; the detailing lives in this vault:
-  [../archive/mellon-THREAT-NOTE.md](../archive/mellon-THREAT-NOTE.md).
+  [../archive/mellon-THREAT-NOTE.md](../../archive/mellon-THREAT-NOTE.md).

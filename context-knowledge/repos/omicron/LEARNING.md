@@ -13,7 +13,7 @@ where the standing rule now lives. Newest first.
   a diff-vs-root fold found ZERO unique content. Ruling: one blueprint, one
   home — child repos link to the root doc, never fork it; superseded docs get
   vault archives (this vault's `archive/`), local-only journals stay local.
-  Standing rule: [doc-map.md](../doc-map.md) + vortex AGENTS §9.8.
+  Standing rule: [doc-map.md](../../doc-map.md) + vortex AGENTS §9.8.
 - **2026-11-13 — referenced-but-missing environments are auto-created
   UNPROTECTED.** v3.0.0 fired with no park and five bump PRs opened
   unattended. Minted the fail-closed `gate-audit` job (no environment OR no

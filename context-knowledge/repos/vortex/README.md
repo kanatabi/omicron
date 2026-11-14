@@ -27,7 +27,7 @@ observability-gate → production → staging), `bases/` (ESO-free, no image pin
 - Values live in OpenBao, never in Git; ESO renders per env; seeding order is
   structural (ESO fails the whole render on one missing key).
 - Architecture explainers live in this vault:
-  [../architecture/gitops.md](../architecture/gitops.md) and friends — the
+  [../architecture/gitops.md](../../architecture/gitops.md) and friends — the
   rationale is the root INFRA doc.
 - The in-repo INFRA copy was retired 2026-11-15 (stale fork; link, don't
   copy).

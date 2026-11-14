@@ -27,9 +27,9 @@ ClusterIP, port-forward is break-glass.
 
 - Holds NO credentials in any layer, any era — the portal is a relay.
 - The §6.1 secrets surface implements the frozen
-  [secrets-control-plane.md](../decisions/secrets-control-plane.md) contract
+  [secrets-control-plane.md](../../decisions/secrets-control-plane.md) contract
   (cockpit, compare, estate matrix; pin-as-lock renders lumen's 403 verbatim).
 - The superseded THREAT-NOTE (GATE #5 detailing) lives in this vault:
-  [../archive/mellon-THREAT-NOTE.md](../archive/mellon-THREAT-NOTE.md).
+  [../archive/mellon-THREAT-NOTE.md](../../archive/mellon-THREAT-NOTE.md).
 
 Lesson ledger: [LEARNING.md](LEARNING.md).

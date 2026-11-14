@@ -18,7 +18,7 @@ them. Newest first.
   (`230783b` + lumen `28e7811`) found "intent" unenforceable at the only
   write path that matters; pins now refuse writes (403) until unpinned, and
   mellon renders the wire copy verbatim. Standing rule: DESIGN §9 + the
-  vault's [secrets-control-plane decision log](../decisions/secrets-control-plane.md).
+  vault's [secrets-control-plane decision log](../../decisions/secrets-control-plane.md).
 - **2026-11-13 (C1) — the estate matrix feed exists because drift was
   invisible.** `GET /admin/bao/summary` (lumen `9544ce4`) answers app×env
   head/pin/key-counts so mellon's matrix can surface empty-key and shape

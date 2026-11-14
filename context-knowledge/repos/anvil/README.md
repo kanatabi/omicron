@@ -27,6 +27,6 @@ design — nothing here holds secrets or values.
   triggers a workflow — the silent no-deploy trap, proven via the events API
   2026-11-13).
 - Rollback = a human-merged revert (or re-dispatch with an older tag).
-- The release explainer: [../architecture/releases-and-ci.md](../architecture/releases-and-ci.md).
+- The release explainer: [../architecture/releases-and-ci.md](../../architecture/releases-and-ci.md).
 
 Lesson ledger: [LEARNING.md](LEARNING.md).
