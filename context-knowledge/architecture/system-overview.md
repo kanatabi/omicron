@@ -106,6 +106,10 @@ flowchart TB
     ANVIL -->|"release ladder"| APPS
 ```
 
+Replica counts in the diagram are the declared production base shape; the
+single-VPS reality collapses the pairs (one node, one of each) via the
+`components/single-node` toggle — [environments-model.md](environments-model.md).
+
 ## The five repos (and why they're separate)
 
 Each repo is independently versioned and released — a blog bug fix should
