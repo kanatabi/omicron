@@ -56,7 +56,21 @@ production, staging, or both; the entrypoint SET is the documented
 single-file alternative for the future scale-out shape, not this estate's
 today), plus exactly **four** pinned one-time installs:
 
-| What | Pin | Command (from a cloned `vortex`) | Why it can't ride the hub |
+**Step 0 — get the repo every path below runs from.** The `-k`/`-f`
+commands in this chapter are relative to a local checkout of `vortex`.
+Clone it (it's **public** — no SSH key needed) and change into it first:
+
+```bash
+git clone https://github.com/kanatabi/vortex.git
+cd vortex
+```
+
+Every path this chapter (and later chapters) quotes —
+`platform/argocd/`, `bootstrap/apps-hub-*.yaml`, `bases/…`,
+`environments/…` — resolves inside this checkout, so stay at its root;
+a "no such file or directory" here means you're not standing in it.
+
+| What | Pin | Command (run from the checkout — step 0) | Why it can't ride the hub |
 |---|---|---|---|
 | **Argo CD** | v3.6.1 | `kubectl apply -k platform/argocd/ --server-side --force-conflicts` | the robot can't host itself |
 | **Zalando postgres-operator** | v1.13.0 | `kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/v1.13.0/manifests/operator-manifests.yaml` (pinned in the header comment of `bases/lumen-db/postgresql.yaml`) | the CRD that defines `postgresql.yaml` must exist before any app applies it |
@@ -92,7 +106,7 @@ bug in this document — tell the next reader.
 
 ## 3. The app-of-apps: the fleet starts in acts (hub set, M3 between)
 
-From a cloned `vortex`, after Argo is up, the entrypoint is a **set**:
+Still in the checkout (step 0), with Argo up, the entrypoint is a **set**:
 
 ```bash
 kubectl apply -f bootstrap/apps-hub-foundation.yaml   # act 1: the shared plane
