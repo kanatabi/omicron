@@ -174,6 +174,15 @@ same waves, the same vault bootstrap. See the why-box at the bottom.
   > AFTER ch. 07's token mint issues the certs; the 404-from-Traefik
   > check (edge up) passes immediately. The fleet's last mile IS the
   > go-public walk.
+  >
+  > **Alternative — the invariant-strict walk:** mint the scoped token
+  > (ch. 07 §3.2) and seed the path BEFORE applying the env hubs. The
+  > seed-before-hubs invariant then holds all the way through ("every key
+  > an ES declares must exist in Bao before its hub syncs" — the
+  > certificates ES declares `CF_API_TOKEN`), nothing parks, and the whole
+  > fleet + doors go green in one pass. The token is a credential, not a
+  > public door — minting it early touches nothing public. Both orders
+  > end identically; the parked state is the only difference.
 
 - [ ] **A10 · the isolation proof (the point of running both here)** — the
   rehearsal must SHOW, not assume, that staging and production are separate

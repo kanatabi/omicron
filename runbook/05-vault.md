@@ -598,6 +598,10 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/production \
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$MEILI_KEY"
 # cert-manager's CF_API_TOKEN is NOT seedable here — the scoped token is
 # minted in ch. 07 §3.2, which seeds this path itself. Skip until then.
+# (OR mint it NOW and seed here — the invariant-strict path: the
+# certificates ES then renders on the hub's first sync and the fleet
+# never parks. The defer path is what wedged earendil/mellon at the
+# Ingress wave on 2026-11-15's walk — safe, but the fleet waits.)
 ```
 
 > **The epoch's witness is the vault head (walked 2026-11-15).** The
