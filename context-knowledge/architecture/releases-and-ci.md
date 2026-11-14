@@ -138,9 +138,14 @@ tooling that deploys production should never move invisibly.
 
 ## Status & operate it
 
-The first live walk proved the ladder end-to-end (first bump #17: staging
-before production, evidence-first, three-environment locks). The full
-operator view lives in runbook [`09-releases.md`](../../runbook/09-releases.md)
+The release MACHINERY is proven — the first live walk rode the full chain
+(first bump #17: staging before production, evidence-first; then lumen
+v4.0.1, mellon v3.0.1, earendil v1.2.0 on 2026-11-14). What is NOT yet
+done: applying the manifests those bumps produced — the staging and
+production hubs are unapplied and nothing is serving (2026-11-15 status;
+see [system-overview.md](system-overview.md)'s declared-vs-serving note).
+The full operator view lives in runbook
+[`09-releases.md`](../../runbook/09-releases.md)
 (the ladder), [`12-operations.md`](../../runbook/12-operations.md)
 (day-2 ops), and [`00a-run-order.md`](../../runbook/00a-run-order.md)
 (the rehearsal order). The machinery's own documentation:

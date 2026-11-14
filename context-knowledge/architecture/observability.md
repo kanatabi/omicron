@@ -85,7 +85,7 @@ This is why bootstrap has ONE manual gate, and it's this hub. See
 [secrets-and-vault.md](secrets-and-vault.md) and runbook
 [`10-observability.md`](../../runbook/10-observability.md).
 
-## What's watched today (walked 2026-11-15)
+## What's watched today (designed + walked on the rehearsal cluster; the stack is not currently running — hubs unapplied)
 
 **Alert #1 — control-plane certificate expiry.** The k3s node certificate
 (mTLS for the API server) is a real single-point-of-expiry: when it lapses,

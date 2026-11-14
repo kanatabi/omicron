@@ -48,7 +48,7 @@ firewall-denied at the host and mesh-reached.
 
 | Door | Serves | Layering | State |
 | :-- | :-- | :-- | :-- |
-| `gofar.id` + `www.gofar.id` | earendil (content reads) | Cloudflare proxy → Traefik → SSR pods. Unauthenticated reads; writes don't exist here | **LIVE** (cutover verified 2026-11-11; `ainurrofiq.com` 301s in; www is production-only by ruling) |
+| `gofar.id` + `www.gofar.id` | earendil (content reads) | Cloudflare proxy → Traefik → SSR pods. Unauthenticated reads; writes don't exist here | **DECLARED — DNS cutover done** (verified 2026-11-11; `ainurrofiq.com` 301s in; www is production-only by ruling). **Not yet serving**: the production hub is not applied to any cluster — the door opens with the hub walk |
 | `console.gofar.id` | mellon (the owner's portal) | Cloudflare → Traefik + console middlewares (HSTS/headers/rate-limit) → mellon → relays to lumen. Service stays **ClusterIP**; only Traefik routes | Contractually live; **GATE #10** checklist gates the first public walk; `kubectl port-forward` remains break-glass |
 | `anor.gofar.id` | Grafana dashboards (per-env filtered) | the ONLY door with a guest list: proxied DNS → managed challenge (whole host) → Access email allowlist → Grafana OIDC. Access IS the identity | ruling 2026-11-13 |
 | `img.gofar.id` | photos | R2 bucket custom domain — never touches the server; outside ACME (bucket-side TLS) | GATE #9 closed 2026-11-13 |
@@ -96,6 +96,54 @@ that "fix" is the estate's most tempting bug (root AGENTS.md non-negotiable
 #2).
 
 ## TLS: DNS-01 everywhere
+
+### Who does the handshake (the termination map)
+
+**Traefik terminates TLS for every public door.** It holds the only 443
+listener at the edge, presents each door's certificate during the
+handshake, and decrypts before routing to the SSR/portal pods. The
+certificates are issued by **cert-manager via DNS-01** through the shared
+`ClusterIssuer` and referenced as secrets (`tls-gofar`, `tls-console`,
+`tls-anor`, the staging twins) — never stored in Git.
+
+With the doors behind the **Cloudflare proxy**, there are two TLS hops:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant V as Visitor
+    participant CF as Cloudflare edge
+    participant T as Traefik (origin :443)
+    participant P as app pod (plaintext inside the cluster)
+
+    V->>CF: TLS handshake #1 — Cloudflare's edge cert
+    Note over V,CF: the visitor's hop ends here
+    CF->>T: TLS handshake #2 — Traefik presents the LE cert<br/>(tls-gofar / tls-console / tls-anor)
+    Note over CF,T: SSL mode Full (strict): Cloudflare VALIDATES the<br/>origin cert — Flexible/plaintext origin would defeat<br/>HSTS + Secure cookies, so it is not an option
+    T->>P: HTTP inside the cluster (service DNS, no TLS needed<br/>— east-west traffic stays inside the node network)
+    P-->>V: response re-encrypted on the way out (same two hops)
+```
+
+Reading the map as rules:
+
+1. **Traefik is the estate's TLS terminator** — the single place public
+   certificates are served from. (You had it right.)
+2. **Cloudflare terminates the visitor hop** when a door is proxied — that's
+   Cloudflare's edge cert, not ours.
+3. **Full (strict) is the required SSL mode** — the origin hop must be real
+   TLS with a validated cert, otherwise the HSTS/`Secure`-cookie posture is
+   theater.
+4. **Inside the cluster, east-west traffic is plaintext HTTP** (pod ↔ pod
+   over service DNS) — a deliberate boundary: the cluster network is the
+   trust domain; mTLS everywhere is a later, deliberate project, not an
+   accident.
+5. **Non-edge TLS is not Traefik's business:** the K8s API (`:6443`) uses
+   k3s's own certs (the ones the observability cert-expiry alert watches —
+   `k3s_certificate_expiration_seconds`); OpenBao's API is TLS-terminated by
+   Bao itself mesh-side; break-glass paths (port-forward, mesh tunnels)
+   terminate locally on the owner's machine.
+
+### DNS-01, and why
 
 - The zone (`gofar.id`) lives on **Cloudflare**; cert-manager solves ACME
   challenges via **DNS-01** through one shared `ClusterIssuer` — which is why

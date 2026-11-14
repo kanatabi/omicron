@@ -17,6 +17,7 @@ several moving parts with different toolchains:
 | `INFRA_ARCHITECTURE.md` | Production blueprint (K3s on 3 VPS, phases §4, secrets design §5) | the decision record — update it when you change a decision |
 | `lumen/` | REST backend — **live code** (M1–M6 merged to `main` 2026-11-09: read API on Meilisearch, admin API, media relay, Bao passthrough) | contract mirror of earendil's `BlogApi`; `lumen/DESIGN.md` mirrors §1/§8 |
 | `mellon/` | Admin portal — **live code** (`kanatabi/mellon` remote real; UI + lumen fetch-adapter on `feature/lumen-cutover`) | UI-only by doctrine: relays to lumen, holds no credentials — read `mellon/DESIGN.md` §2 before any feature work |
+| `context-knowledge/` | The estate vault — per-repo learning notes + lesson ledgers, mermaid architecture explainers, decision records, archives of superseded docs (start at `INDEX.md`) | living docs: sync a repo's note in the same round as the change (see `context-knowledge/doc-map.md`; the workflow bullet below) |
 
 ## Commands
 
@@ -177,6 +178,11 @@ against the 2.15.0 CRD); no cluster-specific literals in Git anymore.
   provider-neutral, junior-readable (start at `runbook/00-overview.md`).
   The minikube rehearsal that produced its claims lives in the archived
   `RUNBOOK.md` at this root.
+
+- **`context-knowledge/` (this repo)** — the vault: learn any repo from
+  `context-knowledge/repos/<name>/README.md`; system explainers under
+  `architecture/`; binding contracts under `decisions/`. The doc-tier and
+  sync rules: `context-knowledge/doc-map.md`.
 
 - Production phases, unseal drills, quorum rationale: `INFRA_ARCHITECTURE.md`
 - Local end-to-end test script (placement, failover, selfHeal, proxy): `README.md` §5

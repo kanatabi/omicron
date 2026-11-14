@@ -182,8 +182,11 @@ The door: `gofar.id` + `www` via Traefik, DNS-01 TLS. Full flow:
 
 ## 9. State & history (walked)
 
-- **2026-11-11** — production cutover verified live (`gofar.id`; the old
-  domain 301s). The SSR dependency-bundling lesson minted the
+- **2026-11-11** — the DNS-side domain cutover verified live (`gofar.id`
+  resolves; the old domain 301s in) — note: the site itself is not yet
+  serving; the staging/production hubs are unapplied (see the status note
+  in [../what-is-omicron.md](../../what-is-omicron.md)). The SSR
+  dependency-bundling lesson minted the
   bundle-the-markdown-family rule (`8609828`).
 - **2026-11-09** — real-first ruling replaced mock-first (the BE exists).
 - **Earlier (dated in git log)** — Route B adopted (publish-time SVG

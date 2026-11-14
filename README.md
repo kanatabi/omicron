@@ -17,6 +17,16 @@ current operating procedure and supersedes the blueprint's older draft
 sections), and the day-2 operations live in [`runbook/`](runbook/00-overview.md)
 — start at `runbook/00-overview.md`, work from `runbook/00a-run-order.md`.
 
+**Learning the estate:** [`context-knowledge/`](context-knowledge/INDEX.md) is
+the knowledge vault — detailed per-repo learning notes (architecture, contract
+surfaces, commands, testing, history), mermaid architecture explainers, the
+decision records, and the per-repo lesson ledgers. Start at
+[`context-knowledge/INDEX.md`](context-knowledge/INDEX.md); a newcomer's first
+read is [`context-knowledge/architecture/system-overview.md`](context-knowledge/architecture/system-overview.md).
+The vault is a **living doc**: changes in a child repo sync to its note in the
+same round (the rule + triggers live in
+[`context-knowledge/doc-map.md`](context-knowledge/doc-map.md)).
+
 ### Submodule workflow
 
 ```bash

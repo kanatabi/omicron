@@ -80,6 +80,7 @@ updated: 2026-11-14
 | What's proven vs open (walk ledger) | [`../context-knowledge/decisions/secrets-control-plane.md`](../context-knowledge/decisions/secrets-control-plane.md) (decision + §8 log) + each chapter's frontmatter `status:` (the promotion ritual, ch.12) |
 | How this folder is numbered & why (reading order, waves, the 04–07 split) | `00-overview.md` + this folder's git history |
 | Working rules for agents/devs | `../AGENTS.md` (workspace) + each child repo's AGENTS/DESIGN |
+| The estate's learning home (detailed per-repo notes, architecture explainers, decision records, lesson ledgers) | `../context-knowledge/INDEX.md` — the doc tier + sync rules live in `../context-knowledge/doc-map.md` |
 | Rehearsal-era detail (minikube quirks, the A-numbered recipes like A11) | `../RUNBOOK.md` (**archived** rehearsal log — reference, not procedure) |
 | The manifest truth battery's expected-kinds table | `../anvil/bin/expected-kinds.txt` — the 23-row truth table (per-directory expected resource-kind counts, regenerated for the `environments/*` tree — `bases/` bases + the 7 foundation + 3×2/3 env overlays) enforced by `validate-manifests`; a count change is a reviewable event |
 | The render contract per plane | `vortex/README.md` ("ES = the render contract", "Naming contract") + lumen `config keys --role admin\|cms` — the machine truth behind ch.05's seed tables |

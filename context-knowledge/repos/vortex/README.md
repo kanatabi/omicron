@@ -118,8 +118,9 @@ detail: [../architecture/gitops.md](../../architecture/gitops.md).
 
 ## 7. State & history (walked)
 
-- **2026-11-11** — production doors live (cutover); first live runbook
-  walk (Part A) on minikube.
+- **2026-11-11** — the DNS-side domain cutover verified (the doors are
+  DECLARED; the hubs that would serve them are not yet applied — 2026-11-15
+  status); first live runbook walk (Part A) on the rehearsal cluster.
 - **2026-11-13/14** — the great convergence: `applications/` → `bases/`
   rename; bases lost Ingress (env overlays author their own) and lost image
   pins (the override-order proof); env trees became the only version homes;

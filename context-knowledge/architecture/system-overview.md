@@ -13,8 +13,8 @@ links to its deep-dive.
 ## The system in one paragraph
 
 A personal blog (the pen-name **`gofar;`**, legal identity **Faiz Ainur
-Rofiq**) published at **`gofar.id`**, plus the private tooling that operates
-it. The blog is a SvelteKit server-rendered frontend (**earendil**) backed by
+Rofiq**) — declared for **`gofar.id`** and not yet serving — plus the private
+tooling that operates it. The blog is a SvelteKit server-rendered frontend (**earendil**) backed by
 a Go API (**lumen**) with search on Meilisearch and storage on PostgreSQL
 (Patroni). The owner writes and administers through **mellon**, a private
 portal at `console.gofar.id` that holds no credentials of its own — it
@@ -24,6 +24,16 @@ an approval-gated ladder where a human click is always the deploy decision.
 Secrets live in **OpenBao** inside the cluster; Git never holds a value. The
 whole estate runs on **one small VPS (~$12/month)** today, with a 3-node
 shape declared as the scale-out blueprint.
+
+> **Declared vs serving (2026-11-15):** every diagram in this folder shows
+> the DECLARED shape. The staging and production hubs are **not yet
+> applied** — no pod is running, the webapp is not serving. Proven so far:
+> the release ladder (ch.09, live 2026-11-14), the vault ritual and the
+> seed contract (ch.05, on the rehearsal cluster), the DNS domain cutover
+> (2026-11-11). The remaining walk — Argo → foundation hub → vault seeds →
+> grafana gate → observability hub → production + staging hubs → first
+> instance checks → go-public — is
+> [`runbook/00a-run-order.md`](../../runbook/00a-run-order.md).
 
 ## The big picture
 
