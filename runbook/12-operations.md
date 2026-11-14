@@ -218,9 +218,12 @@ UNPROTECTED, which is how v3.0.0/v2.0.0 opened five bump PRs
 unattended). Today the chain's `gate-audit` job fails RED before that
 can repeat, so the live symptom is the opposite: **gate-audit red =
 Settings → Environments lost a required reviewer (or an env) — recreate
-and protect, then re-run.** Full record + the owner pending task:
-ch.09 §6. Bump PRs born of an unparked chain are INVALID evidence:
-merge only after a human park, or deliberately supersede them.
+and protect, then re-run.** Second red signature (walked 2026-11-14):
+the audit reads `ENV_AUDIT_PAT` — missing, expired, or under-granted
+(without Administration: read) PAT = the same RED. Refresh the secret,
+then re-run. Full record + the walked resolution: ch.09 §6. Bump PRs
+born of an unparked chain are INVALID evidence: merge only after a
+human park, or deliberately supersede them.
 
 ## The one meta-line
 

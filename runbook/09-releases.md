@@ -1,9 +1,11 @@
 ---
 tags: [runbook, releases]
 updated: 2026-11-14
-status: PROVEN live (lumen v2.0.0, mellon v1.0.1 rode the full chain); the
-  per-env deploy chains + fail-closed gate-audit are the post-incident
-  shape (2026-11-13/14) — the incident record in §6 is required reading
+status: PROVEN live (lumen v4.0.1, mellon v3.0.1, earendil v1.2.0 rode the
+  full chain 2026-11-14 — parks, approvals, auto-merged bumps, all seven
+  environments protected and audited); the per-env deploy chains +
+  fail-closed gate-audit are the post-incident shape (2026-11-13/14) —
+  the incident records in §6 are required reading
 ---
 
 # 09 · Releases — the machine, reference edition
@@ -166,13 +168,17 @@ The fine print that each clause earned (all real incidents):
    incident, printed here so nobody rediscovers it. And per §6: a
    *referenced-but-missing* environment is auto-created UNPROTECTED, so
    "I'll protect it later" is exactly how v3.0.0 shipped itself.
+   (Walked 2026-11-14: all seven exist and are protected now — verified
+   via the environments API — with **Prevent self-review OFF**: the
+   solo operator triggers and approves their own deploys.)
 2. The token trio:
 
 | Token | Grants | Lives where | Dies |
 |---|---|---|---|
 | `RELEASE_BOT_PAT` | Contents+Workflow+Actions (RW), the 3 app repos — the minimum that makes a tag-push fire `release.yml` | app repos' secrets | 90-day expiry — **calendar it at day ~75** (ch.12) |
 | `VORTEX_BOT_PAT` | vortex-only (opens the bump PR as bot identity) | app repos' secrets | same 90-day discipline |
-| `GITHUB_TOKEN` (free) | per-run; deliberately **cannot** cascade workflow events or read repo variables | automatic | — it's the reason the two PATs above exist |
+| `ENV_AUDIT_PAT` | fine-grained, Administration: **read-only**, the 3 app repos — what `gate-audit` reads the environments API with (read access alone suffices per docs; the PAT makes the audit's credential explicit and auditable) | app repos' secrets | same 90-day discipline |
+| `GITHUB_TOKEN` (free) | per-run; deliberately **cannot** cascade workflow events or read repo variables | automatic | — it's the reason the PATs above exist |
 
 **The 90-day symptom line (memorize it):** an expired `RELEASE_BOT_PAT`
 kills a release at the *tag push* (403) and `VORTEX_BOT_PAT` kills it at
@@ -191,7 +197,7 @@ Revoking `RELEASE_BOT_PAT` is the emergency brake on ALL releasing.
    jobs ever EXECUTE without an amber Waiting badge, the environment lost
    its reviewers" — was HUMAN vigilance over a fail-open design. It now
    has a machine: every release pipeline's `gate-audit` job queries the
-   environments API with `GITHUB_TOKEN` and fails the chain RED if any
+   environments API with `ENV_AUDIT_PAT` and fails the chain RED if any
    referenced `deploy-*` environment is missing OR lacks
    required_reviewers. Keep the habit anyway (§6 explains why one silent
    afternoon was expensive enough).
@@ -212,23 +218,53 @@ clicks") rests on the deploy park being a HUMAN door. A park that parks
 nowhere converts the machine from approval-gated to push-to-deploy —
 silently, greenly.
 
-**The fix (shipped 2026-11-13/14, lumen `dc187ce` + `b70343e`, mellon
-`5680849` + `850072e`, earendil `a8dfaaf` + `7b73c81`):** the
+**The fix (shipped 2026-11-13/14, lumen `dc187ce` + `b70343e` + `4685e1b`
++ `3ddd65f` + `6da705a`, mellon `5680849` + `850072e` + `b63f506` +
+`9c453f3` + `19db63d`, earendil `a8dfaaf` + `7b73c81` + `58c73ad`):** the
 fail-closed `gate-audit` job described in §5.5 — every chain's deploy
 job `needs: gate-audit`; the audit demands existence AND
 `required_reviewers` per environment; absence of config must be RED,
 never an implicit yes.
 
-**Owner PENDING TASK (this is the one thing you must do by hand):**
-create + protect, in each app repo → Settings → Environments → required
-reviewers = you: `deploy-foundation`, `deploy-staging`,
-`deploy-production` (lumen); `deploy-staging`, `deploy-production`
-(mellon, earendil). Until then every release of those repos stops at a
-RED gate-audit — which is the design protecting you.
+**Owner task — DONE (walked 2026-11-14):** all seven environments
+created + protected (required reviewers = you, self-review OFF):
+`deploy-foundation`, `deploy-staging`, `deploy-production` (lumen);
+`deploy-staging`, `deploy-production` (mellon, earendil) — verified
+live via the environments API. Protection rules are the ONE thing no
+manifest can set: environments are caller-side config, owned by hand.
 
-**The open tails:** PRs **#14–#18** (vortex) remain **unmerged** from the
-incident run — they await either a deliberate human merge (their content
-is valid) or supersession by a protected re-run. Don't merge them by
-reflex; merging is the deploy decision the machine never got to ask for.
+**Incident addendum — the machine's shakedown (2026-11-14):** getting
+the fixed chain green surfaced three more failure classes, all walked:
+
+- **`startup_failure`, zero jobs, nothing to read.** The gate-audit job
+  declared `permissions: environments: read` — **not a valid
+  GITHUB_TOKEN scope**. The Actions parser rejects the whole workflow
+  file, so EVERY run of EVERY tag died before a single job spun up
+  (lumen v3.0.0→v4.0.0's releases never built; the last "success" was
+  the last commit without the key). An unrecognized permissions key
+  doesn't warn — it kills the file. Fix: lumen `4685e1b`, mellon
+  `b63f506`, earendil `58c73ad`.
+- **The stale-pin blind alley, then the sed overreach.** `release.yml`
+  still pinned anvil `728231b0` (pre-`bases/`-rename), so
+  `deploy-plan`'s render validation demanded the old `applications/*`
+  tree and failed with ten phantom `MISSING` lines. The re-pin sed then
+  flattened every action ref to `publish-image` — the plan jobs
+  docker-built the vortex checkout (`open Dockerfile: no such file`).
+  Doctrine: bulk re-pins get the per-job mapping VERIFIED —
+  `build=publish-image`, `deploy-plan-<env>=deploy-plan`,
+  `deploy-<env>=deploy-bump`. Fix: lumen `6da705a`, mellon `19db63d`,
+  earendil `58c73ad` (all refs → anvil `829fa28`).
+- **An audit's first red can be the truth.** With the pipeline healed,
+  gate-audit went RED on all three chains — CORRECTLY. The environments
+  existed but had no required reviewers configured (a redacted-body
+  theory was investigated and disproven: the environments API needs
+  only read access, so the verdict was ground truth). The fix was
+  Settings → Environments, not code. Configure, never suppress.
+
+After the environments were protected, the full ladder ran green the
+same day: **v4.0.1** (lumen, #21–#23), **v3.0.1** (mellon, #19–#20),
+**v1.2.0** (earendil, #24–#25) — every bump PR born of a PARKED chain
+and auto-merged. #14–#18 are superseded (merged 2026-11-13/14); the
+unattended-PR question is closed.
 
 Next → [10 Observability](10-observability.md)
