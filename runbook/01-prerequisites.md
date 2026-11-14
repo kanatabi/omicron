@@ -1,7 +1,8 @@
 ---
 tags: [runbook, setup]
 updated: 2026-11-14
-status: M0 · prepare — the buy/create list for both tracks; every item here
+status: >-
+  M0 · prepare — the buy/create list for both tracks; every item here
   is a dependency of a later milestone, and nothing public is pointed yet.
 ---
 

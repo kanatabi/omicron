@@ -1,7 +1,8 @@
 ---
 tags: [runbook, index, checklist]
 updated: 2026-11-14
-status: execution map — Track A steps are the k3d-rehearsed path (the
+status: >-
+  execution map — Track A steps are the k3d-rehearsed path (the
   dual-environment shape is walked fresh this round); Track B is PROVEN only
   when walked on the real VPS (tick it there, same ledger style).
 ---

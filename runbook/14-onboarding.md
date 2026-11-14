@@ -1,7 +1,8 @@
 ---
 tags: [runbook, onboarding]
 updated: 2026-11-14
-status: reference — every stop below is a live contract as built (pin-lock
+status: >-
+  reference — every stop below is a live contract as built (pin-lock
   ch.05 §7.1, config-gate ch.06 §4/ch.07, structural validate-all); the
   ceremony is walked per new app, so "proven" = each stop exists and bites;
   re-cut for the env model — two honest OPENs flagged inline (wizard env

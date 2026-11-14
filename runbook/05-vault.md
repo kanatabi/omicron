@@ -1,7 +1,8 @@
 ---
 tags: [runbook, secrets, vault]
 updated: 2026-11-14
-status: ritual incident-proven (rehearsal walk + two unseal drills); the
+status: >-
+  ritual incident-proven (rehearsal walk + two unseal drills); the
   THREE-plane seed contract below is the Phase 11 shape — verified key-by-key
   against the ExternalSecret CRs on the vortex main tip; VPS = first real
   production seeding — the 3/2 key shape below is production-only

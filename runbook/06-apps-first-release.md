@@ -1,7 +1,8 @@
 ---
 tags: [runbook, apps, first-release]
 updated: 2026-11-14
-status: rehearsal-proven shape (walk ledger); VPS = first real instance —
+status: >-
+  rehearsal-proven shape (walk ledger); VPS = first real instance —
   every check below is written to be run for the first time, not trusted;
   re-cut for the three-plane env model (2026-11-14)
 ---

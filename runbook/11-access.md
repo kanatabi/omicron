@@ -1,7 +1,8 @@
 ---
 tags: [runbook, access]
 updated: 2026-11-13
-status: tunnels rehearsed (ports re-verified against vortex manifests
+status: >-
+  tunnels rehearsed (ports re-verified against vortex manifests
   2026-11-13 — the old grafana tunnel line had a port bug, fixed here);
   Tailscale remains the optional comfort chapter, walked per taste
 ---

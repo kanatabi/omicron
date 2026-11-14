@@ -1,7 +1,8 @@
 ---
 tags: [runbook, network, tls, media, go-live]
 updated: 2026-11-14
-status: DNS/TLS/challenge acts rehearsed (minikube-era walk, cert paths
+status: >-
+  DNS/TLS/challenge acts rehearsed (minikube-era walk, cert paths
   adapted to real ACME — and ACME now serves BOTH envs: selfsigned is dead,
   DNS-01 works from any cluster); media public face + Access = first real
   VPS walk

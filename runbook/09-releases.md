@@ -1,7 +1,8 @@
 ---
 tags: [runbook, releases]
 updated: 2026-11-14
-status: PROVEN live (lumen v4.0.1, mellon v3.0.1, earendil v1.2.0 rode the
+status: >-
+  PROVEN live (lumen v4.0.1, mellon v3.0.1, earendil v1.2.0 rode the
   full chain 2026-11-14 — parks, approvals, auto-merged bumps, all seven
   environments protected and audited); the per-env deploy chains +
   fail-closed gate-audit are the post-incident shape (2026-11-13/14) —

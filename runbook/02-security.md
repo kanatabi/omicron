@@ -1,7 +1,8 @@
 ---
 tags: [runbook, security]
 updated: 2026-11-14
-status: commands rehearsed on VM; VPS walk = proof
+status: >-
+  commands rehearsed on VM; VPS walk = proof
 ---
 
 # 02 · VPS Hardening — locks before furniture

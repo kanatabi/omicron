@@ -1,7 +1,8 @@
 ---
 tags: [runbook, gitops, argo]
 updated: 2026-11-14
-status: fully proven on the rehearsal cluster (walk ledger) — same commands
+status: >-
+  fully proven on the rehearsal cluster (walk ledger) — same commands
   on the VPS; the three-hub environment entry (foundation + staging and/or
   production) is the Phase 11 shape
 ---

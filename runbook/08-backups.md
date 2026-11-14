@@ -1,7 +1,8 @@
 ---
 tags: [runbook, backup, dr]
 updated: 2026-11-14
-status: M6 — designed & rehearsed (restic loop written, never walked on the
+status: >-
+  M6 — designed & rehearsed (restic loop written, never walked on the
   VPS). Nothing depends on this chapter yet; it becomes mandatory the day
   real readers exist.
 ---

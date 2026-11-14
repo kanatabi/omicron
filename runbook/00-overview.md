@@ -1,7 +1,8 @@
 ---
 tags: [runbook, index]
 updated: 2026-11-14
-status: draft — chapter numbering IS execution order (M0→M6; 09–14 are day-2
+status: >-
+  draft — chapter numbering IS execution order (M0→M6; 09–14 are day-2
   references). Claims marked rehearsed come from the k3d walk; every VPS step
   is only PROVEN once walked, and each chapter marks its own proof state.
   Re-cut for the Phase 11 environment model (three planes, role split,

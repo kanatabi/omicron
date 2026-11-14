@@ -1,7 +1,8 @@
 ---
 tags: [runbook, ops]
 updated: 2026-11-14
-status: calendar designed from rehearsal; every card here already happened
+status: >-
+  calendar designed from rehearsal; every card here already happened
   once somewhere in the estate — prevention lines are the point; card 9 is
   the 2026-11-13 gate incident (record in ch.09 §6)
 ---
