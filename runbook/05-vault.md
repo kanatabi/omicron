@@ -618,6 +618,13 @@ kubectl -n observability annotate externalsecret grafana-config \
   grafana-secrets reconcile.external-secrets.io/force="true" --overwrite
 ```
 
+> **This gate precedes `bootstrap/apps-hub-observability.yaml`** (the
+> 2026-11-14 hub split): the observability Application is applied BY HAND,
+> only after (a) the foundation hub is green, (b) this four-key put is in,
+> and (c) the two grafana ExternalSecrets show `Ready: True`. An ES errors
+> on ANY missing declared key — apply first and its sync op wedges forever
+> (ch.12 card 11).
+
 > ⚠️ **The admin password binds ONLY at grafana's first boot** (the boot
 > creates the admin user). Grafana has never booted before this gate →
 > today's seed is the clean path. If grafana ALREADY booted (the harvest

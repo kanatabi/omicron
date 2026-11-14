@@ -85,10 +85,14 @@ real public ghcr v-tags (no placeholder builds / image imports anymore).
    BLOCKS sync unless declared==head and pin agrees — and a pin is a
    LOCK (lumen 403s writes while set).
    (amendments 2026-11-13/14, runbook/06–09 + `runbook/00a` for order)
-5. **App-of-apps shape:** `apps/foundation/` + `apps/applications/` (and the
-   Part-C `apps/`) contain ONLY Argo `Application` CRs; raw manifests
+5. **App-of-apps shape:** `apps/{foundation,observability,production,staging}/`
+   (and the Part-C `apps/`) contain ONLY Argo `Application` CRs; raw manifests
    under `bases/<name>/`; each hub syncs its folder non-recursively.
-   Adding an app = new dir + new Application CR, never hub edits. Bases stay ESO-free (k3d invariant)
+   Adding an app = new dir + new Application CR, never hub edits. The
+   observability app rides its OWN hub (`bootstrap/apps-hub-observability.yaml`)
+   — a manual gate applied only after the vault ritual AND the grafana
+   four-key seed verify (its ExternalSecrets error on any missing key; the
+   sync-op wedge class, ch.12 card 11). Bases stay ESO-free (k3d invariant)
    AND carry NO image pins (2026-11-13 convergence: a base `images:` stanza
    outranks every env overlay in kustomize — fixture-proven; env trees are
    the only version homes); per-env values ride `environments/<env>/<app>`;
@@ -134,7 +138,8 @@ real public ghcr v-tags (no placeholder builds / image imports anymore).
   the pinning patch uses that labelSelector on Deployment + StatefulSet so future
   components auto-pin. Don't regress to per-name pinning.
 - The app-of-apps hubs (`bootstrap/apps-hub-foundation.yaml` +
-  `bootstrap/apps-hub-apps.yaml`; Part C's `apps-hub.yaml` when it comes)
+  `bootstrap/apps-hub-observability.yaml` + the env hubs; Part C's
+  `apps-hub.yaml` when it comes)
   can't be GitOps-managed themselves; that's
   the intended manual bootstrap exception. Same for ESO/OpenBao first-time seeds (§5.6).
 

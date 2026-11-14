@@ -149,26 +149,32 @@ Still in the checkout (step 0), with Argo up, the entrypoint is a **set**:
 ```bash
 kubectl apply -f bootstrap/apps-hub-foundation.yaml   # act 1: the shared plane
 # → NOW run chapter 05's vault ritual against what this brought up
-kubectl apply -f bootstrap/apps-hub-production.yaml   # act 2: the production plane
-kubectl apply -f bootstrap/apps-hub-staging.yaml      # act 3 (optional): the staging plane
+# → and §6.5's grafana four-key put — verify the rendered ESs go Ready
+kubectl apply -f bootstrap/apps-hub-observability.yaml  # act 2: the estate's eyes (the manual GATE)
+kubectl apply -f bootstrap/apps-hub-production.yaml   # act 3: the production plane
+kubectl apply -f bootstrap/apps-hub-staging.yaml      # act 4 (optional): the staging plane
 ```
 
 > **Why the hubs split the way they do:** each hub is a single Application
 > synced **non-recursively** over its own dir — `apps/foundation/`
 > (openbao, external-secrets, secrets-plane, lumen-db, meilisearch,
-> observability, **lumen-admin** — 7 CRs), `apps/production/` (lumen,
-> earendil, mellon, certificates — 4 CRs) and `apps/staging/` (lumen,
-> earendil, mellon — 3 CRs); those files are themselves Argo Applications.
-> No hub can manage itself, so the manual applies ARE the documented
-> chicken-and-egg exception (the hub headers carry it: "exactly one
-> foundation + apps(-es) set may own a cluster"). The split's real product
-> is **ordering**: with one hub, "seed before apps" lived in sync-wave
-> numbers *inside* the fleet; with the hub set, it lives in the entrypoints
-> — chapter 05 slots between the applies, so the application planes have
-> never existed yet when the vault is empty. Adding an app = new YAML under
-> `bases/<app>/` (+ `environments/<env>/<app>/` overlays as the app
-> needs envs) + a new Application CR in the hub dir its plane belongs to;
-> the hub dirs never get raw manifests (their prune would delete them).
+> **lumen-admin** — 6 CRs), `apps/observability/` (the stack's eyes, 1 CR),
+> `apps/production/` (lumen, earendil, mellon, certificates — 4 CRs) and
+> `apps/staging/` (lumen, earendil, mellon — 3 CRs); those files are
+> themselves Argo Applications. No hub can manage itself, so the manual
+> applies ARE the documented chicken-and-egg exception (the hub headers
+> carry it: "exactly one foundation + observability + apps(-es) set may own
+> a cluster"). The split's real product is **ordering**: with one hub,
+> "seed before apps" lived in sync-wave numbers *inside* the fleet; with
+> the hub set, it lives in the entrypoints — chapter 05 (plus the grafana
+> four-key put) slots between the applies, so the application planes have
+> never existed yet when the vault is empty, and observability's
+> ExternalSecrets never sync against an unseeded `kv/grafana/production`
+> (an ES errors on ANY missing declared key — the wedge that ate a day;
+> card 11). Adding an app = new YAML under `bases/<app>/` (+
+> `environments/<env>/<app>/` overlays as the app needs envs) + a new
+> Application CR in the hub dir its plane belongs to; the hub dirs never
+> get raw manifests (their prune would delete them).
 
 The env hubs source their Applications at `environments/<env>/*` — the
 **environment axis** (vortex README: "the trees are ENVIRONMENT files, not
@@ -193,8 +199,9 @@ The sync-wave numbers are **structural** — encoded in the
 |---|---|---|---|
 | foundation | 0 | `openbao`, `external-secrets` | nothing — this is the plane everything else waits for |
 | foundation | 1 | `lumen-db` (Patroni ×3 logical DBs), `meilisearch`, `secrets-plane` | wave 0 (ESO's CRDs must exist; storage exists) |
-| — | *between* | **chapter 05: unseal → AppRoles → seed** | the entrypoint order IS the gate |
-| foundation | 2 | `observability`, `lumen-admin` | the **Ready** store, structurally — these two cannot boot before ch. 05 lands, hub applied or not |
+| — | *between* | **chapter 05: unseal → AppRoles → seed**, then §6.5's **grafana four-key put** | the entrypoint order IS the gate |
+| foundation | 2 | `lumen-admin` | the **Ready** store, structurally — it cannot boot before ch. 05 lands, hub applied or not |
+| observability | 0 | `observability` (the eyes: Alloy + Loki + VictoriaMetrics + Grafana) | **applied by hand** (its own hub) only after the grafana four-key put is verified — its ESs error on any missing key (card 11) |
 | production | 0 | `lumen` (cms) | the seeded, Ready `bao` store — which existed **before this hub did** |
 | production | 1 | `earendil`, `mellon`, `certificates` | wave 0 (they reach lumen in-cluster; certificates' `cf-token` feed is a store consumer) |
 | staging | 0 | `lumen` (cms, `-staging` suffix) | the same store, `kv/lumen/staging` half |
@@ -213,15 +220,18 @@ flowchart TD
         MEILI["meilisearch (ONE engine, per-env indexes)"]
         STORE["secrets-plane: ClusterSecretStore 'bao'"]
     end
-    CH5["ch.05 ritual: unseal → mount → AppRoles → SEED (shared first!)"] -.->|"gives the store a login + values"| STORE
+    CH5["ch.05 ritual: unseal → mount → AppRoles → SEED (shared first!)<br/>+ §6.5: the grafana FOUR-KEY put, verified"] -.->|"gives the store a login + values"| STORE
     STORE --> W2
     subgraph W2["foundation wave 2 — gated on the Ready store"]
-        OBS["observability (unified, serves BOTH envs)"]
         ADMIN["lumen-admin (the one Control Plane)"]
     end
-    W2 --> GATE{"store Ready + seeded?"}
+    OBS["bootstrap/apps-hub-observability.yaml (manual apply #2 — THE GATE)"] --> OBS0
+    subgraph OBS0["observability wave 0 — the estate's eyes"]
+        LGTM["Alloy + Loki + VictoriaMetrics + Grafana (serves BOTH envs)"]
+    end
+    W2 --> GATE{"store Ready + grafana seed verified?"}
     GATE -->|"no → the env hubs stay in Git where they belong (design working)"| HOLD["⏸ the split IS the gate"]
-    GATE -->|"yes"| A["bootstrap/apps-hub-production.yaml and/or -staging.yaml (manual applies #2/#3)"]
+    GATE -->|"yes"| A["bootstrap/apps-hub-production.yaml and/or -staging.yaml (manual applies #3/#4)"]
     A --> V0
     subgraph V0["env-hub waves 0–1 — the application planes"]
         LUMEN["lumen per env (w0 — dependency root)"]
@@ -239,8 +249,9 @@ flowchart TD
 > design, not a suggestion)" — and `apps/production/lumen-app.yaml` names
 > the consequence verbatim: "the gate that used to be 'wave 2 waits for the
 > Ready store' is now the two-hub entrypoint order itself". (The CR headers
-> still carry the "two-hub" phrasing from before the staging hub joined —
-> read it as "the env hubs, applied only after the ritual".) The PreSync
+> still carry the "two-hub" phrasing from before the staging hub joined and
+> observability got its own hub — the entrypoint count has only ever grown;
+> read it as "the later hubs, applied only after the ritual".) The PreSync
 > migrate Job (`lumen migrate`, schema-gates-deploy ruling) is the same idea
 > one level in: **a rollout blocked by a failed prerequisite is the design
 > working.**

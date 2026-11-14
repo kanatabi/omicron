@@ -254,7 +254,11 @@ released `vX.Y.Z` or nothing. This re-run door is the recovery path
 for BOTH classes above (cf. card 3's redeploy door).
 
 **11. Argo app stuck OutOfSync/Progressing forever — sync op wedged
-"Running" (walked 2026-11-14, observability; four ops + a CR recreate)**
+"Running" (walked 2026-11-14, observability; four ops + a CR recreate;
+re-confirmed the same day by the dashboard-CM variant — and the app now
+rides its OWN hub, `bootstrap/apps-hub-observability.yaml`, applied by
+hand only after the grafana four-key seed, so the first-bullet class
+becomes a checklist rather than a race)**
 → A sync operation that cannot complete BLOCKS ALL later operations on
 that app (nothing new fires while one is "Running"), and it cannot
 complete whenever ANY resource of a wave waits on a health that will
@@ -274,6 +278,15 @@ is a wedge; check for all three before declaring victory:
   too, so no wave placement escapes it. The design answer:
   `argocd.argoproj.io/skip-health-check: "true"` on the ingress (the
   door still applies; a real VPS LB makes it healthy anyway).
+- **A Deployment whose ConfigMap never renders** (walked 2026-11-14,
+  third variant): kustomize renders ONLY files explicitly listed in the
+  base's `kustomization.yaml` — a new file committed but unlisted is
+  silently absent from every render, the Deployment references a CM no
+  sync ever creates, the pod loops on `FailedMount`, the deployment
+  blows its progress deadline, and the op wedges on
+  `waiting for healthy state of Deployment/grafana`. Fix the listing,
+  then terminate + re-sync (and hard-refresh if the repo-server's clone
+  is stale).
 
 Diagnosis order: controller log
 (`waiting for healthy state of …` names the hostage), `get pvc`

@@ -149,7 +149,9 @@ wget -qO - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 > **Why:** the build chapters should be typed twice — once where a mistake
 > costs `k3d cluster delete`, once on the real box. And the rehearsal must
 > run the **shipped shape** (the hub set:
-> `bootstrap/apps-hub-foundation.yaml` first, the vault ritual, then
+> `bootstrap/apps-hub-foundation.yaml` first, the vault ritual, the
+> `apps-hub-observability.yaml` gate after the grafana four-key seed,
+> then
 > `apps-hub-production.yaml` and/or `apps-hub-staging.yaml`), not
 > a dev sketch — otherwise the first time you meet the real waves, the real
 > secrets-plane gating and the `certificates` app is production day. The

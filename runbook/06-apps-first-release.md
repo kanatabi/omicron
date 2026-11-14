@@ -22,8 +22,9 @@ debug with the firewall still the only audience.
 > breakage). Its vault holds only disposable `kv/*/dev` scratch — nothing
 > to rescue. The ruling: repoint it to **staging** (foundation hub → seed →
 > staging hub) as the first live walk of the new model. On that box, the
-> "second hub" below is `apps-hub-staging.yaml`; on the VPS it is
-> `apps-hub-production.yaml` (± staging).
+> env hub below is `apps-hub-staging.yaml`; on the VPS it is
+> `apps-hub-production.yaml` (± staging). (The observability hub, #2, is
+> already applied by then — 00a A8.5.)
 
 ## 1. Apply the env hub(s) and watch the apps land
 

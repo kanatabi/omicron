@@ -1,10 +1,11 @@
 ---
 tags: [runbook, observability]
 updated: 2026-11-14
-status: stack fully templated & pinned in vortex (foundation overlay + the
-  five alert rules + ESO feeds merged); the Application CR rides the
-  FOUNDATION hub (wave 2, gated on the Ready store) — the stack's eyes open
-  the moment the vault is seeded, before either env hub exists
+status: stack live and walked: own hub (bootstrap/apps-hub-observability.yaml,
+  manual gate after the grafana four-key seed); per-pod + per-node system
+  metrics FLOW (cAdvisor + kubelet /metrics/resource via the API-server proxy);
+  the Estate overview dashboard is provisioned; the five alert rules ride the
+  same provisioning path
 ---
 
 # 10 · Observability — the estate's eyes (Grafana LGTM + VictoriaMetrics)
@@ -21,7 +22,7 @@ status: stack fully templated & pinned in vortex (foundation overlay + the
 | **Grafana Alloy** (DaemonSet) | one small collector per node: scrapes everything + listens for pushed logs/metrics | the building's single wiring closet |
 | **VictoriaMetrics** | stores **metrics** (numbers over time), PromQL-compatible | the ticker tape |
 | **Loki** | stores **logs** (labeled lines, LogQL) | the mailroom, index-only |
-| **Grafana** (pinned `11.2.0`) | the face: dashboards + unified alerting | the wall of screens |
+| **Grafana** (pinned `13.3.1`) | the face: dashboards + unified alerting | the wall of screens |
 
 > **Why Alloy one-per-node instead of a per-app agent army:** the INFRA
 > decision (Phase 5) — small machines don't fit ~150 Mi of exporters per
@@ -52,21 +53,24 @@ flowchart LR
     AL --> MAIL["contact point ops-email\ndev@gofar.id"]
 ```
 
-## 3. Turning it on (already templated — GitOps like everything else)
+## 3. Turning it on (already templated — GitOps plus one manual gate)
 
 `bases/observability/` is the base (alloy, victoria-metrics, loki,
-grafana, namespace, ingress, externalsecret — pinned images),
-`environments/foundation/observability/` is the plane view (placement
-collapse + the alerting file), and `apps/foundation/observability-app.yaml`
-is the Argo Application — it rides the **FOUNDATION hub in wave 2**, the
-first wave structurally gated on the Ready `bao` store (Grafana's config
-feeds consume it; Grafana degrades to defaults via `optional: true`, never
-a blocked wave). So the eyes open right after chapter 05's ritual, *before*
-either env hub is applied — and the single stack serves **BOTH staging and
-production from day one**: Alloy relabels scrapes/logs with the pod's
-`omicron/env` label, and every dashboard filters by env (00a A10's fifth
-proof). The `anor` door's Certificate arrives with the certificates app
-(production hub wave 1, rendered by `bases/certificates/`).
+grafana, namespace, ingress, dashboards, externalsecret — images pinned
+in the env tree), `environments/foundation/observability/` is the plane
+view (placement collapse + the alerting file), and
+`apps/observability/observability.yaml` is the Argo Application — it
+rides its **own hub, `bootstrap/apps-hub-observability.yaml`, applied by
+hand as the manual GATE** (2026-11-14 hub split): only after (a) the
+foundation hub's apps are Synced/Healthy, (b) chapter 05's ritual is
+done, and (c) §6.5's **grafana four-key put is verified** — an
+ExternalSecret errors on ANY missing declared key, so a fresh apply
+before the seed wedges the sync op (the wedge that ate a day; card 11).
+The single stack serves **BOTH staging and production from day one**:
+Alloy relabels scrapes/logs with the pod's `omicron/env` label, and
+every dashboard filters by env (00a A10's fifth proof). The `anor`
+door's Certificate arrives with the certificates app (production hub
+wave 1, rendered by `bases/certificates/`).
 *No manual installs* — on the VPS the stack is merged, not installed.
 
 **Sizing on the 4c/8G box:** VM retention **30d / ~10 Gi PVC**, Loki
@@ -96,6 +100,48 @@ are picked up automatically. Grafana watches *itself* on its HTTP port —
 (dashboard-alert latency for the thing that watches everything else).
 The OTLP receiver is configured-but-waiting (the Go OTel SDK forward
 path — "add, not a rewrite" is the INFRA line; nothing to do today).
+
+### 4.5. System metrics per pod and per node — what Alloy scrapes (walked 2026-11-14)
+
+The annotations above cover **app-exposed** metrics (custom counters
+included — a scrape is a full dump of the endpoint; nothing filters by
+metric name, and every series inherits `namespace`/`pod`/`env`). The
+**system** metrics — cpu, memory, disk, network for every pod on the
+node — come from three kubelet surfaces Alloy pulls over the **API-server
+proxy** (no direct node dialing; identical on k3d and the VPS):
+
+| Scrape job | Path (via `kubernetes.default.svc:443`) | What lands |
+|---|---|---|
+| `kubelet` | `/api/v1/nodes/<node>/proxy/metrics` | `kubelet_*` (111 families): pod counts, volume stats `kubelet_volume_stats_*` (PVC fullness), cgroup managers |
+| `cadvisor` | `…/proxy/metrics/cadvisor` | per-pod/per-container `container_cpu_usage_seconds_total`, `container_memory_working_set_bytes`, `container_fs_*`, `container_network_*` |
+| `kubelet-resource` | `…/proxy/metrics/resource` | node aggregates: `node_cpu_usage_seconds_total`, `node_memory_working_set_bytes` |
+
+Auth is the pod SA bearer (the `alloy` ClusterRole carries `nodes/proxy`
+— that's the whole RBAC ask); TLS verifies against the SA `ca.crt`.
+Verify with:
+
+```bash
+kubectl -n observability port-forward svc/victoria-metrics 18428:8428
+curl -s http://127.0.0.1:18428/api/v1/query?query=up | python3 -m json.tool | grep '"job"'
+# every job up=1; series sanity: curl …/api/v1/label/__name__/values
+```
+
+**Known gaps, printed honestly** (the two `up=0` targets you may still
+see): lumen's pod carries the annotations but its server **doesn't listen
+on 9090 yet** (`listening on :8080` is its only bind — the metrics
+endpoint is a lumen backlog item); meilisearch's `/metrics` answers
+**401** — Meili gates it behind the master key, and the annotation
+contract has no auth story (its visibility rides logs + kubelet series
+until someone adds a scrape-auth decision). The provisioned **Estate
+overview** dashboard (folder `Estate`) draws exactly the verified series:
+node cpu/memory, per-pod cpu/memory/disk top-10, PVC usage %.
+
+> Two Alloy lessons live as comments in `config.alloy` — worth knowing:
+> River relabel rules default `replacement` to `"$1"`, so a multi-capture
+> rule without an explicit `replacement = "$1:$2"` **silently drops the
+> port** (every target scraped port 80 → up=0 estate-wide); and River
+> comments are `//` — an inline `#` is a parse error that CrashLoops the
+> DaemonSet.
 
 ## 5. The door: `anor.gofar.id` — plumbing as verified in vortex
 
@@ -144,8 +190,10 @@ wreck dashboards all afternoon inside that folder and nothing outside it
 > stranger: don't invite strangers; org-level isolation is a later
 > exercise, not tonight.
 
-Starter dashboards (community-proven imports): node exporter (the
-machine), kubernetes cluster (the pods), the Loki log explorer. A
+The provisioned **Estate overview** (folder `Estate`, uid
+`estate-overview`) is the starting board — six panels on verified
+series. Community imports (node exporter full, the kubernetes cluster
+board) want node-exporter's wider series — Phase 5 backlog. A
 `Learning` folder with one blank panel and a query you can type is the
 actual teaching tool.
 
@@ -167,13 +215,18 @@ rules**, each against its target metric:
 | Disk usage above 80% | `node_filesystem_avail_bytes / … > 80` (tmpfs/overlay excluded) | the quiet killer on an 80 GB box |
 
 > **Inert-by-design, stated honestly:** every rule carries
-> `noDataState: OK` — and **no metric source exists in-cluster yet**
-> (cert-manager isn't annotated for the scrape contract; the restic
-> timer is ch.08/M6 work; Bao's telemetry gauge needs enabling + an
-> authenticated scrape; kube-state-metrics and node-exporter are Phase 5
-> backlog). So today all five sit green. **This is provisioning that
-> becomes alive the moment each source lands — zero further Git change —
-> not five broken promises.** One known blind spot, printed rather than
+> `noDataState: OK`. As of the 2026-11-14 metrics round the picture is:
+> cert-manager's pods ARE annotated and their metrics **flow** (3
+> `certmanager_*` families verified in VictoriaMetrics) — but this
+> cert-manager version exports **no
+> `certmanager_certificate_expiration_timestamp_seconds`**, so the TLS
+> rule sits NoData→OK until its export name is re-verified against the
+> installed version. The restart-spike rule needs kube-state-metrics and
+> the disk rule node-exporter (both Phase 5 backlog), the restic timer is
+> ch.08/M6 work, and Bao's telemetry gauge needs enabling + an
+> authenticated scrape. So the five sit green. **This is provisioning
+> that becomes alive the moment each source lands — zero further Git
+> change — not five broken promises.** One known blind spot, printed rather than
 > hidden: a *sealed* Bao serves no metrics, so the sealed case arrives
 > as NoData→OK; the belt-and-braces upgrade is `noDataState: Alert` once
 > an always-on exporter (blackbox or node script on `/sys/seal-status`)

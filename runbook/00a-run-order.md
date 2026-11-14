@@ -16,9 +16,12 @@ status: execution map — Track A steps are the k3d-rehearsed path (the
 
 > **The three-plane reality (Phase 11):** `vortex/environments/` holds
 > **foundation** (shared plumbing), **staging** and **production** (per-env
-> app trees). Hubs match: `apps-hub-foundation.yaml`, `apps-hub-staging.yaml`,
-> `apps-hub-production.yaml`. Entry order is always **foundation hub → SEED
-> THE VAULT → staging and/or production hubs**. One cluster can run any
+> app trees). Hubs match: `apps-hub-foundation.yaml`,
+> `apps-hub-observability.yaml` (the eyes — a manual GATE, applied only
+> after the grafana four-key seed), `apps-hub-staging.yaml`,
+> `apps-hub-production.yaml`. Entry order is always **foundation hub →
+> SEED THE VAULT → GRAFANA FOUR-KEY SEED → observability hub → staging
+> and/or production hubs**. One cluster can run any
 > combination — moving an environment to another cluster is an Argo
 > destination edit, zero manifest changes. Track A below deliberately runs
 > **both** staging and production on one cluster, because the thing worth
@@ -54,7 +57,8 @@ same waves, the same vault bootstrap. See the why-box at the bottom.
   is **public** and Argo therefore needs **no repo credentials** (the iron
   law, [00](00-overview.md): values live only in Bao).
   ✅ after: `vortex/bootstrap/apps-hub-foundation.yaml`,
-  `apps-hub-staging.yaml` and `apps-hub-production.yaml` all exist on disk
+  `apps-hub-observability.yaml`, `apps-hub-staging.yaml` and
+  `apps-hub-production.yaml` all exist on disk
   (the env hubs; `apps-hub.yaml` is the 3-node BLUEPRINT entrypoint, not
   used on this track), and `vortex/overlays/` does **not** (it died with the
   env model — if your clone shows one, you cloned an old ref).
@@ -71,20 +75,20 @@ same waves, the same vault bootstrap. See the why-box at the bottom.
   kubectl apply -f bootstrap/apps-hub-foundation.yaml
   ```
 
-  The first of the manual applies — together with A9's, this is the
-  documented chicken-and-egg exception (GitOps cannot bootstrap the
+  The first of the manual applies — together with A8.5's and A9's, this is
+  the documented chicken-and-egg exception (GitOps cannot bootstrap the
   cluster that hosts its own root apps). It syncs `apps/foundation/`
-  non-recursively: **7 Applications** in waves — 0: openbao +
+  non-recursively: **6 Applications** in waves — 0: openbao +
   external-secrets · 1: lumen-db + meilisearch + secrets-plane (the `bao`
-  store) · 2: observability + **lumen-admin** (the estate's single Control
-  Plane). Wave 2 waits **structurally**: the store's Ready condition gates
+  store) · 2: **lumen-admin** (the estate's single Control
+  Plane; observability moved to its OWN hub — A8.5). Wave 2 waits **structurally**: the store's Ready condition gates
   it, so the admin fleet cannot boot before `kv/lumen/shared` exists.
   **Do NOT apply the env hubs yet** — the split exists precisely so the
   vault ritual (A7) happens *between* the entrypoints: seed-before-apps
   becomes structural, not a wave number.
   ✅ after: foundation wave 0 healthy; `openbao` pod Running but **SEALED**
   and the `bao` ClusterSecretStore **not-Ready** — that is the expected
-  state until A7, not a bug; foundation wave 2 (observability, lumen-admin)
+  state until A7, not a bug; foundation wave 2 (lumen-admin)
   parked, waiting on that store.
 
 - [ ] **A6 · node-pool label** — [03 §3](03-k3s.md):
@@ -103,7 +107,7 @@ same waves, the same vault bootstrap. See the why-box at the bottom.
   property** — every key the [05 §6](05-vault.md) tables name must exist
   BEFORE its hub syncs.
   ✅ after: `bao status` unsealed; ClusterSecretStore `bao` `Ready: True`;
-  foundation wave 2 (observability + lumen-admin) rolls in its wake.
+  foundation wave 2 (lumen-admin) rolls in its wake.
 
 - [ ] **A8 · seeded-matrix check** (before any env hub opens) —
   [05 §6–§7](05-vault.md): prove the seed matches the contract: the
@@ -113,7 +117,25 @@ same waves, the same vault bootstrap. See the why-box at the bottom.
   matrix row walk joins it after A9, once mellon exists — §7's
   conformance check.) ✅ after: paths + keys == the CRs' declarations.
 
-- [ ] **A9 · apply the ENV hubs — entrypoints #2/#3 — and first release
+- [ ] **A8.5 · apply the OBSERVABILITY hub — entrypoint #2 (the GATE)** —
+  [04 §3](04-gitops.md), [10 §3](10-observability.md):
+
+  ```bash
+  kubectl apply -f bootstrap/apps-hub-observability.yaml
+  ```
+
+  Applied BY HAND, only after A7 + A8 are green **and** §6.5's grafana
+  four-key put is verified (the two grafana ExternalSecrets `Ready: True`)
+  — an ES errors on ANY missing declared key, so an early apply wedges
+  the sync op forever (card 11's class; the hub split exists so this
+  ordering is a checklist, not a race).
+  ✅ after: `kubectl -n argocd get application observability` → Synced;
+  the four pods (`alloy`, `grafana`, `loki-0`, `victoria-metrics`) Running;
+  port-forward VictoriaMetrics and `up` is 1 for `kubelet`, `cadvisor`,
+  `kubelet-resource` and the annotated pods; Grafana's **Estate overview**
+  dashboard draws panels.
+
+- [ ] **A9 · apply the ENV hubs — entrypoints #3/#4 — and first release
   (M4)** — [04 §3](04-gitops.md), [06](06-apps-first-release.md):
 
   ```bash
@@ -133,8 +155,8 @@ same waves, the same vault bootstrap. See the why-box at the bottom.
   ([09](09-releases.md)) into *this* cluster — the bump PR, the pin, the
   Argo sync, and a config-only bump ([06 §4](06-apps-first-release.md)) —
   rehearsed end to end.
-  ✅ after: `kubectl -n argocd get applications` lists all **fourteen**
-  (7 + 4 + 3), all Synced/Healthy; and
+  ✅ after: `kubectl -n argocd get applications` lists all **fifteen**
+  (6 + 1 + 4 + 3), all Synced/Healthy; and
   the edge answers — `curl -s -o /dev/null -w '%{http_code}\n'
   http://localhost/` → **404 from Traefik** (edge up, no host matched; with
   `-H "Host: gofar.id"` you get production earendil, with

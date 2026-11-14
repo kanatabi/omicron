@@ -775,14 +775,21 @@ RED dashboards exist for every service even before apps instrument themselves.
 > raw resources. Each per-app Application declares its own destination namespace.
 >
 > **Amended 2026-11-14 (env model, Phase 11 — this is the shipped shape):**
-> the fleet axis is now **three hubs / three planes**. `bootstrap/` holds
+> the fleet axis is now **four hubs / three planes + the eyes**. `bootstrap/` holds
 > `apps-hub-foundation.yaml` (manual apply #1 → `apps/foundation/`: openbao,
-> external-secrets, secrets-plane, lumen-db, meilisearch, observability,
-> lumen-admin), `apps-hub-production.yaml` (#2 → `apps/production/`: lumen,
-> earendil, mellon, certificates) and `apps-hub-staging.yaml` (#3, optional →
-> `apps/staging/`: lumen, earendil, mellon). Entry order foundation → **vault
-> seed (runbook ch. 05)** → env hub(s): the seed-before-apps gate lives at the
-> entrypoint, and foundation wave 2 (lumen-admin + observability) is
+> external-secrets, secrets-plane, lumen-db, meilisearch,
+> lumen-admin), `apps-hub-observability.yaml` (#2, THE GATE →
+> `apps/observability/`: the estate's eyes, applied only after the vault
+> seed AND the grafana four-key put are verified — observability's
+> ExternalSecrets error on any missing declared key, so the manual hub
+> apply turns the seed-before-eyes order into a checklist; walked into the
+> design after the 2026-11-14 sync-op wedges), `apps-hub-production.yaml`
+> (#3 → `apps/production/`: lumen, earendil, mellon, certificates) and
+> `apps-hub-staging.yaml` (#4, optional →
+> `apps/staging/`: lumen, earendil, mellon). Entry order foundation →
+> **vault seed (runbook ch. 05) → grafana four-key seed → observability
+> hub** → env hub(s): the seed-before-apps gate lives at the
+> entrypoint, and foundation wave 2 (lumen-admin) is
 > structurally gated on the Ready store. `environments/<env>/<app>/` overlays
 > are the env axis (`nameSuffix` + `omicron/env` label per the Naming
 > contract) AND the only image-version homes (bases pin nothing). The trees
@@ -800,10 +807,11 @@ operating procedure: `runbook/` 04–06):
 vortex/
 ├── bootstrap/                     # manual-applied hub ENTRYPOINTS
 │   ├── apps-hub-foundation.yaml   # #1: syncs apps/foundation/ (values+data plane)
-│   ├── apps-hub-production.yaml   # #2: syncs apps/production/ (application plane)
-│   ├── apps-hub-staging.yaml      # #3: syncs apps/staging/ (same or another cluster)
+│   ├── apps-hub-observability.yaml # #2, THE GATE: syncs apps/observability/ (the eyes)
+│   ├── apps-hub-production.yaml   # #3: syncs apps/production/ (application plane)
+│   ├── apps-hub-staging.yaml      # #4: syncs apps/staging/ (same or another cluster)
 │   └── apps-hub.yaml              # 3-node BLUEPRINT hub (future scale-out shape)
-├── apps/{foundation,production,staging}/   # Application CRs ONLY, one dir per hub
+├── apps/{foundation,observability,production,staging}/  # Application CRs ONLY, one dir per hub
 ├── bases/                          # raw manifests (bases), one kustomize dir per app —
 │   │                              # ESO-free AND image-pin-free (shape only)
 │   ├── earendil/  mellon/  lumen/  lumen-db/  observability/  meilisearch/
@@ -853,6 +861,7 @@ GitOps cannot bootstrap the cluster hosting its own root apps):
 kubectl apply -k platform/argocd/          # Argo itself, pinned (Phase 6)
 kubectl apply -f bootstrap/apps-hub-foundation.yaml
 # … runbook ch. 05: unseal → AppRoles → SEED every path the render contract names …
+kubectl apply -f bootstrap/apps-hub-observability.yaml  # the GATE: only after the grafana four-key put verifies
 kubectl apply -f bootstrap/apps-hub-production.yaml   # and/or -staging
 ```
 
