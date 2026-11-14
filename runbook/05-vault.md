@@ -324,6 +324,18 @@ curl -s -X POST $V/v1/kv/data/lumen/staging -H "X-Vault-Token: $ROOT" \
 
 ## 5. Harvest-then-seed — the DB passwords come OUT before they go IN
 
+**Pre-flight FIRST — nothing to harvest until it's true** (a NotFound on
+the reads below means "not bootstrapped yet", not "wrong name"; do NOT
+seed past an empty variable — that seeds an empty string, §6's guard
+exists for this):
+
+```bash
+kubectl -n db get postgresql lumen-pg        # STATUS: Running (bootstrap pulls
+                                             # the ~600 MB Spilo image — be patient)
+kubectl -n default get pods -l name=postgres-operator   # Running
+kubectl -n db get secret -o name | grep credentials     # the five naming below
+```
+
 Order trap: Patroni (the Zalando operator, ch. 04 §2) **generates** the DB
 user passwords itself at cluster creation. The vault seeds *from* them, not
 the other way around. The foundation `lumen-db` overlay declares ONE
@@ -336,27 +348,31 @@ owner users** in `bases/lumen-db/postgresql.yaml`:
 | `lumen_staging` | `db_user_staging` | `environments/staging/lumen` (cms) | `kv/lumen/staging` |
 | `lumen_production` | `db_user_production` | `environments/production/lumen` (cms) | `kv/lumen/production` |
 
-The operator publishes each credential as a k8s Secret with its dotted
-naming — `<cluster>.<user>.credentials.postgresql.acid.zalan.do` (the
-operator's own convention, echoed in `bases/lumen-db/postgresql.yaml`:
-`lumen-pg.db_user_admin`; if a secret name ever surprises you, list
-first: `kubectl -n db get secret -o name | grep db_user`):
+The operator publishes each credential as a k8s Secret named
+**`<user>.<cluster>.credentials.postgresql.acid.zalan.do`** — user FIRST —
+and **hyphenates underscores in the k8s NAME only** (secret names are
+DNS-1123; the PostgreSQL ROLE keeps its underscores — the operator's log
+says `creating database "lumen_admin" owner "db_user_admin"`, and the
+Secret's own `.data.username` proves it: `db_user_admin`). Five secrets
+exist: the three estate ones below plus `postgres.…` (superuser) and
+`standby.…` — neither is estate material. (Walk-verified 2026-11-14,
+operator v2.0.3: names `db-user-admin.lumen-pg.…` etc., passwords
+alphanumeric — DSN-safe, no percent-encoding.)
 
 ```bash
 ADMIN_DB_PW=$(kubectl -n db get secret \
-  'lumen-pg.db_user_admin.credentials.postgresql.acid.zalan.do' \
+  'db-user-admin.lumen-pg.credentials.postgresql.acid.zalan.do' \
   -o jsonpath='{.data.password}' | base64 -d)
 STAGING_DB_PW=$(kubectl -n db get secret \
-  'lumen-pg.db_user_staging.credentials.postgresql.acid.zalan.do' \
+  'db-user-staging.lumen-pg.credentials.postgresql.acid.zalan.do' \
   -o jsonpath='{.data.password}' | base64 -d)
 PROD_DB_PW=$(kubectl -n db get secret \
-  'lumen-pg.db_user_production.credentials.postgresql.acid.zalan.do' \
+  'db-user-production.lumen-pg.credentials.postgresql.acid.zalan.do' \
   -o jsonpath='{.data.password}' | base64 -d)
 ```
 
 Only now do you have everything worth seeding. ✅ pre-flight: all three
-commands printed non-empty strings, and `kubectl -n db get pods` shows
-`lumen-pg-0` Running (foundation wave 1 did its job).
+commands printed non-empty strings.
 
 > **Why three databases and one engine, and why the split is structural:**
 > one Patroni is one backup story, one failover story, one $/RAM line. The
