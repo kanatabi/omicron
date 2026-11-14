@@ -138,7 +138,7 @@ wget -qO - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
 | Tool | What we use it for |
 |---|---|
-| `kubectl` | talk to the cluster (laptop-direct in Track A; over a tunnel in production, ch.11) |
+| `kubectl` | talk to the cluster (laptop-direct in Track A; over a tunnel in production, ch.11) — **no local `bao` CLI needed anywhere**: the vault chapter runs the CLI inside the pod (variant A) or speaks plain curl through a port-forward (variant B) |
 | `helm` | render the ESO chart wrapper (`kubectl kustomize --enable-helm`) + install the pinned Traefik chart — pin **v3.22.1**: the render path and anvil's battery both expect it |
 | `kustomize` | render the YAML folder that *is* the truth; `kubectl kustomize` also works |
 | `restic` + `age` | encrypted backups and any file encryption (ch.08) |

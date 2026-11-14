@@ -43,6 +43,11 @@ equivalent variants — **A) `kubectl exec` + the `bao` CLI inside the pod**,
 or **B) `kubectl port-forward` + plain `curl` from your laptop**. Read §2
 for the shape, then pick a variant per taste; both are given in full because
 the day the pod's shell misbehaves (it has), the HTTP API saved the walk.
+**The variant contract, in one line:** variant A **never** needs a
+port-forward (the CLI runs in the pod); variant B's port-forward is §4's
+first command — start it before any §4 command, keep that tab alive, and
+re-establish it after every vault restart (§9's unseal ritual includes
+the step). You never install a `bao` CLI on the laptop in either variant.
 
 ## 1. The vault comes up with the FOUNDATION hub (ch. 04), sealed
 
@@ -156,7 +161,7 @@ X "bao operator unseal $(python3 -c "import json;print(json.load(open('$INIT'))[
 
 ```bash
 ROOT=$(python3 -c "import json;print(json.load(open('$INIT'))['root_token'])")
-X "export VAULT_TOKEN=$ROOT; bao kv enable version=2 kv"     # the values store
+X "export VAULT_TOKEN=$ROOT; bao secrets enable -path=kv kv-v2"   # the values store
 X "export VAULT_TOKEN=$ROOT; bao auth enable approle"        # machine logins
 
 # ESO policy: READ/LIST only — the renderer must never write values.
@@ -178,6 +183,14 @@ path \"kv/data/*/shared\"          { capabilities = [\"read\",\"list\"] }
 path \"kv/metadata/*\"             { capabilities = [\"read\",\"list\"] }
 EOF"
 ```
+
+> **Why `secrets enable -path=kv kv-v2` (and not some `kv enable` form):**
+> there is no `bao kv enable` subcommand — the mount itself is what makes
+> the store version 2, and this is the same call variant B makes via
+> `POST /v1/sys/mounts/kv`. If it answers `path is already in use`, the
+> mount exists from an earlier attempt — check it IS v2
+> (`X "bao secrets list -detailed"` shows the kv mount's options with
+> `version:2`) and move on.
 
 > **Why the `shared` line reads but never writes:** `kv/lumen/shared` holds
 > the estate's ONLY session signing key and the admin DSN. The relay may
@@ -506,9 +519,17 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$ME
 > ⚠️ **`bao kv put` REPLACES the whole path's map** (incident: a mid-list
 > failure stripped the rest). **One invocation per path, listing every key**
 > — then VERIFY by diffing the key set against the CR's `data:` list,
-> key-by-key: `bao kv get -format=json kv/lumen/staging`. **Never**
-> `bao kv delete` casually. The CI driftcheck does the same diff from the
-> Git side, so a mismatch you missed here becomes a red pipeline later.
+> key-by-key. **Never** `bao kv delete` casually. The CI driftcheck does
+> the same diff from the Git side, so a mismatch you missed here becomes a
+> red pipeline later. The verify itself, per variant:
+>
+> ```bash
+> # variant A — runs in the pod, no port-forward:
+> X "bao kv get -format=json kv/lumen/staging"
+> # variant B — through the §4 port-forward:
+> curl -s -H "X-Vault-Token: $ROOT" $V/v1/kv/data/lumen/staging | jq '.data.data | keys'
+> ```
+>
 > (CLI writes with the root token are the operator's break-glass — the
 > 403 pin-lock (§7.1) guards the relay, not the mount; disagreement is
 > what driftcheck's amber and the config-gate are for.)

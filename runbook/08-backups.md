@@ -189,8 +189,9 @@ First Saturday, 20 minutes, **on the rehearsal VM — never prod**:
    no backup: `bao-approle-credentials` + `lumen-bao-credentials`
    (mint the pairs from the restored vault exactly as ch.05 §3.5 says)
    and `search/meilisearch-master-key` — read `MASTER_KEY` back from
-   the restored vault (`bao kv get -field=MASTER_KEY
-   kv/meilisearch/production`).
+   the restored vault (run on the laptop, `$ROOT` from ch.05 §3.3):
+   `kubectl -n secrets exec deploy/openbao -- sh -c \
+   "VAULT_TOKEN=$ROOT bao kv get -field=MASTER_KEY kv/meilisearch/production"`.
 3. Restore Postgres: Patroni comes up empty → load `pg_dumpall` into the
    primary → ESO is already syncing (its values came from step 2).
 4. Argo reconciles everything Git owns; images live in ghcr (immutable
