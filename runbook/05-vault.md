@@ -765,6 +765,19 @@ kubectl -n lumen get externalsecret,deploy,secret
 > dark (it reads env only at container start), and a migrate always finds
 > its Secret. The PreSync config-gate stays a hook: it needs only the
 > hand-made credentials, never a rendered Secret.
+>
+> **Job immutability on bump day (walked 2026-11-14):** the migrate Job is a
+> wave-1 sync-phase resource, and Kubernetes Job pod templates are
+> IMMUTABLE — the v4.0.1 bump could not patch the completed v3.0.0
+> `lumen-admin-migrate`, so Argo retried `spec.template … field is
+> immutable` forever (the corpse blocks its own wave, and wave 2 with it).
+> The vortex fix (`56375cf`) annotates BOTH migrate Jobs — cms base and
+> foundation admin — with `argocd.argoproj.io/sync-options: Replace=true`:
+> on a spec change Argo **deletes and re-creates** the Job instead of
+> patching, the bumped image's migrate runs fresh, and bump days need no
+> manual step. (Pre-fix remedy, historical: `kubectl -n lumen delete job
+> lumen-admin-migrate` once, then re-sync — `ttlSecondsAfterFinished: 600`
+> alone was NOT load-bearing: the bump landed inside the TTL window.)
 
 ✅ end state: all rendered ES `Synced=True`; `kubectl -n external-secrets
 get clustersecretstore bao` → Ready; foundation wave 2 (lumen-admin +
