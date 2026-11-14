@@ -171,7 +171,81 @@ change the contract.
 
 ### 4.6. Pod logs, labeled — the log-label contract (walked 2026-11-14)
 
-Every pod's stdout is indexed with **five labels**, stamped by
+**Where the logs physically live** (the kubelet layer — Kubernetes does
+this for us before any Alloy is involved): every container's stdout and
+stderr is captured by the kubelet into plain files on the node, in a
+fixed layout:
+
+```text
+/var/log/pods/<namespace>_<pod-name>_<pod-uid>/<container-name>/<0,1,…>.log
+```
+
+A lumen-admin pod's log is a path like
+`/var/log/pods/lumen_lumen-admin-http-server-d8f86d685-wbrk2_a66d2f75…/lumen-admin-http-server/0.log`.
+The `<pod-uid>` segment is the trick: **it changes every time the pod is
+recreated**, so each pod generation gets its own fresh directory and
+never competes for a tail position with its predecessor. (Kubernetes
+reference: [Logging
+Architecture](https://kubernetes.io/docs/concepts/cluster-administration/logging/).)
+
+**What the original config did — and why Explore looked broken.** The
+first cut of `config.alloy` was as naive as it gets — one glob, tail
+everything, ship it:
+
+```alloy
+local.file_match "pod_logs" {
+    path_targets = [{
+    __path__  = "/var/log/pods/*/*/*.log",   // every file on the node
+    instance  = env("HOSTNAME"),
+    job       = "kubelet-pods",
+    }]
+}
+loki.source.file "pod_logs" {
+    targets    = local.file_match.pod_logs.targets
+    forward_to = [loki.write.loki.receiver]
+}
+```
+
+Logs arrived fine — but every single stream carried the SAME three
+labels: `job="kubelet-pods"`, `instance=<node>`, and
+`filename=<path-with-uuid>`. Loki knew *where a file came from* and
+nothing else about it. The symptom in Explore: only the chatty pods
+surfaced (argocd, postgres — recent streams, no way to narrow), and
+"show me lumen's errors" was literally unanswerable without knowing the
+uuid of the pod you cared about.
+
+**Why labels matter — Loki's index model** (the one paragraph worth
+memorizing, from [Loki's "Understand
+labels"](https://grafana.com/docs/loki/latest/get-started/labels/)):
+*Loki does not index the content of log lines — it indexes labels.* Log
+entries sharing one label set form a **stream**; a query first finds the
+streams matching your label selectors, then greps within just those.
+Four consequences:
+
+- **Too few labels = unusable queries.** With only
+  `job/instance/filename`, the only selectors available were node-level
+  or a uuid path. "Errors from lumen" meant scanning EVERY stream on the
+  node with `|= "error"` and eyeballing filenames.
+- **Labels must be low-cardinality and bounded.** `env`, `app`,
+  `namespace`, `container` — bounded sets, perfect. `pod` rotates, but
+  each value lives exactly as long as a pod — acceptable. What you must
+  never label: request IPs, user IDs, status codes, uuids — the Loki
+  docs' cardinality example shows how `action`×`status_code`×`ip`
+  explodes into thousands of short-lived streams that melt the index.
+  Our old `filename`-with-uuid label was exactly that failure mode in
+  miniature.
+- **Labels are how ONE stack serves BOTH environments.** The
+  `omicron/env` pod label → `env` log label is the contract that lets a
+  single observability deployment serve staging and production —
+  `{env="shared"}` on k3d today, `{env="production"}` on the VPS: no
+  second stack, no second query grammar.
+- **Bonus:** Loki auto-derives a `service_name` label (for Explore and
+  Logs Drilldown) by looking at `app` / `app_kubernetes_io_name` /
+  `container` in that order — our labels feed that machinery for free
+  (you can see `service_name="traefik"` on traefik streams).
+
+That is what the contract below is FOR. Every pod's stdout is indexed
+with **five labels**, stamped by
 `discovery.relabel "pod_logs"` in `config.alloy` (targets come from
 `discovery.kubernetes` pods, and the per-pod log-file path is built from
 the pod's own uid + container — restarting pods never share a tail
@@ -184,6 +258,45 @@ position):
 | `namespace` | — | `lumen` |
 | `pod` | — | `lumen-admin-http-server-d8f86d685-wbrk2` |
 | `container` | — | `lumen-admin-http-server` |
+
+**The pipeline, end to end** (what `config.alloy` now does):
+
+```mermaid
+flowchart TD
+    K["kubelet writes files on the node<br>/var/log/pods/NAMESPACE_POD-NAME_POD-UID/CONTAINER/0.log"]
+    D["discovery.kubernetes pods — watches the API,<br>exposes every pod's metadata as __meta_kubernetes_* labels"]
+    R1["drop terminal-phase pods<br>(Pending / Succeeded / Failed / Completed)"]
+    R2["build the per-pod __path__ from the pod's OWN uid + container<br>restarting pods never share a tail position"]
+    R3["stamp the contract:<br>env · app · namespace · pod · container"]
+    S["loki.source.file — the file_match block<br>expands the per-pod glob into real files"]
+    W["loki.write"]
+    L["Loki — a stream IS one unique label set;<br>line content is NOT indexed"]
+    G["Grafana Explore — label selectors first,<br>then line filters within the chosen streams"]
+    K --> D --> R1 --> R2 --> R3 --> S --> W --> L --> G
+```
+
+Step by step:
+
+1. **`discovery.kubernetes "pods"`** watches the Kubernetes API and
+   exposes each pod's metadata as `__meta_kubernetes_*` labels —
+   namespace, pod name, **uid**, pod phase, container names, and every
+   pod label (`__meta_kubernetes_pod_label_<x>`; dashes and dots in the
+   label name become underscores).
+2. **`discovery.relabel "pod_logs"`** turns that metadata into targets
+   and stamps the contract: drop terminal-phase pods (finished Job pods
+   stop being tailed; `kubectl logs` still reads them); keep
+   `job=kubelet-pods` and `instance=$HOSTNAME`; **build
+   `__path__ = /var/log/pods/*_<uid>/<container>/*.log` from the pod's
+   own uid + container** — one target per container of one pod
+   generation; copy `namespace` / `pod` / `container`; take `env` from
+   the `omicron/env` pod label; take `app` from the
+   `app.kubernetes.io/name` fallback FIRST and the short `app` label
+   LAST (the precedence lesson below).
+3. **`loki.source.file`** tails the files. The
+   `file_match { enabled = true }` block is **not optional here**: our
+   `__path__` is a glob, and without that block the component demands
+   absolute literal paths.
+4. **`loki.write`** ships every line to Loki with the labels attached.
 
 **How to add a label:** one replace rule in `discovery.relabel
 "pod_logs"` copying `__meta_kubernetes_pod_label_<x>` (dashes/dots in the
@@ -199,6 +312,17 @@ enabled in ch.03 §6) flows through the same labeled tail. The old
 unlabeled streams (label set `job/instance/filename` only) age out on
 their own.
 
+**Design choice: tailing files vs the API.** The Alloy guide offers a
+second route — `loki.source.kubernetes`, which streams logs straight
+through the Kubernetes API with natively labeled targets (less machinery
+to write). We stayed with file-tailing: the files are owned by the
+kubelet on the node, so collection keeps working through API-server
+hiccups, tail positions survive reconnects, and it's the battle-tested
+promtail model. The API route couples log availability to API
+responsiveness — the wrong default for an estate that must survive a
+flaky edge. And the discovery + relabel layer is shared with the metrics
+scrape (§4.8), so it isn't extra complexity: one mechanism, two uses.
+
 Query examples:
 
 ```logql
@@ -208,6 +332,19 @@ Query examples:
 {namespace="db"}                                    # lumen-pg (StatefulSet carries no
                                                     # app label — filter by ns)
 ```
+
+**Official documentation** (all fetched and verified 2026-11-15):
+
+| Doc | What it covers |
+|---|---|
+| [Collect Kubernetes logs and forward them to Loki](https://grafana.com/docs/alloy/latest/collect/logs-in-kubernetes/) | the curated Alloy guide — the exact component chain this section uses |
+| [`discovery.kubernetes` reference](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.kubernetes/) | every `__meta_kubernetes_*` label the pod role exposes (uid, phase, labels…) |
+| [`discovery.relabel` reference](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/) | rule semantics — top-down order, replace overwrites, drop/replace actions |
+| [`loki.source.file` reference](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.source.file/) | the `file_match` block requirement for glob `__path__` |
+| [`loki.source.kubernetes` reference](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.source.kubernetes/) | the API-based alternative we chose not to use |
+| [Loki — Understand labels](https://grafana.com/docs/loki/latest/get-started/labels/) | the index model ("content not indexed"), cardinality rules |
+| [Loki — LogQL / Query](https://grafana.com/docs/loki/latest/query/) | how label-selector-first queries execute |
+| [Kubernetes — Logging Architecture](https://kubernetes.io/docs/concepts/cluster-administration/logging/) | the `/var/log/pods/…` file layout the kubelet produces |
 
 ### 4.7. The OTLP door goes live — traefik's semconv metrics (walked 2026-11-14)
 
