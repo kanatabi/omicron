@@ -578,12 +578,35 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$ME
 > `bases/meilisearch/deployment.yaml`) — and **no ExternalSecret
 > renders that Secret yet** (the manifest comment says "eventually via
 > ExternalSecret/OpenBao"; today it's `optional: true` so the pod can boot
-> unkeyed, which production must not do). So: use the ONE `$MEILI_KEY`
-> from §6's preamble (the same one every cms path gets as `LUMEN_MEILI_KEY` — the engine is shared,
-> the INDEXES are the per-env separation), create the k8s Secret by hand
-> (`kubectl -n search create secret generic meilisearch-master-key --from-literal=master-key=$MEILI_KEY`),
-> AND mirror it into `kv/meilisearch/production` so it shows in the matrix
-> (§7) and rides vault backups. When its ES lands, the hand Secret retires.
+> unkeyed, which production must not do). It's a bootstrap-paradox family
+> member: hand-made once, below. Use the ONE `$MEILI_KEY` from §6's
+> preamble (the same one every cms path gets as `LUMEN_MEILI_KEY` — the
+> engine is shared, the INDEXES are the per-env separation):
+>
+> ```bash
+> # 1. the hand Secret (dry-run form = safe to re-run; the value binds at
+> #    container start, so the pod needs the restart in step 3):
+> kubectl -n search create secret generic meilisearch-master-key \
+>   --from-literal=master-key=$MEILI_KEY \
+>   --dry-run=client -o yaml | kubectl apply -f -
+> # 2. mirror into the vault (matrix row §7 + rides vault backups):
+> X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$MEILI_KEY"
+> # 3. make the pod bind OUR key:
+> kubectl -n search rollout restart deploy/meilisearch
+> ```
+>
+> ✅ check: the pod log **no longer** contains the "a master key has been
+> generated" line.
+>
+> **Why the pod-generated key is NEVER the key:** a "master key has been
+> generated" line in the pod log is the unkeyed-boot state talking — a
+> random value minted at boot, printed to stdout, gone at the next
+> restart. It can't serve this estate because **two parties must know
+> this key**: the meili pod presents it (`MEILI_MASTER_KEY`) AND lumen
+> presents it (`LUMEN_MEILI_KEY`, read from the vault at lumen's
+> container start). Bao holds owned, versioned values — not log-scraped
+> ones. Generate once (§6 preamble), distribute to both ends. When
+> meili's ES lands, the hand Secret retires.
 
 ## 7. Portal doctrine: seeded right == visible to operators (one fact)
 
