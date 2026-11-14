@@ -195,10 +195,13 @@ echo | openssl s_client -connect 127.0.0.1:443 -servername gofar.id 2>/dev/null 
 - **Renewal is automatic:** cert-manager re-issues 30 days before death
   (`renewBefore: 720h0m0s`). You should never *do* this — only notice if it
   stopped happening.
-- **The alert that replaces vigilance:** the "certificate expires < 21 days"
-  rule among the five estate alerts provisioned in
-  `environments/foundation/observability/alerting.yaml` (`certmanager_certificate_expiration_timestamp_seconds`).
-  One line beats a calendar.
+- **The alert that backs vigilance:** among the five estate alerts
+  provisioned in `environments/foundation/observability/alerting.yaml`,
+  rule 1 is LIVE (2026-11-15): `k3s_certificate_expiration_seconds` —
+  the k3s control-plane certs (the walked story is ch.10 §7). The LE
+  door certs THIS section is about have no in-cluster gauge yet — a
+  blackbox prober on the doors is the standing backlog. Until that
+  lands: one line beats a calendar.
 - **The drill (quarterly, Operations chapter):** delete one test
   `Certificate` → selfHeal re-applies → Ready again in minutes. Proves
   issuer+token+permissions without waiting for a real expiry to discover
