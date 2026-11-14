@@ -758,6 +758,13 @@ kubectl -n lumen get externalsecret,deploy,secret
 > phase that the hook itself was blocking — `kubectl -n lumen create
 > serviceaccount config-gate` once, then re-sync; the vortex fix adding
 > hook-wave annotations to the component's RBAC retires this).
+>
+> **The resource-level ordering contract (vortex, post-fix):** inside every
+> gated app the sync-waves are ES **0** → migrate **1** → Deployments **2**
+> — a workload that `envFrom`-binds an ES-rendered Secret can never boot
+> dark (it reads env only at container start), and a migrate always finds
+> its Secret. The PreSync config-gate stays a hook: it needs only the
+> hand-made credentials, never a rendered Secret.
 
 ✅ end state: all rendered ES `Synced=True`; `kubectl -n external-secrets
 get clustersecretstore bao` → Ready; foundation wave 2 (lumen-admin +
