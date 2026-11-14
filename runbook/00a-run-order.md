@@ -133,7 +133,10 @@ same waves, the same vault bootstrap. See the why-box at the bottom.
   the four pods (`alloy`, `grafana`, `loki-0`, `victoria-metrics`) Running;
   port-forward VictoriaMetrics and `up` is 1 for `kubelet`, `cadvisor`,
   `kubelet-resource` and the annotated pods; Grafana's **Estate overview**
-  dashboard draws panels.
+  dashboard draws panels; and Loki carries the log-label contract —
+  `/loki/api/v1/labels` lists `env`, `app`, `namespace`, `pod`,
+  `container` and `{app="lumen-admin-http-server"}` returns real lines
+  (ch.10 §4.6).
 
 - [ ] **A9 · apply the ENV hubs — entrypoints #3/#4 — and first release
   (M4)** — [04 §3](04-gitops.md), [06](06-apps-first-release.md):

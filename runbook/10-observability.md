@@ -98,8 +98,9 @@ lumen already does (admin port 9090, not public); structured stdout logs
 are picked up automatically. Grafana watches *itself* on its HTTP port —
 `prometheus.io/port: "3000"` in `bases/observability/grafana.yaml`
 (dashboard-alert latency for the thing that watches everything else).
-The OTLP receiver is configured-but-waiting (the Go OTel SDK forward
-path — "add, not a rewrite" is the INFRA line; nothing to do today).
+The OTLP receiver is **live** — traefik pushes into it and the OTel
+semconv `http.server.request.duration` histogram lands in
+VictoriaMetrics (§4.7).
 
 ### 4.5. System metrics per pod and per node — what Alloy scrapes (walked 2026-11-14)
 
@@ -136,12 +137,94 @@ until someone adds a scrape-auth decision). The provisioned **Estate
 overview** dashboard (folder `Estate`) draws exactly the verified series:
 node cpu/memory, per-pod cpu/memory/disk top-10, PVC usage %.
 
+**Router / entrypoint / service request metrics are LAZY** (walked
+2026-11-14, this bit bit us): each series is instantiated by the FIRST
+request through that router/entrypoint/service — on a traffic-free edge
+you see only the three global families
+(`traefik_config_*`, `traefik_open_connections`) and conclude the scrape
+is broken. It isn't. Probe it:
+
+```bash
+kubectl -n observability exec deploy/grafana -- sh -c \
+  'curl -s -o /dev/null -w "%{http_code}" http://<traefik-podIP>:8000/ -H "Host: anor.gofar.id"'
+```
+
+And `traefik_router_requests_total` is **OFF by default** —
+`--metrics.prometheus.addrouterslabels` defaults to false (verified from
+the live binary's `--help`); the ch.03 §6 install command now sets
+`metrics.prometheus.addRoutersLabels=true` explicitly, alongside the
+entrypoints/services flags spelled out so defaults can never silently
+change the contract.
+
 > Two Alloy lessons live as comments in `config.alloy` — worth knowing:
 > River relabel rules default `replacement` to `"$1"`, so a multi-capture
 > rule without an explicit `replacement = "$1:$2"` **silently drops the
 > port** (every target scraped port 80 → up=0 estate-wide); and River
 > comments are `//` — an inline `#` is a parse error that CrashLoops the
 > DaemonSet.
+
+### 4.6. Pod logs, labeled — the log-label contract (walked 2026-11-14)
+
+Every pod's stdout is indexed with **five labels**, stamped by
+`discovery.relabel "pod_logs"` in `config.alloy` (targets come from
+`discovery.kubernetes` pods, and the per-pod log-file path is built from
+the pod's own uid + container — restarting pods never share a tail
+position):
+
+| Label | Source | Example |
+|---|---|---|
+| `env` | pod label `omicron/env` | `shared` |
+| `app` | pod label `app`, falling back to `app.kubernetes.io/name` | `lumen-admin-http-server` |
+| `namespace` | — | `lumen` |
+| `pod` | — | `lumen-admin-http-server-d8f86d685-wbrk2` |
+| `container` | — | `lumen-admin-http-server` |
+
+**How to add a label:** one replace rule in `discovery.relabel
+"pod_logs"` copying `__meta_kubernetes_pod_label_<x>` (dashes/dots in the
+label name become underscores). **Precedence lesson (walked the hard
+way):** relabel rules apply in order and a matching replace OVERWRITES —
+set the `app.kubernetes.io/name` fallback FIRST and the short `app` label
+LAST, or the fallback stomps the real name (every lumen stream collapsed
+to `app="lumen"` in the first cut). System pods (argocd, kube-system,
+cert-manager) carry no `omicron/env` label — their streams simply have no
+`env` label. Completed Jobs stop being tailed (terminal-phase drop);
+`kubectl logs` still reads them. Traefik's access log (CLF, stdout —
+enabled in ch.03 §6) flows through the same labeled tail. The old
+unlabeled streams (label set `job/instance/filename` only) age out on
+their own.
+
+Query examples:
+
+```logql
+{app="lumen-admin-http-server"}                     # one app's logs
+{env="shared"} |= "error"                           # errors in the shared plane
+{namespace="ingress", container="traefik"}          # the edge, access + ERR lines
+{namespace="db"}                                    # lumen-pg (StatefulSet carries no
+                                                    # app label — filter by ns)
+```
+
+### 4.7. The OTLP door goes live — traefik's semconv metrics (walked 2026-11-14)
+
+Traefik (chart values in ch.03 §6) is the first live producer into the
+`otelcol.receiver.otlp` door (`:4317` gRPC via the `alloy-otlp` Service).
+Its push is the ONLY source of the OpenTelemetry semantic-convention
+histogram — `http.server.request.duration`, landed in VictoriaMetrics as
+`http_server_request_duration_seconds_{bucket,sum,count}` with
+`http_request_method`, `http_response_status_code`,
+`network_protocol_name`, `server_address` and — via
+`resource_to_telemetry_conversion` — `k8s_namespace_name`, `k8s_pod_name`,
+`k8s_pod_uid`, `job="traefik"` (traefik auto-detects those k8s attributes;
+**on the hostNetwork VPS shape the k8s.\* attrs are absent** — detection
+needs pod networking). `http_client_request_duration_seconds_*` rides
+along (traefik's own outgoing probes).
+
+**The ownership split** (enforced by the `semconv_only` filter in
+`config.alloy`): the push ALSO carries traefik's own `traefik_*` counters,
+which the Prometheus pull above already exports — without the filter
+those families would exist TWICE with different label sets and every
+unfiltered `sum(rate(...))` would double-count. Pull owns all
+`traefik_*`; the push owns only the semconv metrics. Traces stay OFF (no
+Tempo, §1) — this is metrics-OTLP only.
 
 ## 5. The door: `anor.gofar.id` — plumbing as verified in vortex
 
