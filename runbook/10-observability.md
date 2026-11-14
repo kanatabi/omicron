@@ -1,7 +1,13 @@
 ---
 tags: [runbook, observability]
-updated: 2026-11-14
-status: stack live and walked: own hub (bootstrap/apps-hub-observability.yaml,
+updated: 2026-11-15
+# status is a FOLDED BLOCK SCALAR (>-) on purpose: prose colons ("walked:")
+# are LEGAL inside one — the plain-scalar version of this line broke
+# GitHub's frontmatter parse ("mapping values are not allowed… line 3
+# column 30") and rendered the whole chapter as an error box (fixed
+# 2026-11-15; convention note in ch.00).
+status: >-
+  stack live and walked: own hub (bootstrap/apps-hub-observability.yaml,
   manual gate after the grafana four-key seed); per-pod + per-node system
   metrics FLOW (cAdvisor + kubelet /metrics/resource via the API-server proxy);
   the Estate overview dashboard is provisioned; the five alert rules ride the

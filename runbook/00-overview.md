@@ -28,6 +28,13 @@ deploy → the internet updates itself.
 > **Ready to work?** [00a Run Order](00a-run-order.md) is the execution map —
 > what to type, on which machine, in what order. This chapter is the *why*.
 
+> **Writing in this folder:** each chapter's frontmatter is YAML that GitHub
+> parses to render the page — keep `status:` a **folded block scalar**
+> (`status: >-` with the prose indented two spaces beneath). A plain-scalar
+> status containing a colon-space (`walked: …`) is illegal YAML and GitHub
+> shows the whole chapter as one red error box (walked the hard way on
+> 2026-11-15, ch.10).
+
 ## In words a human can hold
 
 - **Kubernetes (k3s)** is a traffic controller for little programs ("pods").
