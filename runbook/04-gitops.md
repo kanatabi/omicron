@@ -73,12 +73,50 @@ a "no such file or directory" here means you're not standing in it.
 | What | Pin | Command (run from the checkout — step 0) | Why it can't ride the hub |
 |---|---|---|---|
 | **Argo CD** | v3.6.1 | `kubectl apply -k platform/argocd/ --server-side --force-conflicts` | the robot can't host itself |
-| **Zalando postgres-operator** | v1.13.0 | `kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/v1.13.0/manifests/operator-manifests.yaml` (pinned in the header comment of `bases/lumen-db/postgresql.yaml`) | the CRD that defines `postgresql.yaml` must exist before any app applies it |
+| **Zalando postgres-operator** | v2.0.3 | the two-command block below (CRDs first, then the ref-pinned upstream kustomization — **quote the ref: `?` is a zsh glob**) | the CRD that defines `postgresql.yaml` must exist before any app applies it |
 | **cert-manager** | v1.16.2 | `kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml` (prereq comment in `bases/certificates/kustomization.yaml`) | its CRDs gate the certificates app; Namespace ships with the install, deliberately untracked |
 | **Traefik (helm chart)** | chart 42.3.2 | [03 §6](03-k3s.md)'s `helm install traefik … --version 42.3.2` (per-runtime flags there) | the edge must be up before any Ingress resolves; helm, not `kubectl apply` |
 
 Anything else you catch yourself `kubectl apply`-ing to the cluster is a
 bug in this document — tell the next reader.
+
+**The postgres-operator install (WALKED GREEN 2026-11-14 on k3d):**
+
+```bash
+# 1) CRDs first — the upstream kustomization explicitly excludes them:
+kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/v2.0.3/manifests/postgresql.crd.yaml \
+  -f https://raw.githubusercontent.com/zalando/postgres-operator/v2.0.3/manifests/operatorconfiguration.crd.yaml \
+  -f https://raw.githubusercontent.com/zalando/postgres-operator/v2.0.3/manifests/postgresteam.crd.yaml
+# 2) the operator bundle — upstream's own kustomization, ref-pinned:
+kubectl apply -k 'github.com/zalando/postgres-operator/manifests?ref=v2.0.3'
+```
+
+✅ check: `kubectl get pod -l name=postgres-operator` → Running.
+
+> **Why this shape (verified against the v2.0.3 chart sources + release
+> notes after the first paste 404'd):**
+> - the old one-liner cited `manifests/operator-manifests.yaml` — **a file
+>   that never existed upstream**. The rotted citation lived in three
+>   places (this table, the `bases/lumen-db/postgresql.yaml` header
+>   comment, INFRA Phase 4) — all three now carry the two-paste above;
+> - the kustomization brings four objects (config ConfigMap + SA/RBAC +
+>   Deployment + api-service) and **excludes the CRDs by design** (the
+>   upstream quickstart says so) — hence command 1;
+> - the operator defaults to **ConfigMap-mode config** — right for this
+>   estate, because the cluster specifics (instances, storage, users,
+>   teamId) live in vortex's `postgresql` CR
+>   (`bases/lumen-db/postgresql.yaml`), which v2 accepts unchanged: the
+>   CRD still serves **`acid.zalan.do/v1`** and the CR uses none of v2's
+>   dropped fields (`init_containers`, `pod_priority_class_name`,
+>   `replicaLoadBalancer`, `useLoadBalancer`);
+> - **v2 defaults, fresh-install-safe:** `scram-sha-256` password
+>   encryption, configmap-based Patroni HA (K8s endpoints are deprecated
+>   from 1.33 — the forward shape on k3s v1.37);
+> - **the LIVE production estate still runs its v1.13.0-era operator** —
+>   upgrading it to v2 is the upstream `docs/migrate.md` procedure
+>   (scale-in → switch to configmaps → scale-out; split-brain risk on
+>   live replicas): a separate deliberate project, NOT this chapter.
+>   Fresh installs — this chapter and ch.08 §6's rebuild — use v2.0.3.
 
 ### 2.1 Argo install details that bit us
 

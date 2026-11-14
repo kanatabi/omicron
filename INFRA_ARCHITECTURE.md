@@ -598,8 +598,20 @@ netbird` for admin access):
    Deploy the operator first (pinned release), then the CR via GitOps:
 
    ```bash
-   kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/v1.13.0/manifests/operator-manifests.yaml
+   # 1) CRDs — the upstream kustomization excludes them:
+   kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/v2.0.3/manifests/postgresql.crd.yaml \
+     -f https://raw.githubusercontent.com/zalando/postgres-operator/v2.0.3/manifests/operatorconfiguration.crd.yaml \
+     -f https://raw.githubusercontent.com/zalando/postgres-operator/v2.0.3/manifests/postgresteam.crd.yaml
+   # 2) the operator bundle (ref-pinned; QUOTE the ref — `?` is a zsh glob):
+   kubectl apply -k 'github.com/zalando/postgres-operator/manifests?ref=v2.0.3'
    ```
+
+   > Pin bumped v1.13.0 → **v2.0.3** (2026-11-14) for **fresh installs**:
+   > the old `operator-manifests.yaml` URL never existed upstream; the
+   > postgresql CRD still serves `acid.zalan.do/v1` and the estate CR uses
+   > none of v2's dropped fields. The LIVE estate's v1.13.0 operator is
+   > NOT upgraded by this — its v1→v2 move is the upstream `docs/migrate.md`
+   > procedure, a separate deliberate project. Why-note: runbook 04 §2.
 
 3. **Meilisearch (namespace `search`), internal-only:** scaffolded in Git —
    [`bases/meilisearch/`](vortex/bases/meilisearch/), synced as the

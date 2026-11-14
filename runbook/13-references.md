@@ -45,7 +45,7 @@ updated: 2026-11-14
 | Fine-grained PATs (Contents/Workflow/Actions perms — the trio's lesson, ch.09 §5) | https://docs.github.com/authentication/keeping-your-account-and-data-secure/about-fine-grained-personal-access-tokens |
 | Actions anti-recursion rule (why tags need a PAT) | https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idsteps-run (see "GITHUB_TOKEN" notes) & https://github.community/t/support-triggeringRepositoryPushEvents-in-github-token/11510 |
 | Repo variables NOT readable by GITHUB_TOKEN (the env-door lesson) | https://docs.github.com/actions/learn-github-actions/variables (limitations note) |
-| Zalando Postgres Operator v1.13.0 (pinned install, ch.04 §2's table) | https://postgres-operator.readthedocs.io/ |
+| Zalando Postgres Operator v2.0.3 (pinned install, ch.04 §2's table; the v1→v2 upgrade path is upstream's `docs/migrate.md`) | https://opensource.zalando.com/postgres-operator/ |
 | External Secrets Operator 2.15.0 (Vault backend; generic `target.manifest` ConfigMap renders) | https://external-secrets.io/ |
 | OpenBao | https://openbao.org/docs/ (init/unseal/**snapshot**/approle pages — snapshot is ch.08 §3b's) |
 | Meilisearch upgrade policy (v1.56.1) | https://www.meilisearch.com/docs/learn/welcome/update-meilisearch |
