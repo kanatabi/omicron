@@ -769,15 +769,30 @@ kubectl -n lumen get externalsecret,deploy,secret
 > **Job immutability on bump day (walked 2026-11-14):** the migrate Job is a
 > wave-1 sync-phase resource, and Kubernetes Job pod templates are
 > IMMUTABLE — the v4.0.1 bump could not patch the completed v3.0.0
-> `lumen-admin-migrate`, so Argo retried `spec.template … field is
-> immutable` forever (the corpse blocks its own wave, and wave 2 with it).
-> The vortex fix (`56375cf`) annotates BOTH migrate Jobs — cms base and
-> foundation admin — with `argocd.argoproj.io/sync-options: Replace=true`:
-> on a spec change Argo **deletes and re-creates** the Job instead of
-> patching, the bumped image's migrate runs fresh, and bump days need no
-> manual step. (Pre-fix remedy, historical: `kubectl -n lumen delete job
-> lumen-admin-migrate` once, then re-sync — `ttlSecondsAfterFinished: 600`
-> alone was NOT load-bearing: the bump landed inside the TTL window.)
+> `lumen-admin-migrate` (`spec.template … field is immutable`, retried
+> until exhausted; the corpse blocks wave 2 behind it). Two walked
+> corrections:
+>
+> - **`Replace=true` does NOT fix this** (walked, then reverted-in-effect):
+>   Argo's `argocd.argoproj.io/sync-options: Replace=true` is `kubectl
+>   replace` — a PUT — and a PUT is bound by the same immutability
+>   (`error when replacing … field is immutable`). It is not
+>   delete-and-recreate.
+> - **`ttlSecondsAfterFinished` on a git-managed Job is a graveyard
+>   cycle**: complete → TTL deletes the Job → Argo sees Missing →
+>   selfHeal recreates → migrate re-runs — every ~10 min, forever
+>   (idempotent, so it stays green, but it re-ran twice in an hour,
+>   walked live).
+>
+> Remedies, in order of landing: (1) clear the stale state —
+> `kubectl -n lumen delete job lumen-admin-migrate --ignore-not-found`
+> (or nothing at all if the cluster Job already matches) then one Sync;
+> an identical-spec apply is a no-op. (2) The SA-round design: a janitor
+> PreSync hook (`kubectl delete job <name> --ignore-not-found` — runs
+> BEFORE the sync-phase apply, needs no secrets, no-ops on fresh
+> clusters) plus TTL removed from the git-managed Jobs: bump days
+> become deterministic corpse-removal, no red window, no eternal
+> re-runs.
 
 ✅ end state: all rendered ES `Synced=True`; `kubectl -n external-secrets
 get clustersecretstore bao` → Ready; foundation wave 2 (lumen-admin +
