@@ -118,9 +118,16 @@ Cloudflare → My Profile → API Tokens → Create Token:
 - Permission: **Zone · DNS · Edit**, scoped to zone `gofar.id` **only**
 - TTL: set one (a year), calendar the rotation (Operations chapter)
 
-Then it goes to the vault — `bao kv put kv/cert-manager/production
-CF_API_TOKEN=<that token>` (ch. 05 §6's replace-the-whole-map rule: one
-call, then re-verify the key set). From there the estate renders it with no
+Then it goes to the vault — and the placeholder lesson from ch.05 §6
+applies: export first, then the put (ch. 05 §6's replace-the-whole-map
+rule: one call, then re-verify the key set):
+
+```bash
+export CF_API_TOKEN=<paste the token you just created>
+X "export VAULT_TOKEN=$ROOT; bao kv put kv/cert-manager/production CF_API_TOKEN=$CF_API_TOKEN"
+```
+
+From there the estate renders it with no
 human middleman: `bases/certificates/externalsecret.yaml` maps
 `cert-manager/production::CF_API_TOKEN` → Secret **`cf-token`**, key
 **`api-token`**, namespace `cert-manager`, where the issuer's solver reads
@@ -216,13 +223,18 @@ Grafana config:
 # it down, and that's fine: read it back from the vault (variant A's X; on
 # variant B swap the read for the curl -field equivalent):
 GF_ADMIN_PW=$(X "export VAULT_TOKEN=$ROOT; bao kv get -field=GF_SECURITY_ADMIN_PASSWORD kv/grafana/production")
-[ -n "$GF_ADMIN_PW" ] || echo "⚠️ read came back empty — check the vault path before continuing"
+[ -n "$GF_ADMIN_PW" ] || echo "WARNING: read came back empty — check the vault path before continuing"
+
+# the OIDC pair from the Access app you just created — export, don't paste
+# angle brackets into an X block (ch. 05 §6's redirection trap):
+export GF_CLIENT_ID=<from Access>
+export GF_CLIENT_SECRET=<from Access>
 
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/grafana/production \
   GF_SERVER_ROOT_URL=https://anor.gofar.id \
   GF_SECURITY_ADMIN_PASSWORD=$GF_ADMIN_PW \
-  GF_AUTH_GENERIC_OAUTH_CLIENT_ID=<from Access> \
-  GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=<from Access>"
+  GF_AUTH_GENERIC_OAUTH_CLIENT_ID=$GF_CLIENT_ID \
+  GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=$GF_CLIENT_SECRET"
 ```
 
 — exactly the four keys `bases/observability/externalsecret.yaml`
