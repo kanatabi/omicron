@@ -41,5 +41,8 @@ decision records, and the walked-lessons ledger.
 - **Minimal frontmatter**: `tags` + `updated` only.
 - **Every claim keeps its walked date.** A rule without a date can't be
   re-verified; dates turn claims into a ledger.
-- Cross-repo links are absolute GitHub URLs (submodules clone standalone — a
-  relative link out of the vault's repo cannot resolve there).
+- **Diagrams are mermaid fenced blocks** (```` ```mermaid ````) — GitHub,
+  Obsidian, and the blog itself render them natively; no images.
+- **Cross-repo links are absolute GitHub URLs** (submodules clone standalone —
+  a relative link out of the vault's repo cannot resolve there); links INTO
+  this repo (root docs, runbook, vault) stay relative.

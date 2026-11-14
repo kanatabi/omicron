@@ -5,19 +5,43 @@ updated: 2026-11-15
 
 # Architecture explainers
 
-One concern per note, written to be READ (prose first, links to the
-authoritative specs second). These synthesize; they do not re-spec — when a
-note and a repo doc disagree, the repo doc wins and the note should be fixed.
+This folder is the estate's **learning home**: prose-first explanations of
+how the system works, written so a new maintainer (human or agent) can
+understand it — and so a returning one can re-find anything in minutes.
+Diagrams are mermaid fenced blocks (GitHub and Obsidian render them
+natively).
 
-| Note | One line |
+## Reading order (first visit)
+
+1. [system-overview.md](system-overview.md) — the estate end-to-end: the
+   big picture, the repos, the three planes, and three request walkthroughs
+   (a reader, a publish, a secret edit).
+2. [gitops.md](gitops.md) — how a git push becomes a cluster state; the hub
+   tree; the validation habit.
+3. [secrets-and-vault.md](secrets-and-vault.md) — OpenBao → ESO → pod env;
+   why seeding order is structural; who may touch values.
+4. [network-and-doors.md](network-and-doors.md) — the three zones, the four
+   doors, the no-public-API rule, TLS/DNS, the admin mesh.
+5. [environments-model.md](environments-model.md) — staging vs production
+   vs foundation; co-tenancy; the naming contract; where versions live.
+6. [releases-and-ci.md](releases-and-ci.md) — the approval ladder and every
+   incident-shaped rule it carries.
+7. [observability.md](observability.md) — the no-sidecars contract, the
+   opt-in scraping pattern, what's watched and what's off.
+
+## The contract these notes serve
+
+Every note is EXPLANATION — the binding statements live in their
+authoritative homes, and these notes link to them rather than re-stating:
+
+| Authority | Home |
 | :-- | :-- |
-| [system-overview.md](system-overview.md) | the estate end-to-end on one page |
-| [gitops.md](gitops.md) | how a git push becomes a cluster state |
-| [environments-model.md](environments-model.md) | the three-environment axis and co-tenancy |
-| [network-and-doors.md](network-and-doors.md) | what is public, what is never, and how TLS/DNS ride |
-| [secrets-and-vault.md](secrets-and-vault.md) | OpenBao, ESO, the render contract, seeding order |
-| [observability.md](observability.md) | metrics/logs/dashboards and their doors |
-| [releases-and-ci.md](releases-and-ci.md) | the approval ladder from merge to running pod |
+| the WHY for every infrastructure decision | [`INFRA_ARCHITECTURE.md`](../../INFRA_ARCHITECTURE.md) (root decision record) |
+| the step-by-step for every operation | [`runbook/`](../../runbook/00-overview.md) — `00a-run-order` is the execution map; `03-k3s` · `04-gitops` · `05-vault` · `06-apps-first-release` · `07-go-public` are the build-out chapters; `08`–`14` are day-2 |
+| per-repo rules and contracts | each repo's own AGENTS.md / DESIGN.md (linked from the [repo cards](../repos/omicron/README.md)) |
+| the frozen cross-repo contract | [decisions/secrets-control-plane.md](../decisions/secrets-control-plane.md) |
+| vocabulary | [glossary.md](../glossary.md) |
+| the incidents behind the rules | [repos/*/LEARNING.md](../repos/omicron/README.md) ledgers |
 
-The decision record behind all of them:
-[`INFRA_ARCHITECTURE.md`](../../INFRA_ARCHITECTURE.md) at the workspace root.
+When a note and an authority disagree, the authority wins and the note gets
+fixed — these are explainers, not spec.
