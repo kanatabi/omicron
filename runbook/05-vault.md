@@ -408,17 +408,30 @@ table, then run the guard.
 | `ROOT` | §3.3 | Bao root token | if the init file still exists: re-run §3.3's first line; else unseal ritual §9 + `bao login` |
 | `ADMIN_DB_PW` `STAGING_DB_PW` `PROD_DB_PW` | §5 | the Patroni-generated passwords | re-run §5's three kubectl reads |
 | `MEILI_KEY` | this § (below) | the shared search key | re-run this §'s `export MEILI_KEY=…` (it re-derives from the vault in §6.5's shape if you already seeded) |
+| `R2_ACCOUNT_HASH` | ch.01 §2c (offline note) | the hex in your R2 endpoint URL (`https://<hash>.r2.cloudflarestorage.com`) — dashboard: R2 → account details | read it from your offline note |
+| `R2_MEDIA_ACCESS_KEY` `R2_MEDIA_SECRET_KEY` | ch.01 §2c (offline note) | the media token pair (scoped to `omicron-media`) | read from your offline note |
 
 ```bash
 # ⚠️ GENERATE the shared search key ONCE, here — §6.2 and §6.5 both use it.
 # (If you already seeded and just need it back: skip the export and read it
 # in §6.5's note — the vault holds it at kv/meilisearch/production.)
 export MEILI_KEY=$(openssl rand -hex 32)
-# paste-safe guard: WARN, don't exit — a dead terminal must not close itself
-for v in ROOT ADMIN_DB_PW STAGING_DB_PW PROD_DB_PW MEILI_KEY; do
-  [ -n "${!v}" ] || echo "⚠️  \$$v is EMPTY — re-establish it (table above) BEFORE seeding"
+# paste-safe guard: WARN, don't exit — a dead terminal must not close itself.
+# NO OUTPUT FROM THIS LOOP = all variables set (silence is the pass condition);
+# a WARNING line names what to re-establish first.
+for v in ROOT ADMIN_DB_PW STAGING_DB_PW PROD_DB_PW MEILI_KEY \
+         R2_ACCOUNT_HASH R2_MEDIA_ACCESS_KEY R2_MEDIA_SECRET_KEY; do
+  [ -n "${!v}" ] || echo "WARNING: \$$v is EMPTY — re-establish it (table above) BEFORE seeding"
 done
 ```
+
+> **The `<placeholder>` convention, and its one trap:** any `<…>` token in
+> a command means **replace it by hand before running** — it is never
+> literal. Inside an `X` block that matters twice over: pasted literally,
+> the shell reads `<…>` as an I/O **redirection** (you get
+> `sh: can't open <thing>: no such file`), never a placeholder error. So
+> inside `X` blocks, values arrive as exported variables — the table
+> above — never as pasted angle brackets.
 
 ### 6.1 `kv/lumen/shared` — the Control Plane's identity (3 keys)
 
@@ -462,9 +475,9 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/staging \
   LUMEN_MEILI_URL=http://meilisearch.search.svc.cluster.local:7700 \
   LUMEN_MEILI_KEY=$MEILI_KEY \
   LUMEN_MEILI_INDEX_POSTS=posts-staging LUMEN_MEILI_INDEX_PHOTOS=photos-staging \
-  LUMEN_MEDIA_ENDPOINT=https://<account-hash>.r2.cloudflarestorage.com \
+  LUMEN_MEDIA_ENDPOINT=https://$R2_ACCOUNT_HASH.r2.cloudflarestorage.com \
   LUMEN_MEDIA_REGION=r2 LUMEN_MEDIA_BUCKET=omicron-media \
-  LUMEN_MEDIA_ACCESS_KEY=<R2 token> LUMEN_MEDIA_SECRET_KEY=<R2 token> \
+  LUMEN_MEDIA_ACCESS_KEY=$R2_MEDIA_ACCESS_KEY LUMEN_MEDIA_SECRET_KEY=$R2_MEDIA_SECRET_KEY \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
   LUMEN_MEDIA_PREFIX=staging/"
 
@@ -474,9 +487,9 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/production \
   LUMEN_MEILI_URL=http://meilisearch.search.svc.cluster.local:7700 \
   LUMEN_MEILI_KEY=$MEILI_KEY \
   LUMEN_MEILI_INDEX_POSTS=posts LUMEN_MEILI_INDEX_PHOTOS=photos \
-  LUMEN_MEDIA_ENDPOINT=https://<account-hash>.r2.cloudflarestorage.com \
+  LUMEN_MEDIA_ENDPOINT=https://$R2_ACCOUNT_HASH.r2.cloudflarestorage.com \
   LUMEN_MEDIA_REGION=r2 LUMEN_MEDIA_BUCKET=omicron-media \
-  LUMEN_MEDIA_ACCESS_KEY=<R2 token> LUMEN_MEDIA_SECRET_KEY=<R2 token> \
+  LUMEN_MEDIA_ACCESS_KEY=$R2_MEDIA_ACCESS_KEY LUMEN_MEDIA_SECRET_KEY=$R2_MEDIA_SECRET_KEY \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
   LUMEN_MEDIA_PREFIX=production/"
 ```
@@ -546,8 +559,9 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/production \
 | `kv/meilisearch/production` | `MASTER_KEY` (mirror — see note) | *(no ES yet — note below)* |
 
 ```bash
-X "export VAULT_TOKEN=$ROOT; bao kv put kv/cert-manager/production CF_API_TOKEN=<scoped DNS-Edit token — minted in ch. 07>"
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$MEILI_KEY"
+# cert-manager's CF_API_TOKEN is NOT seedable here — the scoped token is
+# minted in ch. 07 §3.2, which seeds this path itself. Skip until then.
 # grafana's four keys land here too — but GF_AUTH_GENERIC_OAUTH_* don't
 # exist until Cloudflare Access hands you the OIDC app (ch. 07); seed
 # GF_SERVER_ROOT_URL + a generated GF_SECURITY_ADMIN_PASSWORD now, re-put
@@ -563,8 +577,9 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/meilisearch/production MASTER_KEY=$ME
 > red pipeline later. The verify itself, per variant:
 >
 > ```bash
-> # variant A — runs in the pod, no port-forward:
-> X "bao kv get -format=json kv/lumen/staging"
+> # variant A — runs in the pod, no port-forward (the token export is REQUIRED —
+> # the X wrapper sets only VAULT_ADDR; token-less reads 403):
+> X "export VAULT_TOKEN=$ROOT; bao kv get -format=json kv/lumen/staging"
 > # variant B — through the §4 port-forward:
 > curl -s -H "X-Vault-Token: $ROOT" $V/v1/kv/data/lumen/staging | jq '.data.data | keys'
 > ```
@@ -692,8 +707,11 @@ Chapter 06 picks the story up there.
 
 - **After EVERY bao pod restart (host reboots included):** the vault returns
   **SEALED** (data survives, seal state doesn't). Unseal ritual: any **two**
-  keys ×2 (`X "bao operator unseal <key-from-offline>"`, or variant B's two
-  curls) → everything reconciles within ~a minute; bounce the ESO controller
+  keys, passed as ARGUMENTS from your offline note (`export
+  UNSEAL_KEY_1=<…>; X "bao operator unseal $UNSEAL_KEY_1"`, then the second
+  key — never `< key` stdin form: that's both the placeholder-redirection
+  trap AND §3.2's non-tty failure; or variant B's two curls) → everything
+  reconciles within ~a minute; bounce the ESO controller
   (`kubectl -n external-secrets rollout restart deploy/external-secrets`) to
   skip its error backoff. All-ES-red = sealed-vault signature; trust
   `describe`'s *Last Transition Time* to date the incident, not `get`'s
