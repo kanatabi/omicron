@@ -32,6 +32,18 @@ ledger records walked events. Newest first.
   decides WHICH lumen also names the hop). The id rides error objects
   (`AdminApiError.requestId`) for logs and support escalation, never for
   UI (ghost-field doctrine — the wire copy renders verbatim).
+- **2026-11-15 — one module, many copies: the register must be global.**
+  The runtime executes the metrics registry's SOURCE copy (server.js) AND
+  its bundled chunk (the hooks chain) — with per-instance `new Registry()`
+  the observations landed in a register nobody scraped (the smoke test
+  caught it: the access line spoke, the /metrics output stayed empty).
+  prom-client's DEFAULT register + idempotent `define()` is the fix (the
+  smoke proved it: the outbound series appear in the scrape). And the
+  ops are ENUMERATED per call site with the type enforcing it — the wire
+  paths embed slugs/usernames, so a path-derived label would be a
+  cardinality bomb. Standing rules: the registry is ONE plain-JS file;
+  ops are compiled-checked against the registry; budgets ride flat
+  MELLON_TIMEOUT_* env keys (missing or empty = default).
 - **2026-11-13 — the wizard joined the threat surface.** The setup wizard's
   unauthenticated write path earned first-class TOFU analysis (V7) after this
   note's original scope was written; the detailing lives in this vault:

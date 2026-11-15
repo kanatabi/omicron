@@ -27,6 +27,21 @@ events that minted entries there and anything newer. Newest first.
   in log fields, `X-Request-Id` on the wire — never `rid`, never a second
   spelling; the id rides error objects for logs but UI copy renders the
   wire message verbatim (ghost-field).
+- **2026-11-15 — server-only machinery is INJECTED into shared code, and
+  the metrics register is prom-client's DEFAULT global.** The SSR build
+  bundles `src/lib/server/*` into a chunk while server.js imports the
+  SOURCE file — two module instances of the same code. Per-instance
+  `new Registry()` meant the hooks' observations landed in a register
+  nobody scraped (the smoke test caught it: outbound series absent from
+  /metrics); the DEFAULT global register (a property of the externalized
+  prom-client module) makes every copy share one instance, and `define()`
+  makes the metric definitions idempotent across copies. The same shape
+  keeps the browser bundle clean: `client.ts` (shared) takes the
+  observability seam as an INJECTED `instrument` param — server.ts passes
+  the real wrapper, the browser gets an inert default (the proxy route
+  bounds its own leg). Standing rules: metrics vocabulary in ONE plain-JS
+  file; `$lib/server` imports never cross into shared client code (the
+  build enforces it).
 - **2026-11-09 — real-first replaced mock-first** (owner ruling). The runtime
   always fetches lumen; the fixture twin is test-only. Standing rule: AGENTS
   §6.4. The trap it guards: any new "mock mode" runtime path.

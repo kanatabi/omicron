@@ -195,6 +195,16 @@ The door: `gofar.id` + `www` via Traefik, DNS-01 TLS. Full flow:
   verbatim), logs the access line (`hop=ssr|proxy`), and carries lumen's
   echo in `ApiError.requestId`; the `/api` proxy mints/forwards/echoes
   too — the browser hop joins the chain.
+- **2026-11-15** — the metrics + budgets round (`7b872ad`): prom-client,
+  the ONE registry (`src/lib/server/metrics.js`, plain JS) shared by the
+  SvelteKit hooks and the custom server; every outbound call COUNTED
+  (outbound_request_total, ok/error/timeout) and BOUNDED
+  (AbortSignal.timeout, flat `EARENDIL_TIMEOUT_*` env keys, missing or
+  empty = default); the inbound RED pair in a `handle` hook keyed on
+  route IDs; `server.js` runs TWO listeners in ONE process (app on PORT,
+  unrouted `/metrics` on `EARENDIL_METRICS_PORT` default 9090 — the
+  no-sidecar contract's scrape door; Docker CMD `node server.js`);
+  vortex's pod annotations opt the scrape in.
 - **2026-11-09** — real-first ruling replaced mock-first (the BE exists).
 - **Earlier (dated in git log)** — Route B adopted (publish-time SVG
   rejected); the theme bloom retired (clip-path re-rasterized the viewport

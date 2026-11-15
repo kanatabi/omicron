@@ -180,8 +180,10 @@ contract has no auth story (its visibility rides logs + kubelet series
 until someone adds a scrape-auth decision). LUMEN'S 9090 LISTENER LANDED
 (2026-11-15, lumen `a9d71f9`): every process shape (`server`, `worker`,
 `all`) serves unrouted `/metrics` on `LUMEN_METRICS_PORT` (default 9090)
-— the rung-2 backlog is CLOSED; what remains is the vortex annotations
-round (the enable checklist below walks it) before `up` flips to 1.
+— the rung-2 backlog is CLOSED; and the Node apps' listeners + the
+pod annotations landed the same day (earendil `7b872ad`, mellon
+`c86c9cd`, vortex annotations merge) — the scrape door is OPEN on all
+three apps; `up` flips on the next image release of each.
 The provisioned **Estate
 overview** dashboard (folder `Estate`) draws exactly the verified series:
 node cpu/memory, per-pod cpu/memory/disk top-10, PVC usage %.

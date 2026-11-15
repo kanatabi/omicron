@@ -162,6 +162,18 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   `X-Request-Id`, log the access line (`hop=admin|cms` free from
   `upstreamFor`), and carry lumen's echo in `AdminApiError.requestId` —
   the wire copy untouched (ghost-field).
+- **2026-11-15** — the metrics + budgets round (`c86c9cd`): prom-client,
+  the ONE registry (`src/lib/server/metrics.js`) shared by the hooks and
+  the custom server via prom-client's DEFAULT register; every lumen call
+  COUNTED (outbound_request_total — the dependency axis maps from the
+  routing table: admin→lumen-admin, cms→lumen-cms) and BOUNDED
+  (AbortSignal.timeout; `photos.upload` gets the 30s budget); ops are
+  ENUMERATED per call site and typed (`OpName` — a misspelled op is a
+  compile error; the paths embed slugs so a path-derived label would be
+  a cardinality bomb); the inbound RED pair in a `handle` hook;
+  `server.js` runs TWO listeners in ONE process (unrouted `/metrics` on
+  `MELLON_METRICS_PORT` default 9090); vortex's pod annotations opt the
+  scrape in.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
 - **Open:** GATE #5 owner read-through; GATE #10 run (prod seeds first —
