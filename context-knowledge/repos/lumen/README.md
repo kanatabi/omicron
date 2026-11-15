@@ -13,9 +13,11 @@ updated: 2026-11-15
 
 ## 1. Role in the estate
 
-lumen is the estate's ONLY backend — a Go service that wears up to three
-hats depending on the **role** each deployment is given (`LUMEN_ROLE`,
-inline on the pods — deployment identity, never a vault value):
+Live Go service (M1–M6 merged 2026-11-09; secrets control plane
+2026-11-13; the count-pipeline redesign 2026-11-15) — a Go service that
+wears up to three hats depending on the **role** each deployment is given
+(`LUMEN_ROLE`, inline on the pods — deployment identity, never a vault
+value):
 
 | Role | Instances | Serves | Namespace |
 | :-- | :-- | :-- | :-- |
@@ -45,7 +47,17 @@ flowchart LR
 
 No role ever gets a public route — the API has no ingress, ever.
 
-## 2. Stack, and why each piece
+## 2. The deep-dive library (learn a subsystem here)
+
+| File | Answers |
+| :-- | :-- |
+| [content-pipeline.md](content-pipeline.md) | how a post becomes public: the §2 publish unit of work, the derivations, the state machine, the transactions |
+| [auth-and-sessions.md](auth-and-sessions.md) | where credentials live, the JWT mint/verify, tv-revocation, the TOFU wizard, the cms plane's introspection, the throttling |
+| [worker-and-queue.md](worker-and-queue.md) | River's Postgres queue, the index jobs, the server/worker prod-split, the janitor, the itest rule |
+| [media-relay.md](media-relay.md) | the upload path: multipart → hash → R2 → the CDN URL; the region lesson |
+| [search.md](search.md) | the engine's contract, the three indexes, the count pipeline (the counter's death) |
+
+## 3. Stack, and why each piece
 
 | Piece | Why |
 | :-- | :-- |
@@ -57,7 +69,7 @@ No role ever gets a public route — the API has no ingress, ever.
 | **argon2id** | password hashing (m=64MiB, t=3, p=2 — memory-hard, OWASP-side) |
 | Zalando Postgres operator (outside) | generates DB credentials; lumen only consumes `LUMEN_DB_URL` |
 
-## 3. Anatomy (the layering is load-bearing)
+## 4. Anatomy (the layering is load-bearing)
 
 ```mermaid
 flowchart TB
@@ -81,7 +93,7 @@ The layering rule is enforced by review, not a compiler: **a handler
 importing store, queue, or bao is a layering violation by definition.**
 Composition happens only in `cmd/lumen`.
 
-## 4. The contract surface
+## 5. The contract surface
 
 **Public API (§1) — earendil's `BlogApi` mirrors this exactly; the FE types move in ONE coordinated change:**
 
@@ -145,7 +157,7 @@ surface (D5 — teardown is an operator drill); logging is
 semantics + the append-only decision log:
 [secrets-control-plane.md](../../decisions/secrets-control-plane.md).
 
-## 5. Conventions that bite
+## 6. Conventions that bite
 
 - **Prepared statements always:** every query uses `$n` parameters;
   `ORDER BY` variants switch over fixed SQL strings; the ONE exception is
@@ -162,7 +174,7 @@ semantics + the append-only decision log:
 - **Migrations** run at boot (initContainer); the DSN arrives as
   `LUMEN_DB_URL` per environment.
 
-## 6. Running it
+## 7. Running it
 
 ```bash
 make dev          # the one-command loop: containers (pg+meili+openbao) +
@@ -185,7 +197,7 @@ make worker / make server   # the prod-split processes
 
 `env.yaml.sample` is the schema; real values never leave Bao/dev-plane.env.
 
-## 7. Testing (the battery, strictness order)
+## 8. Testing (the battery, strictness order)
 
 | Gate | Proves | Infra |
 | :-- | :-- | :-- |
@@ -200,7 +212,7 @@ Plus: `go vet ./...`, `go test ./...` before any commit; the Postman
 catalog preserves live captures (identical 401 bodies, 429 + Retry-After,
 token-replay-401).
 
-## 8. How it ships
+## 9. How it ships
 
 Same ladder as every app repo (anvil; tag `vX.Y.Z` → image
 `ghcr.io/kanatabi/lumen` → bump PR). The wrinkle: lumen deploys in TWO
@@ -209,7 +221,7 @@ Ready) and each env's cms (wave 0 of its env's hub, the dependency root) —
 and the **epoch TRIO** gate pins the config/render agreement. Detail:
 [../architecture/releases-and-ci.md](../../architecture/releases-and-ci.md).
 
-## 9. State & history (walked)
+## 10. State & history (walked)
 
 - **2026-11-09** — M1–M6 merged to `main` (the API is LIVE code).
 - **2026-11-13** — secrets control plane landed (`846f98b`): onboard/
@@ -221,7 +233,7 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
 - **Open:** D2 (RSS delivery shape) — runbook-era decision; Phase C4
   (vortex prod seeds for new apps).
 
-## 10. When you change this repo — the sync checklist
+## 11. When you change this repo — the sync checklist
 
 1. `go test ./... && go vet ./...` (+ the battery tier the change
    deserves).
@@ -229,6 +241,6 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
    admin-side) in the same round.
 3. Frozen-contract change (the `/admin/bao/*` surface)? The decision
    record's log updates BEFORE the code ships.
-4. Update this note if §1–§9 drifted; update [LEARNING.md](LEARNING.md)
+4. Update this note if §1–§10 drifted; update [LEARNING.md](LEARNING.md)
    if the change minted a lesson.
 5. Release via the anvil ladder only.
