@@ -205,6 +205,11 @@ The door: `gofar.id` + `www` via Traefik, DNS-01 TLS. Full flow:
   unrouted `/metrics` on `EARENDIL_METRICS_PORT` default 9090 — the
   no-sidecar contract's scrape door; Docker CMD `node server.js`);
   vortex's pod annotations opt the scrape in.
+- **2026-11-15** — the boot fixes: package.json ships in the runtime
+  image (the `#lib/*` alias needs it — `50bd8d0`, pre-empted before the
+  next release could crash-loop like mellon's v3.1.0) and the static
+  `/healthz` door (the probes rendered the homepage — the fake /api/*
+  traffic the metrics exposed).
 - **2026-11-09** — real-first ruling replaced mock-first (the BE exists).
 - **Earlier (dated in git log)** — Route B adopted (publish-time SVG
   rejected); the theme bloom retired (clip-path re-rasterized the viewport

@@ -28,6 +28,8 @@ natively).
    incident-shaped rule it carries.
 7. [observability.md](observability.md) — the no-sidecars contract, the
    opt-in scraping pattern, what's watched and what's off.
+8. [metrics-catalog.md](metrics-catalog.md) — the ONE inventory: every
+   metric family the three apps publish, labels, budgets, queries.
 
 ## The contract these notes serve
 

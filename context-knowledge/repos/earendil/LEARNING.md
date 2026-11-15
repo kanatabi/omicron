@@ -42,6 +42,15 @@ events that minted entries there and anything newer. Newest first.
   bounds its own leg). Standing rules: metrics vocabulary in ONE plain-JS
   file; `$lib/server` imports never cross into shared client code (the
   build enforces it).
+- **2026-11-15 — a probe that renders a page is a load generator.** The
+  kubelet's probes hit `/` (liveness 20s + readiness 60s): each probe
+  SSR-rendered the homepage and fired getPosts + listTags at lumen —
+  the steady fake /api/* traffic the metrics exposed (exact beats,
+  200s, 1ms, lumen-minted ids because the deployed image predated the
+  correlation seam). The static `/healthz` door (the metrics hook
+  already skipped it) + the vortex repoint is the fix. Standing rule:
+  probes aim at static doors, never at pages — and when a rate graph
+  shows exact fixed-period plateaus, suspect the probes FIRST.
 - **2026-11-09 — real-first replaced mock-first** (owner ruling). The runtime
   always fetches lumen; the fixture twin is test-only. Standing rule: AGENTS
   §6.4. The trap it guards: any new "mock mode" runtime path.

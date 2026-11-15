@@ -44,6 +44,22 @@ ledger records walked events. Newest first.
   cardinality bomb. Standing rules: the registry is ONE plain-JS file;
   ops are compiled-checked against the registry; budgets ride flat
   MELLON_TIMEOUT_* env keys (missing or empty = default).
+- **2026-11-15 — two boot blockers the rollout taught (the portal stayed
+  up through BOTH, which is its own trap):**
+  1. **The runtime image needs package.json** — the `#lib/*` alias lives
+     in its `imports` field; without it server.js dies at boot
+     (`ERR_PACKAGE_IMPORT_NOT_DEFINED`, 99a7d47). The v3.1.0 pod
+     crash-looped while the OLD pod kept serving — "the portal works"
+     masked a stuck rolling update. Check `rollout status`/pod states,
+     never just the browser.
+  2. **Auth-in-layout does not gate page loads** — SvelteKit runs layout
+     and page loads in PARALLEL; the kubelet's probe on `/` (unauthed)
+     fired the dashboard's four lumen dials anyway: four 401s per probe
+     forever (0f224b0). Every (app) page load now opens with
+     `requireAuthed` (a LOCAL cookie check — no lumen dial) and the
+     auth-gate guard test walks the route tree. The probes also point at
+     the M0-era `/healthz` (a probe must never render a page). Standing
+     rules: new page loads gate FIRST; probes aim at static doors.
 - **2026-11-13 — the wizard joined the threat surface.** The setup wizard's
   unauthenticated write path earned first-class TOFU analysis (V7) after this
   note's original scope was written; the detailing lives in this vault:
