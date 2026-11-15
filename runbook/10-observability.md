@@ -211,6 +211,19 @@ change the contract.
 
 ### 4.6. Pod logs, labeled — the log-label contract (walked 2026-11-14)
 
+> **The request-id debug flow (lumen, walked 2026-11-15):** every lumen
+> request carries a **request-id** — adopted from the caller's
+> `X-Request-Id` (mellon's relay forwards one) or minted by chi — printed
+> on EVERY log line down the stack, echoed in the response header, and
+> carried into the queue's jobs (metadata; the worker's lines add
+> `job_id`). The debug flow: an error anywhere → its request-id → one
+> Loki/LogQL query (`{app="lumen"} |= "the-id"`) → the WHOLE chain: the
+> relay's line, the auth verdict, the store, the queue, the worker, the
+> S3 error code. lumen's errors SPEAK now: the catch-all logs
+> `http.unhandled` (err + method + path + id), the media S3 failures log
+> `media.put.failed` with the error code, the deny reasons are named. The
+> redaction contract is untouched (the ids are not payloads).
+
 **Where the logs physically live** (the kubelet layer — Kubernetes does
 this for us before any Alloy is involved): every container's stdout and
 stderr is captured by the kubelet into plain files on the node, in a

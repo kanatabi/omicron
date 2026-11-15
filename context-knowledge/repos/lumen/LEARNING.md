@@ -10,6 +10,15 @@ The standing rulings live in the repo's
 contract in its DESIGN.md. This ledger records walked events that minted
 them. Newest first.
 
+- **2026-11-15 — the observability amendment: every request and job
+  speaks.** Three silent paths were found in ONE debugging night: the
+  media relay's 500 (logged nothing), the catch-all's `_ = r` (the
+  discarded error), the verify's reasonless 401. The amendment: the
+  correlation seam (request-id in/out + down the ctx + into the job
+  metadata) + the speaking-errors rule (the catch-all, the media S3
+  errors, the deny's reason). The lesson's edge: **the machinery was
+  half-built all along** (chi's RequestID middleware mounted but
+  unread) — audit what EXISTS before building new.
 - **2026-11-15 — the media relay's first real walk; the region seed was
   wrong.** The upload 500'd with lumen's generic `{"error":"internal
   error"}` AND zero log lines (the media handler swallows the S3 error —

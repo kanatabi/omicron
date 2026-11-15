@@ -56,6 +56,7 @@ No role ever gets a public route — the API has no ingress, ever.
 | [worker-and-queue.md](worker-and-queue.md) | River's Postgres queue, the index jobs, the server/worker prod-split, the janitor, the itest rule |
 | [media-relay.md](media-relay.md) | the upload path: multipart → hash → R2 → the CDN URL; the region lesson |
 | [search.md](search.md) | the engine's contract, the three indexes, the count pipeline (the counter's death) |
+| [logging.md](logging.md) | the correlation seam: the request-id's lifecycle, the speaking-errors rule, the debug flow |
 
 ## 3. Stack, and why each piece
 
