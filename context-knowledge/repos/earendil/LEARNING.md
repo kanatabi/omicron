@@ -19,6 +19,14 @@ events that minted entries there and anything newer. Newest first.
   that no doc states plainly (environment approval scope; `on.push.tags`
   glob-vs-regex). Ledgered here because the fix rode this repo's release
   wiring; the full ruling lives in anvil AGENTS §5.
+- **2026-11-15 — the correlation id is MINTED per call, never adopted.**
+  earendil's seam (`requestid.ts`) mints a UUID per outbound call and
+  echoes lumen's RESPONSE id when it answers — the echo wins, the minted
+  id is the fallback (a caller that predates the echo still chains).
+  Standing rule: one vocabulary file per app (`requestid.ts`), `request_id`
+  in log fields, `X-Request-Id` on the wire — never `rid`, never a second
+  spelling; the id rides error objects for logs but UI copy renders the
+  wire message verbatim (ghost-field).
 - **2026-11-09 — real-first replaced mock-first** (owner ruling). The runtime
   always fetches lumen; the fixture twin is test-only. Standing rule: AGENTS
   §6.4. The trap it guards: any new "mock mode" runtime path.

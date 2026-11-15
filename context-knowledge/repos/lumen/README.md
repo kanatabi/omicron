@@ -58,6 +58,18 @@ No role ever gets a public route — the API has no ingress, ever.
 | [search.md](search.md) | the engine's contract, the three indexes, the count pipeline (the counter's death) |
 | [logging.md](logging.md) | the correlation seam: the request-id's lifecycle, the speaking-errors rule, the debug flow |
 
+Observability (2026-11-15) rides the same seam: `internal/obs` is ONE
+package with ONE vocabulary — the outbound RED pair for every outside
+dependency (`outbound_request_total{dependency,operation,result}` +
+duration + in-flight), the inbound pair on chi route TEMPLATES, queue job
+counters, pool gauges. `/metrics` serves on the UNROUTED admin port
+(`LUMEN_METRICS_PORT`, default 9090) on every process shape — server,
+worker, all. Every outbound call is also BOUNDED: the timeout table lives
+in the same registry, resolved `op override > dep default > in-code
+default` through viper's flat `timeout_*` keys (missing or empty env =
+default). Label doctrine: `dependency`/`operation`/`result` + static
+`service` — never ids or slugs.
+
 ## 3. Stack, and why each piece
 
 | Piece | Why |
@@ -225,6 +237,12 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
 ## 10. State & history (walked)
 
 - **2026-11-09** — M1–M6 merged to `main` (the API is LIVE code).
+- **2026-11-15** — the observability round (`a9d71f9`): `internal/obs`
+  (RED pairs + timeouts + `/metrics` on 9090 every shape), adapters
+  wrapped, sample made loadable, `.gitignore` doctrine gap closed. The
+  correlation chain reached the frontends the same day (earendil
+  `7f4dc0c`, mellon `be18712`): every SSR/portal hop mints a request-id
+  lumen adopts.
 - **2026-11-13** — secrets control plane landed (`846f98b`): onboard/
   mirror/pin foundations + the C1 estate matrix (`9544ce4`) + the epoch
   gate and **pin-as-lock** (`28e7811`); role split (admin/cms) minted in

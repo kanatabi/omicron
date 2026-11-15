@@ -1,6 +1,6 @@
 ---
 tags: [runbook, secrets, vault]
-updated: 2026-11-14
+updated: 2026-11-15
 status: >-
   ritual incident-proven (rehearsal walk + two unseal drills); the
   THREE-plane seed contract below is the Phase 11 shape — verified key-by-key
@@ -178,11 +178,16 @@ EOF"
 X "export VAULT_TOKEN=$ROOT; bao policy write portal - <<'EOF'
 path \"kv/data/lumen/staging\"     { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }
 path \"kv/data/lumen/production\"  { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }
-path \"kv/data/*/staging\"         { capabilities = [\"read\",\"list\"] }
-path \"kv/data/*/production\"      { capabilities = [\"read\",\"list\"] }
-path \"kv/data/*/shared\"          { capabilities = [\"read\",\"list\"] }
+path \"kv/data/+/staging\"         { capabilities = [\"read\",\"list\"] }
+path \"kv/data/+/production\"      { capabilities = [\"read\",\"list\"] }
+path \"kv/data/+/shared\"          { capabilities = [\"read\",\"list\"] }
 path \"kv/metadata/*\"             { capabilities = [\"read\",\"list\"] }
 EOF"
+# NOTE the `+` (fixed 2026-11-15): in OpenBao policy paths a `*` is a glob
+# valid as the LAST character only — a MIDDLE `*` (kv/data/*/staging) is
+# not the segment wildcard that shape implies; `+` matches exactly ONE
+# segment, which is what these scoped grants mean. The trailing globs
+# (kv/data/*, kv/metadata/*) stay `*` on purpose.
 ```
 
 > **Why `secrets enable -path=kv kv-v2` (and not some `kv enable` form):**
@@ -335,7 +340,7 @@ curl -s -X POST $V/v1/sys/policy/eso -H "X-Vault-Token: $ROOT" --data-binary @- 
 {"policy": "path \"kv/data/*\" { capabilities = [\"read\"] }\npath \"kv/metadata/*\" { capabilities = [\"read\",\"list\"] }"}
 EOF
 curl -s -X POST $V/v1/sys/policy/portal -H "X-Vault-Token: $ROOT" --data-binary @- <<'EOF'
-{"policy": "path \"kv/data/lumen/staging\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/lumen/production\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/*/staging\" { capabilities = [\"read\",\"list\"] }\npath \"kv/data/*/production\" { capabilities = [\"read\",\"list\"] }\npath \"kv/data/*/shared\" { capabilities = [\"read\",\"list\"] }\npath \"kv/metadata/*\" { capabilities = [\"read\",\"list\"] }"}
+{"policy": "path \"kv/data/lumen/staging\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/lumen/production\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/staging\" { capabilities = [\"read\",\"list\"] }\npath \"kv/data/+/production\" { capabilities = [\"read\",\"list\"] }\npath \"kv/data/+/shared\" { capabilities = [\"read\",\"list\"] }\npath \"kv/metadata/*\" { capabilities = [\"read\",\"list\"] }"}
 EOF
 
 # 5. ROLES — secret_id_num_uses 0 BEFORE minting (§3.4's bomb)

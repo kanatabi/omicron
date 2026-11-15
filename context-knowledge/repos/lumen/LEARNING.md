@@ -30,6 +30,18 @@ them. Newest first.
   auto`. The seeds (runbook ch.05) now say `LUMEN_MEDIA_REGION=auto`.
   Also walked: FORCE_PATH=false (virtual-host) reaches R2's API fine —
   ch.07's claim proven; the FORCE_PATH flip was a red herring.
+- **2026-11-15 — a key family with TWO spellings is a drift vector.** The
+  timeout keys were minted flat (`timeout_meilisearch`) by the obs
+  registry, but config's resolution loop still filtered on the dotted
+  prefix (`"timeout."`) — every binding silently fell through and every
+  env override read NOTHING while the in-code defaults kept the tests
+  half-green (the standalone viper probe passed, the flow didn't). The
+  class: derived keys must have ONE spelling rule shared by the minter
+  and every filter — the parity guard test now proves the rows against
+  the registry, and the union arithmetic derives the shared count instead
+  of hardcoding it. (The viper probe's lesson underneath: dotted keys
+  can't hold a dep-default scalar AND an op-override map at one YAML
+  path — flat underscore keys are the shape.)
 - **2026-11-13 — the battery owns an `itest/` prefix, never the human path.**
   An old worker + shared queue reseeded `kv/lumen/dev` mid-walk (a human was
   browsing the same path) — the collision class. Minted the integration-path

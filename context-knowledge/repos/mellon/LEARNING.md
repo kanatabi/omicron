@@ -25,6 +25,13 @@ ledger records walked events. Newest first.
   role-split round moved every call behind `routing.ts` (session/users/
   setup/bao → ADMIN_URL; content → CMS_URL; unknown → throw). Standing rule:
   AGENTS §4.
+- **2026-11-15 — the correlation id is MINTED here, never adopted from the
+  browser.** The browser renders nothing correlation-shaped; a
+  client-supplied id header is a log-injection surface. The access line's
+  `hop` comes free from the routing table (`upstreamFor` — the table that
+  decides WHICH lumen also names the hop). The id rides error objects
+  (`AdminApiError.requestId`) for logs and support escalation, never for
+  UI (ghost-field doctrine — the wire copy renders verbatim).
 - **2026-11-13 — the wizard joined the threat surface.** The setup wizard's
   unauthenticated write path earned first-class TOFU analysis (V7) after this
   note's original scope was written; the detailing lives in this vault:

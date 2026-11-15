@@ -43,9 +43,32 @@ flowchart LR
 | the worker's failures | `job.failed` with `err` (+ the ids) | ERROR |
 | the login denials | `session.deny` (the throttle's audit — pre-existing) | INFO |
 | reads | silent (the ops doctrine: consequential events only) | — |
+| **every incoming request** | `http.access`: method, path, status, duration_ms, bytes + the id — the transport's nginx-style line; the query string never logs (URLs can carry secrets); the probes skip | INFO |
+| **every FAILED outbound call** | `outbound.failed`: dependency, operation, result (`error`\|`timeout`), duration_ms, err + request_id — the generic line is the alert's grep; the rich site lines above stay for the human | ERROR |
 
 The redaction stance is UNCHANGED by all of this: the ids are identifiers,
 not payloads — `op + app + env + version + key-counts`, never values.
+
+## The chain now reaches the frontends (2026-11-15)
+
+The seam used to start at lumen's edge. It now starts at the BROWSER:
+
+- **earendil** (`src/lib/api/requestid.ts`, landed `7f4dc0c`): every SSR
+  load and the `/api` proxy MINT a UUID per call, send it as
+  `X-Request-Id` (lumen adopts it verbatim), log their own access line
+  (`hop=ssr|proxy`), echo lumen's response id back to the browser, and
+  carry the id in `ApiError.requestId` — a page-level catch names the
+  same id the backend's logs print.
+- **mellon** (`src/lib/api/requestid.ts`, landed `be18712`): the
+  fetch-adapter's `call()` and `addPhoto` do the same (`hop` comes free
+  from the routing table's `upstreamFor`); `AdminApiError.requestId`
+  rides for logs — the wire error copy stays verbatim (ghost-field
+  doctrine). The id is MINTED per call, never adopted from the browser:
+  a client-supplied header is a log-injection surface.
+
+So the debug flow's step 2 is now reachable from a user's screenshot,
+and the chain has FOUR hops: earendil/mellon's outbound line → lumen's
+`http.access` → lumen's op line → the queue job.
 
 ## The debug flow, end to end
 

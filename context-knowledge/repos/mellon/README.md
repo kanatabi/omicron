@@ -157,6 +157,11 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   cf-token seed issued the certs); the upload relay's first walk hit the
   R2 region seed bug (lumen's ledger has it — fixed via `auto`) and the
   upload went 201 through the fixed relay.
+- **2026-11-15** — the correlation round (`be18712`): the fetch-adapter's
+  `call()` and `addPhoto` mint a request-id per call, send it as
+  `X-Request-Id`, log the access line (`hop=admin|cms` free from
+  `upstreamFor`), and carry lumen's echo in `AdminApiError.requestId` —
+  the wire copy untouched (ghost-field).
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
 - **Open:** GATE #5 owner read-through; GATE #10 run (prod seeds first —

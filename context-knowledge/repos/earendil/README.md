@@ -189,6 +189,12 @@ The door: `gofar.id` + `www` via Traefik, DNS-01 TLS. Full flow:
   went green; earendil's pods rolled when the certs landed (the wave-2
   hold → lifted; **gofar.id serves 200 with the real cert**) — the site's
   public DNS flip (GATE #10) is the remaining go-public act.
+- **2026-11-15** — the correlation round (`7f4dc0c`): every outbound
+  lumen call mints a request-id (`src/lib/api/requestid.ts` — the
+  vocabulary in ONE file), sends it as `X-Request-Id` (lumen adopts it
+  verbatim), logs the access line (`hop=ssr|proxy`), and carries lumen's
+  echo in `ApiError.requestId`; the `/api` proxy mints/forwards/echoes
+  too — the browser hop joins the chain.
 - **2026-11-09** — real-first ruling replaced mock-first (the BE exists).
 - **Earlier (dated in git log)** — Route B adopted (publish-time SVG
   rejected); the theme bloom retired (clip-path re-rasterized the viewport

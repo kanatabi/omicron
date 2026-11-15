@@ -43,7 +43,7 @@ status: >-
 ```mermaid
 flowchart LR
     subgraph PRODUCE["Producers opt in — 3 pod annotations, no sidecars"]
-        L["lumen fleets (admin + cms per env — omicron/env stamped)<br/>annotated for :9090 /metrics — the listener itself is<br/>still OPEN backlog (§4.5 ladder, rung 2)"]
+        L["lumen fleets (admin + cms per env — omicron/env stamped)<br/>annotated for :9090 /metrics — the listener LANDED 2026-11-15<br/>(lumen a9d71f9; the pod-annotation edit is the vortex round)"]
         G["grafana :3000 /metrics"]
         K["kubelet / cAdvisor / k3s certs —<br/>via the API-server proxy"]
         T["traefik — scraped (traefik_*) ·<br/>OTLP :4317 push: semconv metrics<br/>+ access logs (§4.7)"]
@@ -173,13 +173,16 @@ curl -s http://127.0.0.1:18428/api/v1/query?query=up | python3 -m json.tool | gr
 # every job up=1; series sanity: curl …/api/v1/label/__name__/values
 ```
 
-**Known gaps, printed honestly** (the two `up=0` targets you may still
-see): lumen's pod carries the annotations but its server **doesn't listen
-on 9090 yet** (`listening on :8080` is its only bind — the metrics
-endpoint is a lumen backlog item); meilisearch's `/metrics` answers
+**Known gaps, printed honestly** (the `up=0` target you may still
+see): meilisearch's `/metrics` answers
 **401** — Meili gates it behind the master key, and the annotation
 contract has no auth story (its visibility rides logs + kubelet series
-until someone adds a scrape-auth decision). The provisioned **Estate
+until someone adds a scrape-auth decision). LUMEN'S 9090 LISTENER LANDED
+(2026-11-15, lumen `a9d71f9`): every process shape (`server`, `worker`,
+`all`) serves unrouted `/metrics` on `LUMEN_METRICS_PORT` (default 9090)
+— the rung-2 backlog is CLOSED; what remains is the vortex annotations
+round (the enable checklist below walks it) before `up` flips to 1.
+The provisioned **Estate
 overview** dashboard (folder `Estate`) draws exactly the verified series:
 node cpu/memory, per-pod cpu/memory/disk top-10, PVC usage %.
 
@@ -211,18 +214,28 @@ change the contract.
 
 ### 4.6. Pod logs, labeled — the log-label contract (walked 2026-11-14)
 
-> **The request-id debug flow (lumen, walked 2026-11-15):** every lumen
-> request carries a **request-id** — adopted from the caller's
-> `X-Request-Id` (mellon's relay forwards one) or minted by chi — printed
-> on EVERY log line down the stack, echoed in the response header, and
-> carried into the queue's jobs (metadata; the worker's lines add
-> `job_id`). The debug flow: an error anywhere → its request-id → one
-> Loki/LogQL query (`{app="lumen"} |= "the-id"`) → the WHOLE chain: the
-> relay's line, the auth verdict, the store, the queue, the worker, the
-> S3 error code. lumen's errors SPEAK now: the catch-all logs
+> **The request-id debug flow (walked 2026-11-15, now chain-complete):**
+> every lumen request carries a **request-id** — adopted from the
+> caller's `X-Request-Id` or minted by chi — printed on EVERY log line
+> down the stack, echoed in the response header, and carried into the
+> queue's jobs (metadata; the worker's lines add `job_id`). The debug
+> flow: an error anywhere → its request-id → one Loki/LogQL query
+> (`{app="lumen"} |= "the-id"`) → the WHOLE chain: the relay's line, the
+> auth verdict, the store, the queue, the worker, the S3 error code.
+> lumen's errors SPEAK now: the catch-all logs
 > `http.unhandled` (err + method + path + id), the media S3 failures log
 > `media.put.failed` with the error code, the deny reasons are named. The
 > redaction contract is untouched (the ids are not payloads).
+>
+> **The chain reaches the BROWSER side too** (2026-11-15: earendil
+> `7f4dc0c`, mellon `be18712`): both frontends MINT a UUID per outbound
+> call, send it as `X-Request-Id`, and log their own access line
+> (`hop=ssr|proxy` for earendil, `hop=admin|cms` for mellon). So the
+> one-query pull now has FOUR hops — extend the query:
+> `{app=~"lumen|earendil|mellon"} |= "the-id"` — the frontend's outbound
+> line, lumen's `http.access`, its op line, the queue job. A user can
+> even report the id: earendil's `/api` proxy echoes lumen's response id
+> back to the browser.
 
 **Where the logs physically live** (the kubelet layer — Kubernetes does
 this for us before any Alloy is involved): every container's stdout and
@@ -525,9 +538,11 @@ rung has a walked example somewhere in this estate):
 1. **Is the pod annotated at all?** No annotations → the relabel `keep`
    drops it → not even an `up` series exists. (Command: step 5.1 above.)
 2. **Does the app actually LISTEN on the annotated port?** *Walked
-   example:* lumen's pod carries the annotations but its server binds
-   only `:8080` — no 9090 listener yet, so its `up` is 0 despite a
-   perfect contract (backlog, §4.5).
+   example (now RESOLVED — the backlog's own history):* lumen's pod
+   carried the annotations while its server bound only `:8080` — `up`
+   was 0 despite a perfect contract. Landed 2026-11-15 (`a9d71f9`):
+   every lumen process shape serves unrouted `/metrics` on 9090; the
+   remaining rung is the vortex pod-annotation edit.
 3. **Does the endpoint answer without auth?** *Walked example:*
    meilisearch's `/metrics` returns **401** — gated behind the master
    key; the annotation contract has no auth story yet (§4.5).
