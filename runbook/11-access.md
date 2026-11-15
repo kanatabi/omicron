@@ -105,6 +105,40 @@ the value carried from the rehearsed walk).
 > `/var/log/auth.log`. Two commands per work session is the honest cost
 > of a small attack surface.
 
+### The k3d rehearsal's local doors (no SSH hop — walked 2026-11-15)
+
+On the laptop cluster the doors are ALREADY on localhost: the k3d
+loadbalancer maps host 80/443 → Traefik (the chart's `hostPort`, ch.03
+§6). The zero-forward test is `/etc/hosts` + the browser:
+
+```
+127.0.0.1 console.gofar.id gofar.id www.gofar.id anor.gofar.id staging.gofar.id
+```
+
+then `https://console.gofar.id/login` — real Let's Encrypt cert, no
+`-k`. Three traps walked tonight:
+
+- **The browser test fails without the hosts override** — and the hosts
+  file itself is CLUSTER-ERA STATE: an entry written for one rehearsal
+  runtime (the minikube-era `192.168.58.2`) keeps pointing the doors at a
+  dead IP after the runtime changes (k3d answers on `127.0.0.1`) —
+  "Unable to connect" looks like a cluster problem and is a stale line.
+- **`curl --resolve gofar.id:443:127.0.0.1` bypasses DNS** — it proves the
+  cluster path while the browser still hits Cloudflare; use it to tell
+  "cluster fine, name stale" from "cluster broken".
+- **Forward the SERVICE's door ports, never the pod's `8080`** — that one
+  is Traefik's own API/dashboard entrypoint (the map: `web` 8000 =
+  HTTP-redirect, `websecure` 8443 = the doors, `traefik` 8080 = dashboard,
+  `metrics` 9100). The useful forwards:
+
+  ```bash
+  kubectl -n ingress port-forward svc/traefik 30443:443
+  # → https://console.gofar.id:30443 (hosts lines in place)
+  kubectl -n ingress port-forward deploy/traefik 30080:8080
+  # → http://localhost:30080/dashboard/ — every router Traefik claims,
+  #   and WHY a route is missing (per-router TLS errors listed live)
+  ```
+
 ## 4. Optional comfort: Tailscale (mesh VPN)
 
 > **Why optional:** it removes the two-terminal dance forever — server

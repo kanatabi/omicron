@@ -48,9 +48,9 @@ firewall-denied at the host and mesh-reached.
 
 | Door | Serves | Layering | State |
 | :-- | :-- | :-- | :-- |
-| `gofar.id` + `www.gofar.id` | earendil (content reads) | Cloudflare proxy → Traefik → SSR pods. Unauthenticated reads; writes don't exist here | **DECLARED — DNS cutover done** (verified 2026-11-11; `ainurrofiq.com` 301s in; www is production-only by ruling). **Not yet serving**: the production hub is not applied to any cluster — the door opens with the hub walk |
-| `console.gofar.id` | mellon (the owner's portal) | Cloudflare → Traefik + console middlewares (HSTS/headers/rate-limit) → mellon → relays to lumen. Service stays **ClusterIP**; only Traefik routes | Contractually live; **GATE #10** checklist gates the first public walk; `kubectl port-forward` remains break-glass |
-| `anor.gofar.id` | Grafana dashboards (per-env filtered) | the ONLY door with a guest list: proxied DNS → managed challenge (whole host) → Access email allowlist → Grafana OIDC. Access IS the identity | ruling 2026-11-13 |
+| `gofar.id` + `www.gofar.id` | earendil (content reads) | Cloudflare proxy → Traefik → SSR pods. Unauthenticated reads; writes don't exist here | **LIVE — walked 2026-11-15**: 200 with the real Let's Encrypt cert (`gofar-id`); DNS cutover 2026-11-11; www is production-only by ruling |
+| `console.gofar.id` | mellon (the owner's portal) | Cloudflare → Traefik + console middlewares (HSTS/headers/rate-limit) → mellon → relays to lumen. Service stays **ClusterIP**; only Traefik routes | **LIVE — walked 2026-11-15**: 303 → login, cert valid; HUMAN-GATE #10 still gates the PRODUCTION DNS flip (this walk rode the local k3d rehearsal cluster); port-forward remains break-glass |
+| `anor.gofar.id` | Grafana dashboards (per-env filtered) | the ONLY door with a guest list: proxied DNS → managed challenge (whole host) → Access email allowlist → Grafana OIDC. Access IS the identity | ruling 2026-11-13; cert issued + 302 → OIDC (walked 2026-11-15) |
 | `img.gofar.id` | photos | R2 bucket custom domain — never touches the server; outside ACME (bucket-side TLS) | GATE #9 closed 2026-11-13 |
 | `staging.gofar.id` / `staging-console.gofar.id` | the staging world's twins | same Traefik, same ClusterIssuer | contractual; DNS + seeds land when staging first goes live |
 

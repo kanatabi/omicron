@@ -283,7 +283,10 @@ The `omicron-media` bucket and lumen's `LUMEN_MEDIA_*` seed already exist
    `kv/lumen/production::LUMEN_MEDIA_ACCESS_KEY/_SECRET_KEY`;
    `LUMEN_MEDIA_CDN_BASE=https://img.gofar.id` and
    `LUMEN_MEDIA_FORCE_PATH=false` (R2 speaks virtual-host style fine —
-   MinIO-era tutorials will say "true"; R2 says no need).
+   MinIO-era tutorials will say "true"; R2 says no need — **and so does
+   lumen's relay, walked 2026-11-15**: both addressing forms reach R2's
+   API; the 500 that night was the REGION seed (`r2` — invalid; `auto`
+   is the value, ch.05 §6.2), not the addressing).
 
 ✅ smoke test (the monthly one from here on): portal → upload a tiny png →
 its `img.gofar.id` URL → `curl -sI` shows `cf-cache-status: HIT|MISS`

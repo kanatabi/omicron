@@ -79,10 +79,12 @@ line shape; observability without sidecars; the doc tier
 
 ## 5. State & history (walked)
 
-- **2026-11-15** — the first production-hub walk (k3d): lumen cms green;
-  earendil/mellon parked at the Ingress wave pending ch.07's `cf-token`
-  seed (the wave-2 hold); the hook-ordering + epoch-head lessons walked
-  and ledgered.
+- **2026-11-15** — the first production-hub walk (k3d), LANDED: hook
+  ordering (sync-wave), epoch-vs-vault-head, the edge (hostPort +
+  ingressEndpoint.hostname), the cf-token seed → certs → doors — the
+  fleet + all doors green (gofar.id 200 / console 303 / anor 302); the
+  media relay's region seed bug (r2 → auto) walked and fixed the same
+  night.
 - **2026-11-11** — the DNS-side domain cutover verified (the doors are
   declared); first full runbook walk (Part A) on the rehearsal cluster.
 - **2026-11-13/14** — the environment-model re-cut (three planes, role

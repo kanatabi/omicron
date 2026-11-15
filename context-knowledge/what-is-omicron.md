@@ -12,19 +12,17 @@ infrastructure decision record, the operating runbook, and the knowledge vault
 ([kanatabi](https://github.com/kanatabi)); GitLab `arkoi/omicron/*` trees exist
 as mirrors where protection rules allow.
 
-> **Status honesty (2026-11-15, after the first production-hub walk):** the
-> estate described here is what the manifests DECLARE — and the walk to
-> realize it is PART-WAY done. Applied and green: Argo CD, the foundation
-> plane (incl. `lumen-admin`), observability, and the production **lumen
-> cms fleet (Synced/Healthy)**. Parked by design: **earendil and mellon sit
-> at their Ingress wave** — their TLS secrets wait on ch.07's `cf-token`
-> seed (the certificates app rides Degraded until then), and Argo's health
-> gate holds their Deployments (wave 2) until the Ingress has an address.
-> Not applied: the staging hub. Done earlier: the DNS-side domain cutover
-> (2026-11-11), the release ladder proven live (ch.09, 2026-11-14). What
-> remains: ch.07 (token mint + seed → certs → the fleet's last mile → the
-> doors open) → the first-instance checks → go-public (M5) —
-> [`runbook/00a-run-order.md`](../runbook/00a-run-order.md).
+> **Status honesty (2026-11-15, the first-hub walk LANDED):** the
+> production fleet is **SERVING on the rehearsal cluster** — lumen cms
+> Synced/Healthy, earendil + mellon rolled (the wave-2 hold lifted once
+> ch.07's `cf-token` seed issued the certs), the doors answering: gofar.id
+> 200 (real cert), console 303, anor 302. The certificates app is Healthy.
+> Not applied: the staging hub (seed its token first — the invariant-strict
+> order, 00a A9). The doors ride the LOCAL k3d cluster via /etc/hosts +
+> the k3d loadbalancer (ch.11's local-doors section); the PUBLIC dns flip
+> (GATE #10) still gates the real go-public. Walked the hard way tonight:
+> the gate's epoch-vs-vault-head witness, the hook ordering (sync-wave),
+> and the media region seed (auto).
 
 ## The five repos
 

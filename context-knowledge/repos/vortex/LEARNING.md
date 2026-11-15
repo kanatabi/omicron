@@ -9,6 +9,22 @@ The standing traps live in the repo's
 [AGENTS.md §9](https://github.com/kanatabi/vortex/blob/main/AGENTS.md); this
 ledger records walked events, newest first.
 
+- **2026-11-15 — the doors opened: the full first-boot chain walked.**
+  cf-token seeded (ch.07 §3.2) → ES rendered → challenges presented →
+  DNS-01 propagation → all four certs issued → Traefik claimed the routes
+  → Ingress addresses (via `ingressEndpoint.hostname=localhost` — see
+  below) → the wave-2 hold lifted → **earendil + mellon rolled; gofar.id
+  answered 200 with the real cert; console 303; anor 302.** Two sub-lessons
+  minted on the way:
+  - **`ingressEndpoint.hostname` must be a DNS NAME, not an IP** — the API
+    server rejects `127.0.0.1` (`must be a DNS name, not an IP address`);
+    AND the chart's `publishedService` default (copy the address from the
+    traefik Service — PENDING here) silently wins over the hostname unless
+    disabled in the SAME helm upgrade (helm upgrades replace values — a
+    flag from a previous upgrade doesn't survive).
+  - **Every `helm upgrade traefik` on this cluster deadlocks** — the new
+    pod can't schedule while the old holds hostPort 80/443 (the chart
+    ignores the Recreate override); delete the old pod after upgrading.
 - **2026-11-15 — the epoch's witness is the vault HEAD.** The production
   hub's first apply wedged a THIRD way: the gate refused
   `declared 7; vault head 1` — the trio's 7 was the owner's

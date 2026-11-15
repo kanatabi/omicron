@@ -10,6 +10,17 @@ The standing rulings live in the repo's
 contract in its DESIGN.md. This ledger records walked events that minted
 them. Newest first.
 
+- **2026-11-15 — the media relay's first real walk; the region seed was
+  wrong.** The upload 500'd with lumen's generic `{"error":"internal
+  error"}` AND zero log lines (the media handler swallows the S3 error —
+  a logging gap to fix in code: `media.put.failed` must log the op +
+  bucket + the S3 error code, never payloads). The diagnose-a-silent-S3
+  probe that cracked it: a one-off `amazon/aws-cli` pod carrying the SAME
+  rendered credentials named the error out loud — `InvalidRegionName:
+  'r2' is not valid. Must be one of: wnam, enam, weur, eeur, apac, oc,
+  auto`. The seeds (runbook ch.05) now say `LUMEN_MEDIA_REGION=auto`.
+  Also walked: FORCE_PATH=false (virtual-host) reaches R2's API fine —
+  ch.07's claim proven; the FORCE_PATH flip was a red herring.
 - **2026-11-13 — the battery owns an `itest/` prefix, never the human path.**
   An old worker + shared queue reseeded `kv/lumen/dev` mid-walk (a human was
   browsing the same path) — the collision class. Minted the integration-path

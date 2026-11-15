@@ -140,10 +140,11 @@ tooling that deploys production should never move invisibly.
 
 The release MACHINERY is proven — the first live walk rode the full chain
 (first bump #17: staging before production, evidence-first; then lumen
-v4.0.1, mellon v3.0.1, earendil v1.2.0 on 2026-11-14). What is NOT yet
-done: applying the manifests those bumps produced — the staging and
-production hubs are unapplied and nothing is serving (2026-11-15 status;
-see [system-overview.md](system-overview.md)'s declared-vs-serving note).
+v4.0.1, mellon v3.0.1, earendil v1.2.0 on 2026-11-14) — AND on
+2026-11-15 the production hub's first apply turned those manifests into a
+SERVING fleet (the bump tags' images running behind the doors; the
+config-gate's epoch-vs-vault-head witness walked the hard way — see
+[system-overview.md](system-overview.md)'s status note).
 The full operator view lives in runbook
 [`09-releases.md`](../../runbook/09-releases.md)
 (the ladder), [`12-operations.md`](../../runbook/12-operations.md)

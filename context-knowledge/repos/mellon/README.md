@@ -152,6 +152,11 @@ layering; HUMAN-GATE #10 is the go-live checklist.
 - **2026-11-11** — setup wizard surfaces; the TOFU threat analysis (V7)
   added to the threat note.
 - **2026-11-08** — the public-door amendment (was port-forward-only).
+- **2026-11-15** — the portal ROLLED and the door answered: `console.gofar.id`
+  → 303 → login behind the real cert (the wave-2 hold lifted once the
+  cf-token seed issued the certs); the upload relay's first walk hit the
+  R2 region seed bug (lumen's ledger has it — fixed via `auto`) and the
+  upload went 201 through the fixed relay.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
 - **Open:** GATE #5 owner read-through; GATE #10 run (prod seeds first —

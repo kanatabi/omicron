@@ -186,9 +186,9 @@ The door: `gofar.id` + `www` via Traefik, DNS-01 TLS. Full flow:
   resolves; the old domain 301s in). The SSR dependency-bundling lesson
   minted the bundle-the-markdown-family rule (`8609828`).
 - **2026-11-15** — the first production-hub walk: the cms fleet (lumen)
-  went green; **earendil's own pods park at the Ingress wave** until
-  ch.07's `cf-token` seed issues the TLS cert (the wave-2 hold — the
-  site's last mile is the go-public walk).
+  went green; earendil's pods rolled when the certs landed (the wave-2
+  hold → lifted; **gofar.id serves 200 with the real cert**) — the site's
+  public DNS flip (GATE #10) is the remaining go-public act.
 - **2026-11-09** — real-first ruling replaced mock-first (the BE exists).
 - **Earlier (dated in git log)** — Route B adopted (publish-time SVG
   rejected); the theme bloom retired (clip-path re-rasterized the viewport

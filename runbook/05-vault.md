@@ -512,7 +512,7 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/staging \
   LUMEN_MEILI_KEY=$MEILI_KEY \
   LUMEN_MEILI_INDEX_POSTS=posts-staging LUMEN_MEILI_INDEX_PHOTOS=photos-staging \
   LUMEN_MEDIA_ENDPOINT=https://$R2_ACCOUNT_HASH.r2.cloudflarestorage.com \
-  LUMEN_MEDIA_REGION=r2 LUMEN_MEDIA_BUCKET=omicron-media \
+  LUMEN_MEDIA_REGION=auto LUMEN_MEDIA_BUCKET=omicron-media \
   LUMEN_MEDIA_ACCESS_KEY=$R2_MEDIA_ACCESS_KEY LUMEN_MEDIA_SECRET_KEY=$R2_MEDIA_SECRET_KEY \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
   LUMEN_MEDIA_PREFIX=staging/"
@@ -524,7 +524,7 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/production \
   LUMEN_MEILI_KEY=$MEILI_KEY \
   LUMEN_MEILI_INDEX_POSTS=posts LUMEN_MEILI_INDEX_PHOTOS=photos \
   LUMEN_MEDIA_ENDPOINT=https://$R2_ACCOUNT_HASH.r2.cloudflarestorage.com \
-  LUMEN_MEDIA_REGION=r2 LUMEN_MEDIA_BUCKET=omicron-media \
+  LUMEN_MEDIA_REGION=auto LUMEN_MEDIA_BUCKET=omicron-media \
   LUMEN_MEDIA_ACCESS_KEY=$R2_MEDIA_ACCESS_KEY LUMEN_MEDIA_SECRET_KEY=$R2_MEDIA_SECRET_KEY \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
   LUMEN_MEDIA_PREFIX=production/"
@@ -536,6 +536,16 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/production \
 > what keep their objects apart. Seeding a different `LUMEN_MEDIA_BUCKET`
 > for staging is the pre-documented escape hatch if the bucket split ever
 > earns its keep.
+>
+> **`LUMEN_MEDIA_REGION` must be `auto` — walked 2026-11-15 the hard way.**
+> R2 rejects every other region name with `InvalidRegionName: The region
+> name 'r2' is not valid. Must be one of: wnam, enam, weur, eeur, apac, oc,
+> auto` — and lumen's media relay 500s SILENTLY on that error (the pod logs
+> nothing; the only signatures are lumen's generic `{"error":"internal
+> error"}` body and an empty cms log). The diagnosis that cracked it: a
+> one-off `amazon/aws-cli` pod with the SAME rendered credentials naming
+> the S3 error out loud. Keep that probe in mind for any silent
+> S3-compatible failure.
 
 ### 6.3 `kv/earendil/{staging,production}` — the readers (2 keys each)
 

@@ -25,14 +25,15 @@ Secrets live in **OpenBao** inside the cluster; Git never holds a value. The
 whole estate runs on **one small VPS (~$12/month)** today, with a 3-node
 shape declared as the scale-out blueprint.
 
-> **Declared vs serving (2026-11-15, first production-hub walk):** every
-> diagram in this folder shows the DECLARED shape. Real now: the foundation
-> plane, observability, and the production **lumen cms fleet (green)**.
-> Parked by design: earendil/mellon hold at their Ingress wave (the TLS
-> secrets wait on ch.07's `cf-token` seed; no address ⇒ no health ⇒ wave 2
-> never applies). The remaining walk — ch.07's token mint + seed → certs →
-> the doors — is [`runbook/00a-run-order.md`](../../runbook/00a-run-order.md) →
-> [`07-go-public.md`](../../runbook/07-go-public.md).
+> **Declared vs serving (2026-11-15 — the walk LANDED):** the production
+> fleet is SERVING on the rehearsal cluster: lumen cms + earendil + mellon
+> Synced; gofar.id 200 / console 303 / anor 302 with real certs (the
+> wave-2 hold lifted once ch.07's cf-token seed issued them). The
+> sequence that got here — Argo → foundation → vault ritual → grafana
+> gate → observability → production hub (gates, certs, doors) — is
+> [`runbook/00a-run-order.md`](../../runbook/00a-run-order.md) →
+> [`07-go-public.md`](../../runbook/07-go-public.md). Staging's hub is
+> next (its token first — the invariant-strict order).
 
 ## The big picture
 
