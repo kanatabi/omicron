@@ -81,7 +81,7 @@ ESO-rendered pod env): secret-id TTL ≤ 1h in production (5m in dev) with
 **agent-side re-login** — the relay's client re-authenticates
 automatically; the token NEVER outlives its lease. The relay's surface +
 the policy: [search.md](search.md) for the count pipeline,
-[../decisions/secrets-control-plane.md](../decisions/secrets-control-plane.md)
+[../decisions/secrets-control-plane.md](../../decisions/secrets-control-plane.md)
 for the frozen contract.
 
 ## The throttling (V1's answer)
