@@ -1,6 +1,6 @@
 ---
 tags: [omicron, lessons]
-updated: 2026-11-15
+updated: 2026-11-17
 ---
 
 # omicron — lesson ledger
@@ -8,6 +8,16 @@ updated: 2026-11-15
 Workspace-level lessons. Each entry: the incident, the ruling it minted, and
 where the standing rule now lives. Newest first.
 
+- **2026-11-17 — `;` is a Mermaid statement separator.** GitHub rendered the
+  `07-go-public.md` reader-path diagram as a parse error: an unquoted `;`
+  inside a sequenceDiagram note/message ENDS the statement, and the parser
+  reads the tail as an arrow-less one ("Expecting arrow… got NEWLINE"). Three
+  instances sat in one diagram (the first masked the other two — parsing dies
+  at the first offender). Standing rules: prose punctuation in unquoted
+  diagram text (` — ` / `. `), never `;`; quoted flowchart labels are immune;
+  `<br/>` is sequence-diagram-legal but must stay quoted in flowchart labels;
+  `#nnn;` in text becomes an HTML entity. Sweep recipe: awk the mermaid
+  fences, flag `;`/`#` on lines without quotes.
 - **2026-11-15 — forks rot, single-home the truth.** The in-vortex INFRA copy
   had diverged ~350 lines stale in weeks (old domain, superseded tag scheme);
   a diff-vs-root fold found ZERO unique content. Ruling: one blueprint, one

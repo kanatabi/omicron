@@ -408,12 +408,12 @@ sequenceDiagram
     participant E as earendil pod
     participant L as lumen pod
     B->>CF: GET https://gofar.id/ — TLS leg 1 (edge cert, visitor↔CF)
-    Note over B,CF: managed challenge ONLY if suspicious — blog has no rules (Act 2); real browsers pass silently
+    Note over B,CF: managed challenge ONLY if suspicious — blog has no rules (Act 2) — real browsers pass silently
     CF->>T: proxied request — TLS leg 2 (origin cert tls-gofar, cert-manager-issued)
     T->>E: route earendil-web-server-production
-    E->>L: server load: API_BASE=http://lumen-http-server-production.lumen.svc (SEEDED value naming the suffixed Service; in-cluster, never public)
+    E->>L: server load: API_BASE=http://lumen-http-server-production.lumen.svc (SEEDED value naming the suffixed Service — in-cluster, never public)
     L-->>E: posts JSON (rendered as-is — no FE filtering)
-    E-->>CF: HTML; the page's own browser calls ride /api/* — the same-origin proxy inside the SSR pod
+    E-->>CF: HTML. The page's own browser calls ride /api/* — the same-origin proxy inside the SSR pod
     CF-->>B: page (+ images later from img.gofar.id, edge→R2, VPS not involved)
 ```
 
