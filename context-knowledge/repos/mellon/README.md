@@ -46,7 +46,7 @@ earendil so one mental model covers both SSR apps, and the same
 ```mermaid
 flowchart TB
     subgraph shell["the §11 shell (every route)"]
-        NAV["left nav (Control Plane / Admin sections) + topbar + ⌘K palette"]
+        NAV["left nav (Content / Control Plane / Admin) + topbar (⌘K pill centered · account avatar menu)<br/>ONE chrome mass — no internal borders; content scrolls in the rounded box: flush top/left at lg, 12px ring right/bottom (§11.1, 2026-11-16/17)<br/>breadcrumbs IN-PAGE, sub-pages only, parent-naming (editor `posts ›`), Secrets kv-path above the title<br/>collapsed rail = centered icon column (36px squares, labels out of layout)<br/>dropdowns are the house Select (no native <select>); content-mode palette rows wear cast-hued type pills"]
     end
     subgraph app["src/routes/(app)/"]
         DASH["/ dashboard: recent posts, publish queue, quick actions"]
