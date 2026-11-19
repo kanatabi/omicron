@@ -43,7 +43,11 @@ real public ghcr v-tags (no placeholder builds / image imports anymore).
   commits (the four scaffold commits are the baseline exception).
 - The workspace root is the submodule superproject: changes here are only pins (gitlinks),
   `.gitmodules`, and root docs. Bump a pin after pushing the child:
-  `git add <child> && git commit`.
+  `git add <child> && git commit` — or the mechanized ritual `make pin`
+  (`pin-push` also pushes): fetch every child, fast-forward its local `main` to
+  `origin/main` (`--ff-only`, fails loudly on divergence), one pin-bump commit.
+  **Pins follow PUSHED main only** — a pin is a claim about pushed state, never
+  local WIP.
 - **Context sync (2026-11-15):** every child change that alters its stack, anatomy,
   contract, commands, conventions, or state updates its vault learning note
   (`context-knowledge/repos/<name>/README.md`, + `LEARNING.md` when the change minted
