@@ -1,6 +1,6 @@
 ---
 tags: [mellon, lessons]
-updated: 2026-11-15
+updated: 2026-11-20
 ---
 
 # mellon — lesson ledger
@@ -9,6 +9,34 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
+
+- **2026-11-20 — theming the editor's chrome is HALF a theme.**
+  `CodeMirrorEditor.svelte` painted `&`, `.cm-content`, `.cm-gutters` and
+  selection from the semantic vars and considered itself token-driven — but
+  `basicSetup` registers CodeMirror's default highlight palette as a
+  *fallback*, and that palette is a LIGHT one (`#219` for `tags.url` +
+  `tags.labelName` — the language word in ```` ```mermaid ```` — `#a11`
+  strings). On the dark canvas those landed at ~1.3:1: the owner's
+  "washed-out `mermaid`" report. Fix: one non-fallback
+  `syntaxHighlighting(HighlightStyle.define(...))` (a non-fallback style
+  outranks the fallback regardless of extension order), every spec resolving
+  from the existing vars — links = `--foreground` + underline (preview
+  parity with `--tw-prose-links`), metadata = `--muted-foreground`. Lessons:
+  (a) a *fallback* extension is a starter, not a default — if you accept it,
+  you own its colors; (b) the source pane must obey the same tokens as the
+  render, or "true-to-prod" is a claim about half the screen.
+
+- **2026-11-17 — single-select widgets must REPLACE, not append.** The
+  Combobox served both modes with one `toggle`: `[...selected, name]` — the
+  multi idiom. With a pre-populated selection (photo detail + the table/tile
+  per-photo pickers), a new pick produced `[old, new]`, and every caller's
+  `next[0] ?? null` kept the OLD collection — the detail page's Save never
+  armed, the list pages PATCHed the old name to lumen. Bulk escaped because
+  its `selected` starts empty (append-to-empty ≡ replace — why the bug hid).
+  Fix: the mode ternary in the component; contract comment already said
+  "replace + close" — the code just never honored it. Ruling: when one
+  component serves two contracts, the mode switch owns the SEMANTICS, not
+  just the chrome.
 
 - **2026-11-13 — one broken lazy-chunk killed the ENTIRE relay.** The
   markdown stack wasn't bundled deliberately until a single bad chunk took

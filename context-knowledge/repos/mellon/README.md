@@ -1,6 +1,6 @@
 ---
 tags: [mellon, portal]
-updated: 2026-11-15
+updated: 2026-11-20
 ---
 
 # mellon — the private admin portal
@@ -50,7 +50,7 @@ flowchart TB
     end
     subgraph app["src/routes/(app)/"]
         DASH["/ dashboard: recent posts, publish queue, quick actions"]
-        POSTS["/posts list + /posts/[slug] editor+preview<br/>(split or toggle · Ctrl+Enter save/publish)"]
+        POSTS["/posts list + /posts/[slug] editor+preview<br/>(split or toggle · Ctrl+Enter save/publish · source pane colored from the §11 tokens, not CodeMirror's light default)"]
         PHOTOS["/photos the darkroom (tiles⇄table, bulk bar, uploads)<br/>/photos/[id] canvas + metadata pane"]
         SEC["/secrets the cockpit (app picker → env tabs, masked values,<br/>history + diff + CAS save, pin-lock badge)"]
         SUM["/secrets/summary the ESTATE MATRIX<br/>(every app × env: head, pin state, key counts, drift)"]
@@ -176,6 +176,13 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   scrape in.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
+- **2026-11-20** — the editor's syntax palette became token-driven (owner
+  report: dark-mode links and fence language washed out). `@codemirror/language`
+  + `@lezer/highlight` promoted to direct deps; one non-fallback
+  `HighlightStyle` outranks `basicSetup`'s light fallback. Links now match the
+  preview (`--foreground` + underline), metadata steps down to
+  `--muted-foreground`. DESIGN §11.3 gained the token clause; the lesson is in
+  [LEARNING.md](LEARNING.md).
 - **Open:** GATE #5 owner read-through; GATE #10 run (prod seeds first —
   the decision record's C4).
 
