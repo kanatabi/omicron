@@ -10,6 +10,18 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — a transformed ancestor hijacks position:fixed.** The
+  user-creation dialog rendered with the Role select's popup floating at the
+  viewport's bottom-right. The dialog centered via the block's
+  `-translate-x/y-1/2`; CSS makes a TRANSFORMED element the containing block
+  for `position:fixed` descendants — and mellon's Select popups are
+  `position:fixed` with viewport coordinates from getBoundingClientRect, so
+  inside any dialog their coordinates resolve against the dialog's box.
+  Standing rule: **center dialogs without transforms** (`inset-0` +
+  `mx-auto my-auto` + `h-fit`), or no fixed-positioned popup can live
+  inside one. Same round: the block's dialog overlay is a whisper
+  (`bg-black/10`) — mellon's dialog frost is the DeleteDialog vocabulary
+  (`bg-background/70` + `backdrop-blur-sm`, theme-aware).
 - **2026-11-21 — the DIALOG round: three owner asks, one vendored file.**
   `ui/dialog` joined the block (normalized in the same commit — the CLI
   re-writes files with the dead `data-open:` hooks, so EVERY vendor run
