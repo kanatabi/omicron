@@ -10,6 +10,19 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — the DIALOG round: three owner asks, one vendored file.**
+  `ui/dialog` joined the block (normalized in the same commit — the CLI
+  re-writes files with the dead `data-open:` hooks, so EVERY vendor run
+  re-applies the sed: a vendor commit without the normalization re-diffs).
+  The user-creation form moved into a dialog (door above the table, close
+  on success so the one-time password reveal reads next, failed submits
+  stay open). The login's Enter round trip shows a spinner now — a form
+  with NO progress indicator on a minting round trip reads as a dead click.
+  And the case sweep continues: chips on the compare page (Parsed/Raw
+  JSON/Show values) — the sweep rule of thumb so far: **interactive labels
+  speak case; mono metadata (breadcrumbs, table headers, status badges,
+  slug chips) stays lowercase** — when in doubt, ask which words the USER
+  reads as a sentence.
 - **2026-11-21 — D9b: the ceiling governs COMPONENTS, not furniture.** The
   owner's seven-report round on the secrets page. The box's D9 ruling
   (rounded-lg, no shadow) lasted one day — the owner's side-by-side claimed
