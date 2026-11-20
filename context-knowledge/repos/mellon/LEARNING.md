@@ -10,19 +10,42 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-20 — the shadcn S1 round minted three small, load-bearing
+  discoveries** (`feat/shadcn-s1-foundation`):
+  1. **The CLI resolves `package.json` `imports` aliases without a
+     `svelte.config.js`.** Both the shadcn-svelte docs and our own plan
+     assumed alias resolution needed the config file; mellon keeps config in
+     `vite.config.ts` and has no `svelte.config.js` on purpose — yet
+     `shadcn-svelte@1.8.1 add` read `components.json`, resolved `#lib`, and
+     emitted clean imports (zero `$UTILS$` placeholders). The documented
+     fallback fetcher was never needed. Lesson: probe the tool before building
+     its fallback — the plan's 30-minute probe saved a ~70-line script.
+  2. **A `var()` alias only needs to be declared once.** The plan wanted the
+     18 shadcn aliases duplicated into both theme blocks; they are `:root`-only
+     because every one points at a core token that already flips — the cascade
+     does the theming. The palette guard (which demanded "every token in both
+     blocks") had to learn the literal/alias distinction rather than be
+     relaxed; duplicating would have _satisfied the guard while creating the
+     drift it exists to catch_.
+  3. **vitest 3+ projects split cleanly by FILENAME** (`*.test.ts` → node,
+     `*.dom.test.ts` → happy-dom), so a 157-test pure-node fleet gains a DOM
+     project without one test changing environment. Mirror the app's forced
+     runes in the project's `svelte()` plugin or tests compile components in
+     legacy mode — and pass `configFile: false` or the plugin logs a warning
+     about the config file that intentionally doesn't exist.
 - **2026-11-20 — theming the editor's chrome is HALF a theme.**
   `CodeMirrorEditor.svelte` painted `&`, `.cm-content`, `.cm-gutters` and
   selection from the semantic vars and considered itself token-driven — but
   `basicSetup` registers CodeMirror's default highlight palette as a
-  *fallback*, and that palette is a LIGHT one (`#219` for `tags.url` +
-  `tags.labelName` — the language word in ```` ```mermaid ```` — `#a11`
+  _fallback_, and that palette is a LIGHT one (`#219` for `tags.url` +
+  `tags.labelName` — the language word in ` ```mermaid ` — `#a11`
   strings). On the dark canvas those landed at ~1.3:1: the owner's
   "washed-out `mermaid`" report. Fix: one non-fallback
   `syntaxHighlighting(HighlightStyle.define(...))` (a non-fallback style
   outranks the fallback regardless of extension order), every spec resolving
   from the existing vars — links = `--foreground` + underline (preview
   parity with `--tw-prose-links`), metadata = `--muted-foreground`. Lessons:
-  (a) a *fallback* extension is a starter, not a default — if you accept it,
+  (a) a _fallback_ extension is a starter, not a default — if you accept it,
   you own its colors; (b) the source pane must obey the same tokens as the
   render, or "true-to-prod" is a claim about half the screen.
 

@@ -129,11 +129,11 @@ logout).
 
 ## 7. Testing
 
-| Gate | Proves |
-| :-- | :-- |
-| `npm run test:unit` | offline battery vs the twin (runtime graph never touches it) |
-| the console harness (79/79) | keyboard-first + view anatomy invariants |
-| `make live` | the acceptance suite against a real lumen — the relay is only honest when it relays |
+| Gate                        | Proves                                                                              |
+| :-------------------------- | :---------------------------------------------------------------------------------- |
+| `npm run test:unit`         | offline battery vs the twin (runtime graph never touches it)                        |
+| the console harness (79/79) | keyboard-first + view anatomy invariants                                            |
+| `make live`                 | the acceptance suite against a real lumen — the relay is only honest when it relays |
 
 ## 8. How it ships
 
@@ -178,11 +178,19 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   vault archive; this vault note created.
 - **2026-11-20** — the editor's syntax palette became token-driven (owner
   report: dark-mode links and fence language washed out). `@codemirror/language`
-  + `@lezer/highlight` promoted to direct deps; one non-fallback
-  `HighlightStyle` outranks `basicSetup`'s light fallback. Links now match the
-  preview (`--foreground` + underline), metadata steps down to
-  `--muted-foreground`. DESIGN §11.3 gained the token clause; the lesson is in
-  [LEARNING.md](LEARNING.md).
+  - `@lezer/highlight` promoted to direct deps; one non-fallback
+    `HighlightStyle` outranks `basicSetup`'s light fallback. Links now match the
+    preview (`--foreground` + underline), metadata steps down to
+    `--muted-foreground`. DESIGN §11.3 gained the token clause; the lesson is in
+    [LEARNING.md](LEARNING.md).
+- **2026-11-20** — **shadcn S1 landed on a branch** (`feat/shadcn-s1-foundation`,
+  PR open): the substrate for the A2 UI experiment — `components.json`,
+  `cn()` (`clsx` + `tailwind-merge`, no `cn` package), 18 shadcn token aliases
+  declared once in `:root` + their 18 `--color-*` twins, and a filename-split
+  DOM test project (`*.dom.test.ts` → happy-dom + forced runes). Zero visual
+  diff (no route imports `ui/` yet; JS bundle byte-identical). Docs live in
+  `SHADCN.md` + `SHADCN-PLAN.md` (D3: DESIGN.md untouched while experimental);
+  lessons in [LEARNING.md](LEARNING.md).
 - **Open:** GATE #5 owner read-through; GATE #10 run (prod seeds first —
   the decision record's C4).
 
