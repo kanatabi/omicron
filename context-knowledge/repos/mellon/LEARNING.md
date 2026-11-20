@@ -10,6 +10,23 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — the animation layer was never in the pipeline.** After the
+  class-clobber fix the owner still saw no section animation, and the real
+  story was two layers deep: tw-animate-css is a TAILWIND v4 stylesheet
+  (`@theme inline` + `@utility` directives) — injected as a plain JS-side
+  stylesheet those directives are browser-invisible, so no `animate-*` class
+  ever existed. And it COULD not be imported from the tailwind entry: the
+  package exposes its css only under the `style` export condition, which
+  every resolver in this chain rejects (tailwind's loadStylesheet, enhanced-
+  resolve — even relative node_modules paths — and vite's js resolution).
+  Standing rule: **animation vocabularies ride the tailwind entry's @import,
+  and when the exports map blocks resolution, vendor the copy into src/**
+  (`src/lib/styles/tw-animate.css`, provenance header, regenerate on bump) —
+  the build then emits real rules
+  (`.data-\[state\=open\]\:animate-collapsible-down[data-state=open]`) and
+  the sheet/dropdown/tooltip animations came alive in the same stroke.
+  Three failed routes documented in layout.css's comment so nobody re-walks
+  them.
 - **2026-11-21 — the collapsed rail taught the SVELTE 5 CLASS-CLOBBER rule.**
   A static `class` attribute after `{...props}` **REPLACES** the spread's
   class — it does not merge (proven in the dom harness: the button rendered
