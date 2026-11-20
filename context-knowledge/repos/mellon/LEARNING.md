@@ -10,6 +10,20 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — the two-click toggle was a DOUBLE NEGATION wearing state
+  -dependent clothes.** The rail's collapse toggle worked only every other
+  click. The wiring: `onOpenChange={(open) => navRail.setCollapsed(!open)}`
+  called a setter whose body ALREADY stores the inverse of its open
+  parameter — `collapsed = !(!open) = open` — inverted. The symptom was
+  irregular because of the writable-derived override semantics: the
+  Provider's `bind:open` write lands as an OVERRIDE on the derived, and it
+  stands only when the store value does NOT change in the same flush — so
+  some clicks moved the rail, some only flipped the persisted flag.
+  Standing rules: **a setter named after its OUTPUT (setCollapsed) must not
+  take its input named after its INVERSE** — renamed `setOpen(open)`, the
+  name is the contract; and wire callbacks 1:1, no "helpful" negations at
+  call sites. The harness now drives the REAL layout's footer toggle:
+  one click = one flip, both directions, persistence following.
 - **2026-11-21 — `data-active={false}` is not "absent" — and Tailwind's
   presence variants made the whole rail pay for it.** The owner's
   side-by-side (old vs new rail) showed bolder, darker rows and no hover
