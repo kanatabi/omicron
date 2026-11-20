@@ -10,6 +10,23 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — the collapsed rail taught the SVELTE 5 CLASS-CLOBBER rule.**
+  A static `class` attribute after `{...props}` **REPLACES** the spread's
+  class — it does not merge (proven in the dom harness: the button rendered
+  with only the static string). Live symptoms, all one cause: the collapsed
+  rail's section labels rendered sentence-case and large (the vendored
+  `text-xs tracking-widest uppercase` never arrived), never faded in
+  icon-collapse mode (`opacity-0` + `-mt-8` never arrived), and the UserMenu
+  rows silently lost their hover/focus classes. Standing rule: **inside a
+  `child` snippet, compose — `class={cn(props.class, '…')}` — never a bare
+  static class after a spread.** Pinned by a fixture + dom test. Same round:
+  section collapse got its height animation — tw-animate-css ships
+  `animate-collapsible-down/up` reading `--bits-collapsible-content-height`
+  (0.2s ease-out; the global reduced-motion rule snaps it). And a standing
+  Svelte comment rule, hit four times this round: **comments match their
+  context** — `//` only inside script blocks (a `//` in MARKUP renders as
+  literal page text — the owner screenshotted that too), `<!-- -->` only in
+  markup, never inside a tag's attribute list, never inside a script block.
 - **2026-11-20 — the 500 page lost its shell, and it was HYDRATION, not
   routing.** The owner's screenshot showed the ROOT error boundary (the
   unshelled `gofar;` page) for a dashboard 500, and every framework reading
