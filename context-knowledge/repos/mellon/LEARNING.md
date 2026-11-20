@@ -10,6 +10,26 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — D9b: the ceiling governs COMPONENTS, not furniture.** The
+  owner's seven-report round on the secrets page. The box's D9 ruling
+  (rounded-lg, no shadow) lasted one day — the owner's side-by-side claimed
+  the old box back: `rounded-2xl` + `shadow-sm` is the DESIGNED furniture
+  geometry; the ceiling and the no-shadow rule keep governing components
+  (Palette/ImagePicker stay rounded-lg). Standing rule: **a doctrine
+  written for components does not automatically govern furniture** — scope
+  the rule, don't flatten the design. Same round, two more findings:
+  (1) **the block's `w-full` + `mx-3` overflowed the viewport by exactly
+  the margin** — the box touched the screen edge on desktop AND mobile;
+  in a flex column, stretch() already sizes children minus margins —
+  drop `w-full` whenever margins need to show. (2) **the vendored
+  animations were hooked to attributes that don't exist** — the registry
+  animates on `data-open:`/`data-closed:`; bits-ui sets `data-state`.
+  Seven files normalized to `data-[state=open]:`/`data-[state=closed]:`
+  (proven in the harness: the open sheet's attribute list has data-state,
+  no data-open). And the lowercase-button sweep: interactive labels speak
+  normal case (`Save as v2`, `+ Key`, `History`, `Save draft`/`Save Post`
+  by publish state); mono metadata (breadcrumbs, table headers, status
+  badges) stays lowercase — that's the vocabulary, not an error.
 - **2026-11-21 — the two-click toggle was a DOUBLE NEGATION wearing state
   -dependent clothes.** The rail's collapse toggle worked only every other
   click. The wiring: `onOpenChange={(open) => navRail.setCollapsed(!open)}`
