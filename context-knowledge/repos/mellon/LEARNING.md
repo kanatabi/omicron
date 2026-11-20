@@ -10,6 +10,24 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-20 — the 500 page lost its shell, and it was HYDRATION, not
+  routing.** The owner's screenshot showed the ROOT error boundary (the
+  unshelled `gofar;` page) for a dashboard 500, and every framework reading
+  said impossible: `nearest_error_pages` walks up from the failed node and
+  renders the nearest `+error.svelte` INSIDE the layouts that loaded — the
+  SSR was proven innocent by a headless repro (throwaway fake lumen:
+  session 200, dashboard reads 404 → SSR of `/` rendered the shell on BOTH
+  the S1 and S2 trees). The real crash was client-side, in the browser
+  console: `props_invalid_value — Cannot do bind:ref={undefined} when ref
+has a fallback value`. The shell's hamburger was
+  `$state<HTMLButtonElement | undefined>()` bound into `Sidebar.Trigger`'s
+  `$bindable(null)`; Svelte threw at hydration, the throw landed INSIDE the
+  error-boundary render chain, and the client router fell back to the
+  OUTERMOST boundary — discarding the shell. Standing rules: **a two-way
+  binding into a `$bindable` with a fallback must initialize `null`, never
+  `undefined`**; and when an error page renders "wrong", check the browser
+  console for a hydration throw before doubting the boundary logic. Pinned
+  by fixtures + a dom test (undefined throws / null mounts).
 - **2026-11-20 — S2 rode the shell onto the sidebar block; five small,
   load-bearing lessons** (`feat/shadcn-s2-chrome`):
   1. **Match RENDERED geometry, not declared vars.** The plan set the

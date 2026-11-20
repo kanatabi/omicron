@@ -183,6 +183,13 @@ layering; HUMAN-GATE #10 is the go-live checklist.
     preview (`--foreground` + underline), metadata steps down to
     `--muted-foreground`. DESIGN §11.3 gained the token clause; the lesson is in
     [LEARNING.md](LEARNING.md).
+- **2026-11-20** — **the 500-page-loses-its-shell bug fixed on the
+  integration branch** (`3eb72dd`): the dashboard's 500 rendered the ROOT
+  error boundary because a hydration crash (`bind:ref={undefined}` into
+  `$bindable(null)` — the hamburger) threw inside the error-boundary render.
+  Null-init + fixtures + dom tests pin it. A favicon landed with it (the
+  access log was eating a 404 per page view). The dashboard's 404s
+  themselves are the lumen door's truth (see below).
 - **2026-11-20** — **shadcn S2 merged to the integration branch**
   (`feat/shadcn-integration`, `5dd78f9`): the hand-built 459-line shell now
   rides the sidebar block (`+layout.svelte` → 189 lines + `app-sidebar.svelte`)
