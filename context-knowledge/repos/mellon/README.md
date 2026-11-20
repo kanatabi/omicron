@@ -190,6 +190,15 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   Null-init + fixtures + dom tests pin it. A favicon landed with it (the
   access log was eating a 404 per page view). The dashboard's 404s
   themselves are the lumen door's truth (see below).
+- **2026-11-20** — **collapsible nav sections** (`afa4feb`, owner ask — the
+  doc's sidebar-07 structure): each group collapses via the CANONICAL
+  collapsible-group pattern — `Collapsible.Root` (vendored `ui/collapsible`,
+  2 files, zero deps) wraps the group, the label IS the trigger, the chevron
+  rotates off `data-state`, height animates. Not persisted: a fresh visit
+  opens every destination. Same round: a `//` comment in the layout's MARKUP
+  rendered as literal page text (Svelte only treats `//` as a comment inside
+  script blocks) — the owner screenshotted the leak; HTML comments only,
+  outside script tags.
 - **2026-11-20** — **shadcn S2 merged to the integration branch**
   (`feat/shadcn-integration`, `5dd78f9`): the hand-built 459-line shell now
   rides the sidebar block (`+layout.svelte` → 189 lines + `app-sidebar.svelte`)
