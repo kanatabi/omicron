@@ -10,6 +10,21 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — `data-active={false}` is not "absent" — and Tailwind's
+  presence variants made the whole rail pay for it.** The owner's
+  side-by-side (old vs new rail) showed bolder, darker rows and no hover
+  lift. The class strings were IDENTICAL to the old design — the bug was in
+  what the CSS MATCHES: the block's `data-active:` variants compile to
+  attribute-PRESENCE selectors (`[data-active]`), and the svelte block sets
+  `data-active: isActive`, which stringifies to `"false"` on every inactive
+  row. Presence matches `"false"`: EVERY row rendered `font-medium` (500)
+  and — beating `text-muted-foreground` on specificity — full foreground.
+  The hover's text lift then had nothing to lift. Standing rule: **an
+  attribute consumed by presence-selectors must be OMITTED when false**
+  (`isActive ? 'true' : undefined`), never written as `"false"`. The class
+  strings being identical is NOT the same as the styles matching — check
+  the compiled selector's match semantics. Pinned by the harness
+  (data-active present on the active row only).
 - **2026-11-21 — the animation layer was never in the pipeline.** After the
   class-clobber fix the owner still saw no section animation, and the real
   story was two layers deep: tw-animate-css is a TAILWIND v4 stylesheet
