@@ -10,6 +10,34 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-20 — S2 rode the shell onto the sidebar block; five small,
+  load-bearing lessons** (`feat/shadcn-s2-chrome`):
+  1. **Match RENDERED geometry, not declared vars.** The plan set the
+     collapsed rail to 3.5rem because `--container-nav-rail: 56px` said so —
+     but that var had ZERO consumers (56px is the topbar's height in DESIGN's
+     diagram); the rendered rail was `lg:w-[4.25rem]`. Dead theme vars are
+     not a spec; the screenshot is.
+  2. **Context is only readable BELOW the Provider.** Svelte's
+     `getContext` fails in the component that calls `setContext` — so the
+     shell's footer toggle and sheet dismissal (both needing
+     `useSidebar()`) forced the rail into a child component
+     (`app-sidebar.svelte`). Any block wiring that needs the context
+     belongs in a child; the topbar gets it free via `Sidebar.Trigger`.
+  3. **`npm install` can wipe `.svelte-kit`**, and the scaffold `prepare`
+     script's `svelte-kit sync || echo ''` swallows the failure — the next
+     `vitest run` dies with `TSCONFIG_ERROR: $app/tsconfig not found`.
+     Fix: rerun `npx svelte-kit sync` (or `npm run check`). A failing test
+     suite right after a dependency change means this, not the code.
+  4. **bits-ui v2 composes through the `child` snippet** — `Item` has no
+     `href` (links render via child snippet receiving the menu-item props),
+     and a destructive form-submit row is an `Item` whose child is the
+     real `<button type="submit">`.
+  5. **The block's inset variant is a lie for this design** — its `p-2`
+     chrome tile + expanded-gap math render a floating panel, while mellon's
+     shell is a full-bleed ONE-chrome-mass. `variant="sidebar"` + the
+     doctrine line on `Sidebar.Inset` reproduce today's geometry exactly
+     (D13); the breakpoint moved 768 → 1024 so the hamburger owns everything
+     below lg (D12).
 - **2026-11-20 — the shadcn S1 round minted three small, load-bearing
   discoveries** (`feat/shadcn-s1-foundation`):
   1. **The CLI resolves `package.json` `imports` aliases without a

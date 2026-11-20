@@ -183,6 +183,17 @@ layering; HUMAN-GATE #10 is the go-live checklist.
     preview (`--foreground` + underline), metadata steps down to
     `--muted-foreground`. DESIGN §11.3 gained the token clause; the lesson is in
     [LEARNING.md](LEARNING.md).
+- **2026-11-20** — **shadcn S2 merged to the integration branch**
+  (`feat/shadcn-integration`, `5dd78f9`): the hand-built 459-line shell now
+  rides the sidebar block (`+layout.svelte` → 189 lines + `app-sidebar.svelte`)
+  — rail with collapse toggle in the footer (owner call 2026-11-16), mobile
+  sheet below lg (breakpoint moved 768→1024, D12), ⌘B guard on text surfaces
+  (D5), UserMenu on dropdown-menu, content box = the doctrine line
+  (`rounded-lg`, no shadow — D9). The block runs `variant="sidebar"` not
+  `inset` (D13). **New UI branches: slice branches fork from and merge into
+  `feat/shadcn-integration`; main merges ONCE at the end** (owner call — the
+  per-slice release ladder is suspended for this experiment). S3 (form
+  primitives) is next. Lessons in [LEARNING.md](LEARNING.md).
 - **2026-11-20** — **shadcn S1 landed on a branch** (`feat/shadcn-s1-foundation`,
   PR open): the substrate for the A2 UI experiment — `components.json`,
   `cn()` (`clsx` + `tailwind-merge`, no `cn` package), 18 shadcn token aliases
