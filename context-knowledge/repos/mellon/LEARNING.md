@@ -9,6 +9,22 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-21 — SHAPE UNIFORMITY: the seeds must establish what the mirror
+  enforces.** The key-set mirror reconciles sibling shapes on every portal
+  save — so a NON-uniform seed is a bomb whose pin the first save pulls
+  (walked twice in one day: mellon's split seeding flattened staging +
+  production, dropping their real keys; lumen's shared was still the
+  walkthrough's 3-key shape, one save away from the same). Owner ruling:
+  every path of an app carries the SAME key set, unused keys EMPTY — the
+  runbook §6 seeds now establish it (per-key used-by notes name which
+  path's copy each ES pulls), a post-seed guard diffs key sets across
+  paths, and the live estate was re-seeded to the law (JWT secret verified
+  byte-identical through the reseed; both mellon ESes re-rendered green
+  with the knob in its designed home). Consequence worth keeping: a key
+  that should exist on only ONE path is now a CONTRACT VIOLATION — the
+  env-model's answer is the empty placeholder, and "which copy is
+  consumed" is a property of the ES remoteRefs, never of presence.
+
 - **2026-11-21 — a green test suite can still fail the run: unmounted
   transitions reject, and a piped gate lies.** Two findings from one CI
   red (223/223 tests passed; the run exited 1): (1) happy-dom's Web

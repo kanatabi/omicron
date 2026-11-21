@@ -4,8 +4,10 @@ updated: 2026-11-15
 status: >-
   ritual incident-proven (rehearsal walk + two unseal drills); the
   THREE-plane seed contract below is the Phase 11 shape — verified key-by-key
-  against the ExternalSecret CRs on the vortex main tip; VPS = first real
-  production seeding — the 3/2 key shape below is production-only
+  against the ExternalSecret CRs on the vortex main tip, and re-verified
+  2026-11-21 under the SHAPE-UNIFORMITY law (every path of an app carries
+  the SAME key set; unused keys empty — the relay's mirror enforces it,
+  the seeds establish it); VPS = first real production seeding
 ---
 
 # 05 · Secrets Vault — OpenBao + ESO: values live only here
@@ -451,6 +453,34 @@ clustersecretstore.yaml`).
 **Seed order: `shared` first** (lumen-admin boots with foundation wave 2,
 before either env hub), then staging, then production.
 
+> **🟠 SHAPE UNIFORMITY — the seeds must ESTABLISH what the relay ENFORCES
+> (owner ruling 2026-11-21):** every path of an app carries the **SAME key
+> set**; keys a path does not use exist with an **EMPTY value**. The relay's
+> key-set mirror reconciles sibling shapes on EVERY portal save (adds arrive
+> empty, keys missing from the saved set are dropped) — a non-uniform seed
+> is a bomb whose pin the first portal save pulls (walked: the first
+> `mellon/shared` write flattened `mellon/{staging,production}`, dropping
+> their real keys). Uniform at seed time = the mirror is a permanent no-op.
+> The tables below carry a **used-by note per key**: which path's copy the
+> ES actually pulls — the empty copies are placeholders, never consumed.
+> earendil (no `shared` path) and the §6.5 singletons conform trivially.
+
+Post-seed guard — silence is the pass condition (key NAMES are not secrets;
+a mismatch line names the drifting path):
+
+```bash
+for app in lumen mellon; do
+  FIRST=""; FIRSTKEYS=""
+  for env in shared staging production; do
+    KEYS=$(X "export VAULT_TOKEN=$ROOT; bao kv get -format=json kv/$app/$env" 2>/dev/null \
+      | python3 -c "import json,sys;print('\n'.join(sorted(json.load(sys.stdin)['data']['data'])))")
+    [ -z "$FIRSTKEYS" ] && FIRSTKEYS="$KEYS" && FIRST="$app/$env" && continue
+    diff <(echo "$FIRSTKEYS") <(echo "$KEYS") >/dev/null || \
+      echo "SHAPE DRIFT: $app/$env differs from $FIRST"
+  done
+done
+```
+
 **Variables this section depends on — check before the first `bao kv put`:**
 every seed block writes what a shell variable *currently* holds; if your
 terminal died since §3–§5, an empty variable seeds an **empty string**
@@ -488,43 +518,49 @@ done
 > inside `X` blocks, values arrive as exported variables — the table
 > above — never as pasted angle brackets.
 
-### 6.1 `kv/lumen/shared` — the Control Plane's identity (3 keys)
+### 6.1 `kv/lumen/shared` — the Control Plane's identity (15 keys, 3 filled)
 
 | kv path | Keys | Declared by |
 |---|---|---|
-| `kv/lumen/shared` | `LUMEN_DB_URL` `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` | `environments/foundation/lumen/externalsecret.yaml` (first two; the admin ES binds exactly what role=admin reads) + the two cms ESes read `LUMEN_ADMIN_URL` FROM this path |
+| `kv/lumen/shared` | the 15-key lumen set (below); **filled here:** `LUMEN_DB_URL` `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` — **empty here:** the 12 cms-only keys | `environments/foundation/lumen/externalsecret.yaml` (first two; the admin ES binds exactly what role=admin reads) + the two cms ESes read `LUMEN_ADMIN_URL` FROM this path |
 
 ```bash
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
   LUMEN_DB_URL=postgres://db_user_admin:$ADMIN_DB_PW@lumen-pg.db.svc:5432/lumen_admin \
   LUMEN_SESSION_JWT_SECRET=$(openssl rand -hex 32) \
-  LUMEN_ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local"
+  LUMEN_ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local \
+  LUMEN_MEILI_URL= LUMEN_MEILI_KEY= LUMEN_MEILI_INDEX_POSTS= LUMEN_MEILI_INDEX_PHOTOS= \
+  LUMEN_MEDIA_ENDPOINT= LUMEN_MEDIA_REGION= LUMEN_MEDIA_BUCKET= LUMEN_MEDIA_ACCESS_KEY= \
+  LUMEN_MEDIA_SECRET_KEY= LUMEN_MEDIA_CDN_BASE= LUMEN_MEDIA_FORCE_PATH= LUMEN_MEDIA_PREFIX="
 ```
 
-> **`LUMEN_SESSION_JWT_SECRET` has exactly ONE home:** this path. The admin
-> plane signs, only the admin plane verifies with the key; the cms planes
-> hold no signing key and no users table — they ask the Control Plane
-> `POST /admin/session/verify` (verdicts cached 30 s keyed by the token's
-> SHA-256, so revocation propagates in ≤30 s; admin unreachable = **fail
-> closed, 503** — a down Control Plane must never degrade into "probably
-> still valid"). `LUMEN_ADMIN_URL` is seeded here because a service URL is
-> a VALUE (the `LUMEN_MEILI_URL` precedent) — and it must name the UNSUFFIXED
-> Service `lumen-admin` (foundation owns it; the Naming contract guarantees
-> the name).
+> **`LUMEN_SESSION_JWT_SECRET`'s VALUE has exactly ONE home:** this path
+> (amended 2026-11-21: the uniform-shape contract puts the KEY on every
+> lumen path — EMPTY outside this one; a key's presence is structure, its
+> value is meaning). The admin plane signs, only the admin plane verifies
+> with the key; the cms planes hold no signing key and no users table —
+> they ask the Control Plane `POST /admin/session/verify` (verdicts cached
+> 30 s keyed by the token's SHA-256, so revocation propagates in ≤30 s;
+> admin unreachable = **fail closed, 503** — a down Control Plane must
+> never degrade into "probably still valid"). `LUMEN_ADMIN_URL` is seeded
+> here because a service URL is a VALUE (the `LUMEN_MEILI_URL` precedent)
+> — and it must name the UNSUFFIXED Service `lumen-admin` (foundation owns
+> it; the Naming contract guarantees the name).
 
-### 6.2 `kv/lumen/{staging,production}` — each cms plane (13 keys, identical shape)
+### 6.2 `kv/lumen/{staging,production}` — each cms plane (15 keys, identical shape)
 
 | kv path | Keys | Declared by |
 |---|---|---|
-| `kv/lumen/staging` | `LUMEN_DB_URL` `LUMEN_MEILI_URL` `LUMEN_MEILI_KEY` `LUMEN_MEILI_INDEX_POSTS` `LUMEN_MEILI_INDEX_PHOTOS` `LUMEN_MEDIA_ENDPOINT` `LUMEN_MEDIA_REGION` `LUMEN_MEDIA_BUCKET` `LUMEN_MEDIA_ACCESS_KEY` `LUMEN_MEDIA_SECRET_KEY` `LUMEN_MEDIA_CDN_BASE` `LUMEN_MEDIA_FORCE_PATH` `LUMEN_MEDIA_PREFIX` | `environments/staging/lumen/externalsecret.yaml` (plus `LUMEN_ADMIN_URL` sourced from `lumen/shared`) |
-| `kv/lumen/production` | the same 13 keys with production values | `environments/production/lumen/externalsecret.yaml` |
+| `kv/lumen/staging` | the SAME 15 keys as `lumen/shared` (uniform-shape law); **filled here:** the 13 cms keys below — **empty here:** `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` (the jwt's value lives only in `shared`; the cms ESes pull `LUMEN_ADMIN_URL` from `lumen/shared`) | `environments/staging/lumen/externalsecret.yaml` |
+| `kv/lumen/production` | the same 15 keys with production values | `environments/production/lumen/externalsecret.yaml` |
 
 ```bash
 # STAGING — note the THREE collapse-preventors: distinct DB, distinct index
 # names, distinct media prefix. The in-code index defaults (posts/photos)
 # belong to PRODUCTION; staging MUST use distinct names (posts-staging /
 # photos-staging) — sharing an index is exactly the failure these keys
-# exist to prevent.
+# exist to prevent. The TWO EMPTY keys (jwt secret, admin url) are the
+# uniform shape's placeholders — presence is structure, not consumption.
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/staging \
   LUMEN_DB_URL=postgres://db_user_staging:$STAGING_DB_PW@lumen-pg.db.svc:5432/lumen_staging \
   LUMEN_MEILI_URL=http://meilisearch.search.svc.cluster.local:7700 \
@@ -534,7 +570,8 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/staging \
   LUMEN_MEDIA_REGION=auto LUMEN_MEDIA_BUCKET=omicron-media \
   LUMEN_MEDIA_ACCESS_KEY=$R2_MEDIA_ACCESS_KEY LUMEN_MEDIA_SECRET_KEY=$R2_MEDIA_SECRET_KEY \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
-  LUMEN_MEDIA_PREFIX=staging/"
+  LUMEN_MEDIA_PREFIX=staging/ \
+  LUMEN_SESSION_JWT_SECRET= LUMEN_ADMIN_URL="
 
 # PRODUCTION — the same shape, production's values.
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/production \
@@ -546,7 +583,8 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/production \
   LUMEN_MEDIA_REGION=auto LUMEN_MEDIA_BUCKET=omicron-media \
   LUMEN_MEDIA_ACCESS_KEY=$R2_MEDIA_ACCESS_KEY LUMEN_MEDIA_SECRET_KEY=$R2_MEDIA_SECRET_KEY \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
-  LUMEN_MEDIA_PREFIX=production/"
+  LUMEN_MEDIA_PREFIX=production/ \
+  LUMEN_SESSION_JWT_SECRET= LUMEN_ADMIN_URL="
 ```
 
 > **Media on one bucket is a choice, printed honestly:** both envs share
@@ -588,23 +626,27 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/earendil/production \
 (`ORIGIN` returned with its reader — earendil reads it for the JSON-LD and
 anything origin-anchored; staging's pod must speak STAGING.)
 
-### 6.4 `kv/mellon/shared` + `kv/mellon/{staging,production}` — the dual-upstream portal
+### 6.4 `kv/mellon/shared` + `kv/mellon/{staging,production}` — the dual-upstream portal (4 keys, uniform)
 
-| kv path | Keys | Declared by |
+| kv path | Keys (uniform set) | Pulled by the ES from |
 |---|---|---|
-| `kv/mellon/shared` | `ADMIN_URL` | both mellon ESes (`remoteRef key: mellon/shared`) |
-| `kv/mellon/staging` | `CMS_URL` (+ `API_BASE` — transitional) | `environments/staging/mellon/externalsecret.yaml` |
-| `kv/mellon/production` | `CMS_URL` (+ `API_BASE` — transitional) | `environments/production/mellon/externalsecret.yaml` |
+| `kv/mellon/shared` | `ADMIN_URL` `CMS_URL` `API_BASE` `EDITOR_AUTOSAVE_SECONDS` — **filled here:** `ADMIN_URL`, `EDITOR_AUTOSAVE_SECONDS` — **empty here:** `CMS_URL` `API_BASE` | both mellon ESes pull `ADMIN_URL` + `EDITOR_AUTOSAVE_SECONDS` FROM this path |
+| `kv/mellon/staging` | the same 4 keys — **filled here:** `CMS_URL` `API_BASE` (staging values) — **empty here:** `ADMIN_URL` `EDITOR_AUTOSAVE_SECONDS` | `environments/staging/mellon/externalsecret.yaml` pulls `CMS_URL` (+ `API_BASE` — transitional) from here |
+| `kv/mellon/production` | the same 4 keys — **filled here:** `CMS_URL` `API_BASE` (production values) — **empty here:** `ADMIN_URL` `EDITOR_AUTOSAVE_SECONDS` | the production twin, from here |
 
 ```bash
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/shared \
-  ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local"
+  ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local \
+  EDITOR_AUTOSAVE_SECONDS=60 \
+  CMS_URL= API_BASE="
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/staging \
   CMS_URL=http://lumen-http-server-staging.lumen.svc.cluster.local \
-  API_BASE=http://lumen-http-server-staging.lumen.svc.cluster.local"
+  API_BASE=http://lumen-http-server-staging.lumen.svc.cluster.local \
+  ADMIN_URL= EDITOR_AUTOSAVE_SECONDS="
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/production \
   CMS_URL=http://lumen-http-server-production.lumen.svc.cluster.local \
-  API_BASE=http://lumen-http-server-production.lumen.svc.cluster.local"
+  API_BASE=http://lumen-http-server-production.lumen.svc.cluster.local \
+  ADMIN_URL= EDITOR_AUTOSAVE_SECONDS="
 ```
 
 > **Mirror the routing table, never out-guess it:** mellon's

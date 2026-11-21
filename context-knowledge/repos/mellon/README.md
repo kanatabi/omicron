@@ -298,7 +298,14 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   pin/unpin swept end-to-end through the AppRole (204/204, unpin
   RFC7396-clears the key, final state verified clean). The control
   plane's full designed surface is now live: read/list, CAS save,
-  pin/unpin, onboard, add-env.
+  pin/unpin, onboard, add-env. **The SHAPE-UNIFORMITY law (owner ruling,
+  same day):** every path of an app carries the SAME key set; unused keys
+  EMPTY — the mirror enforces it on every save, the runbook §6 seeds now
+  ESTABLISH it (lumen paths 3/13/13 → uniform 15; mellon → uniform 4 with
+  per-key used-by notes), a post-seed guard asserts it, and the live
+  estate was re-seeded to the law (lumen shared v1 was still the
+  walkthrough's 3-key shape — the next mirror save would have flattened
+  it). JWT secret verified byte-identical through the reseed.
   **Test infra lesson (same day, CI walked it):** a dom test can pass every
   assertion and still FAIL the run — happy-dom's Web Animations REJECTS
   `finished` with an AbortError on cancel(), and Svelte's teardown aborts
