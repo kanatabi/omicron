@@ -40,7 +40,31 @@ The standing doctrine lives in the repo's
       Cancel/Action/Close, override the height anatomy on the registry one
       (h-auto + matching py) or the pair renders uneven**; pin it with a
       class-list test — happy-dom's getComputedStyle is unreliable for borders.
-      ledger records walked events. Newest first.
+      - **2026-11-21 — the lock is a CI artifact; the pipe lies; JS strings eat
+        backslashes.** Three findings from mellon's FIRST CI run on the shadcn
+        branch (it died at `npm ci`, and would have died at lint right after):
+        (1) **npm 10 vs 11 disagree on optional peers** — bits-ui's runed has the
+        optional peer `@sveltejs/kit ^2.21.0`; npm 11 (local Node 26) leaves it
+        out of the tree, npm 10 (Node 22 = CI + the runtime image) nests kit-2
+        copies in. A lock generated on npm 11 fails `npm ci` on Node 22 (EUSAGE,
+        "Missing: @sveltejs/kit@2.70.4"). Remedy: regenerate with
+        `npx -y npm@10.9.2 install --package-lock-only`, prove with
+        `npx -y npm@10.9.2 ci --dry-run` — and the npm-10 lock satisfies npm 11
+        too, and npm 11 does not strip the entries on regenerate (stable both
+        ways). (2) **`eslint … | tail; echo $?` reports TAIL's exit code** — four
+        lint errors read as green across three rounds. Gates must run bare or
+        under `set -o pipefail`; a worktree at the previous commit + a real
+        `npm ci` is the honest reproduction harness. (3) **`'\\-'` in a JS
+        string is `'-'`** — the "v-flag dash escape" fix (54f9853) never reached
+        the browser: HTML compiles `pattern` attrs with the v flag, where an
+        unescaped `-` in a character class is a SYNTAX ERROR, and a
+        non-compiling pattern is silently IGNORED — username/app/env inputs had
+        no client-side validation at all. The fix is `'\\\\-'` in source (the
+        string then carries `\\-`), proven under `new RegExp(src, 'v')`.
+        Meta-lesson: when a "fix" targets a string that leaves the JS runtime
+        (attribute → browser compiler), trace the value through every
+        serialization hop — the escape you wrote may vanish before it ships.
+        ledger records walked events. Newest first.
 
 - **2026-11-21 — the CLI's `--overwrite` reverts OWNED files; the test net
   catches it.** The S4 vendor run overwrote the cast button, the frost
