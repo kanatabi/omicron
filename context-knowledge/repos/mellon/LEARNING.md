@@ -38,6 +38,21 @@ The standing doctrine lives in the repo's
   amber active), never a checkbox; (2) hunk-level conflict resolution is
   PARKED with a design: two-way per-region choice (no ancestor exists —
   posts have no version history), compose client-side, save rebased.
+- **2026-11-21 — synced scroll is source-line anchored, never percentages.**
+  The split-editor scroll sync's only honest form: the RENDERER knows which
+  source lines each block came from (markdown-it `token.map` → a core rule
+  stamps `data-source-lines`), the editor builds a cumulative-height map
+  from the rendered blocks, and each pane's scroll resolves the other
+  through it (interpolated inside fences — a 20-line fence is one tall
+  block; per-line truth doesn't exist there). Percentage mapping would lie
+  the moment a diagram appears. Three pipeline details worth keeping: the
+  Shiki renderer DROPS token attrs (re-inject on its `<pre>`); singleton
+  tokens (fence/hr) have `nesting === 0` — anchor them too; a hydrated
+  mermaid box replaces the hidden source pre — the SIBLING donates the
+  geometry. And the flush-before-navigate rule: any SPA navigation flushes
+  the live draft to the pending-edit store FIRST — an in-memory draft dies
+  with the component; the flush is the handoff (and it resets the
+  autosave window).
 
 - **2026-11-21 — a green test suite can still fail the run: unmounted
   transitions reject, and a piped gate lies.** Two findings from one CI

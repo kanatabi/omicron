@@ -338,7 +338,20 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   per-keystroke `$state.snapshot` clone; the word count is debounced;
   slide→fade on pills/banners; preview debounce STAYS 120ms (the cache
   carries it). A raw NUL byte rode the cache-key literal (git binary-diffed
-  the file) — space separator now. Hunk-level
+  the file) — space separator now. **Synced scrolling** (owner round,
+  mellon `68d638b` + earendil `364a565`): the pipelines stamp every
+  top-level block with `data-source-lines` (markdown-it token.map,
+  1-based, fences include the closing line; the Shiki renderer drops
+  token attrs — the anchor is re-injected); `preview-sync.ts` maps the
+  editor fold ⇄ the preview fold through the anchors (binary search +
+  interpolation inside a block's pixel range, hidden mermaid fences
+  donate their box's geometry), rAF-throttled, suppression-latched; the
+  meta-bar Sync toggle (lg+ only, persisted `mellon.syncscroll`, default
+  ON). **Flush-before-navigate landed with it**: EVERY SPA navigation
+  flushes the live draft to the store first — the diff page's contract
+  is HEAD vs what you were ACTUALLY editing (the dialog and the diff
+  page cannot disagree); the flush resets the scheduler's window.
+  Hunk-level
   conflict resolution PARKED (the two-way compose design is in the vault
   notes — no ancestor exists, posts have no version history).
   **Test infra lesson (same day, CI walked it):** a dom test can pass every
