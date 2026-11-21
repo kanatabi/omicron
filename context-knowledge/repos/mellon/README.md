@@ -316,7 +316,18 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   is per-env-tunable now; the staging trio moved 8 → 10 the same hour
   (the gate's re-dispatch remedy — ladder epoch #79 predated the
   recovery writes) and a stale test pin (v8, pin≠head) was cleared en
-  route — the config-gate held BOTH blockages correctly.
+  route — the config-gate held BOTH blockages correctly. **The pending-diff
+  presentation round** (**merged to `main` `72840bd`**): the markdown tab is
+  two TEXT PANES (not a bordered grid), whole file by default, changed lines
+  block-highlighted (`bg-diff-del/15`/`bg-diff-add/15`), a `Changed only`
+  toggle collapsing to regions + gap bands; the metadata tab is the VAULT's
+  table view (status chips + Hide-unchanged button, body EXCLUDED — it used
+  to render the whole document twice); the autosave pill states the truth
+  (`Unsaved` → `Autosaved locally · HH:MM`, tooltip: local-only); the
+  DIFF_BLOCK vocabulary unifies block highlighting across the compare page
+  and the vault drawer; six lowercase button labels normalized. Hunk-level
+  conflict resolution PARKED (the two-way compose design is in the vault
+  notes — no ancestor exists, posts have no version history).
   **Test infra lesson (same day, CI walked it):** a dom test can pass every
   assertion and still FAIL the run — happy-dom's Web Animations REJECTS
   `finished` with an AbortError on cancel(), and Svelte's teardown aborts

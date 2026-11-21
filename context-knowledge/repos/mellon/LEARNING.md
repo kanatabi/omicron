@@ -24,6 +24,20 @@ The standing doctrine lives in the repo's
   that should exist on only ONE path is now a CONTRACT VIOLATION — the
   env-model's answer is the empty placeholder, and "which copy is
   consumed" is a property of the ES remoteRefs, never of presence.
+- **2026-11-21 — the diff page's two presentations + the shared DIFF_BLOCK
+  language.** The markdown tab = two TEXT PANES (free-flowing lines, not a
+  bordered grid), whole file by DEFAULT with changed rows block-highlighted
+  (`bg-diff-del/15`/`bg-diff-add/15` — solid row blocks, not font tints),
+  `Changed only` collapsing to regions ±2 context + gap bands
+  (`splitRegions`); the metadata tab = the vault's table view (status
+  chips, Hide-unchanged button, body EXCLUDED — a body row rendered the
+  whole document twice, walked). The `DIFF_BLOCK` map lives in
+  secrets-diff.ts and is consumed by the compare page (split/inline/table)
+  and the vault drawer — ONE highlight language. Two process notes: (1)
+  the toggle affordance is the vault's reveal-BUTTON (aria-pressed +
+  amber active), never a checkbox; (2) hunk-level conflict resolution is
+  PARKED with a design: two-way per-region choice (no ancestor exists —
+  posts have no version history), compose client-side, save rebased.
 
 - **2026-11-21 — a green test suite can still fail the run: unmounted
   transitions reject, and a piped gate lies.** Two findings from one CI

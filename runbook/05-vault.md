@@ -649,6 +649,10 @@ anything origin-anchored; staging's pod must speak STAGING.)
 > The retirement sequence is the render contract's own: fill the env
 > paths, flip the remoteRefs, verify both renders green, THEN delete the
 > shared path (metadata + versions — history rides Bao's server audit).
+> The portal's diff pages that read these paths: the pending-diff page
+> (mellon editor) renders TWO tabs — the markdown diff (two text panes,
+> block-highlighted changes, `Changed only` collapse) and the metadata
+> table (status chips + `Hide unchanged`, the vault-compare shape).
 
 ```bash
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/staging \
