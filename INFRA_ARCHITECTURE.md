@@ -1296,7 +1296,12 @@ PUT    /v1/kv/data/<app>/<env>  (cas=0)     # create-if-absent = onboard (trio) 
   > `read/list/create/update/patch` on every `kv/data/+/…` path, matching
   > this section and `scripts/dev-plane.sh`. ESO's `eso` policy stays
   > strictly `read` — the renderer must never write values (untouched,
-  > load-bearing).
+  > load-bearing). **Same day, second instance:** the PIN verb
+  > (`PATCH /v1/kv/metadata/…` — exactly this section's table) also 403'd —
+  > the seeded policy granted `read/list` on `kv/metadata/*` without the
+  > `patch` this section specifies; the live policy now carries it (pins
+  > and unpins verified end-to-end through the AppRole: 204/204, unpin
+  > RFC7396-clears the key).
 - Go client: `hashicorp/vault/api` works unmodified against OpenBao (wire-compatible).
 - Bao **audit devices are the trail**: mellon adds no secret-value logging, and lumen must
   never log values (structured logs redact by key).

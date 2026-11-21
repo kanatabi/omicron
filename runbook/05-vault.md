@@ -190,8 +190,13 @@ path \"kv/data/lumen/production\"  { capabilities = [\"read\",\"list\",\"create\
 path \"kv/data/+/staging\"         { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }
 path \"kv/data/+/production\"      { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }
 path \"kv/data/+/shared\"          { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }
-path \"kv/metadata/*\"             { capabilities = [\"read\",\"list\"] }
+path \"kv/metadata/*\"             { capabilities = [\"read\",\"list\",\"patch\"] }
 EOF"
+# METADATA PATCH (amended again same day): the PIN rides it — PATCH
+# /v1/kv/metadata/<path> merge-patches custom_metadata.pinned_version
+# (§5.5's API table); the walkthrough seeded read/list only, so every
+# pin/unpin 403'd at Bao. `patch` — not `update` (no full-metadata
+# rewrites, no delete); unpins RFC7396 the key to null.
 # NOTE the `+` (fixed 2026-11-15): in OpenBao policy paths a `*` is a glob
 # valid as the LAST character only — a MIDDLE `*` (kv/data/*/staging) is
 # not the segment wildcard that shape implies; `+` matches exactly ONE
@@ -349,7 +354,7 @@ curl -s -X POST $V/v1/sys/policy/eso -H "X-Vault-Token: $ROOT" --data-binary @- 
 {"policy": "path \"kv/data/*\" { capabilities = [\"read\"] }\npath \"kv/metadata/*\" { capabilities = [\"read\",\"list\"] }"}
 EOF
 curl -s -X POST $V/v1/sys/policy/portal -H "X-Vault-Token: $ROOT" --data-binary @- <<'EOF'
-{"policy": "path \"kv/data/lumen/staging\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/lumen/production\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/staging\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/production\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/shared\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/metadata/*\" { capabilities = [\"read\",\"list\"] }"}
+{"policy": "path \"kv/data/lumen/staging\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/lumen/production\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/staging\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/production\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/shared\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/metadata/*\" { capabilities = [\"read\",\"list\",\"patch\"] }"}
 EOF
 
 # 5. ROLES — secret_id_num_uses 0 BEFORE minting (§3.4's bomb)

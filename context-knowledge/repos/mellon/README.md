@@ -292,7 +292,13 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   while the banner claimed success. Restore now REPLACES the form with the
   chosen version exactly (keys + values, +/− delta named in the banner,
   dirty draft confirms first); the save rides CAS + the mirror as any
-  write. 2 dom tests (223 green).
+  write. 2 dom tests (223 green). **Pin follow-up (same day):** the PIN
+  verb 403'd too — the seeded policy lacked `patch` on `kv/metadata/*`
+  (§5.5's table always specified it). The live policy now grants it;
+  pin/unpin swept end-to-end through the AppRole (204/204, unpin
+  RFC7396-clears the key, final state verified clean). The control
+  plane's full designed surface is now live: read/list, CAS save,
+  pin/unpin, onboard, add-env.
   Lesson in [LEARNING.md](LEARNING.md).
 - **2026-11-21 — GRADUATED:** `feat/shadcn-integration` merged to `main`
   (PR #4) and tagged **v4.0.0** — the A2 preset is the production UI.
