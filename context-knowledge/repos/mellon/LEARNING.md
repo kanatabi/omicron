@@ -10,6 +10,19 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — a portaled popup is an outsider: shield its events.** The
+  portal fixed the geometry and broke the picking — with the popup in
+  document.body, a pointerdown on an option reads as INTERACT-OUTSIDE by
+  the dialog's dismiss layer, which closed the whole dialog before the
+  option's click could land. The clean part: bits-ui's dismiss layer
+  EXPLICITLY ignores stopped events (`if (event.cancelBubble)` on
+  pointerdown, `if (event.defaultPrevented)` on keydown) — so the popup
+  stops propagation on pointerdown (+ focusin/focusout for the focus
+  guard), and Esc closing the SELECT without the dialog is just
+  preventDefault, which the layer already honors. Standing rule: **a
+  portaled popup must shield pointerdown/focus events or the host dialog
+  dismisses on its own options** — the layer's stopped-event contract is
+  the sanctioned seam, not a hack.
 - **2026-11-21 — once-measured coordinates are a liability: PORTAL the
   popup.** The transform fix wasn't enough — the Select's popup STILL
   detached inside the dialog. The deeper truth: the popup measured the
