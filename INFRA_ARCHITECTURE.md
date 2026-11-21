@@ -126,7 +126,7 @@ _always_ serves the laptop→cluster admin path regardless of that choice.
 | **Blog Frontend (SvelteKit SSR)**    | **Public** (production + staging twins, amended 2026-11-14) | `gofar.id` (+`www`, production-only) · staging: `staging.gofar.id` — the old `ainurrofiq.com` 301s in                                    | HTTPS via Traefik Ingress + Let's Encrypt TLS via **DNS-01** (HTTP→HTTPS redirect enforced; staging rides the SAME ClusterIssuer — the self-signed rehearsal component is retired, DNS-01 works from any cluster)                                                                                                                                                                                                 |
 | **Lumen API**                        | **Cluster-internal only — and role-split** (amended 2026-11-14)  | cms: `http://lumen-http-server-{staging,production}.lumen.svc.cluster.local` (suffixed per the Naming contract — the suffix is part of the SEEDED value, not a rewrite) · admin: `http://lumen-admin.lumen.svc.cluster.local` (ONE Control Plane, foundation plane, unsuffixed) | No public ingress, either plane. `LUMEN_ROLE=admin` = sessions (the only ones), users (the only `users` table), Bao relay, TOFU wizard — no worker, no content routes, no ingress; `LUMEN_ROLE=cms` = content only, introspects every admin write against the admin plane (≤30 s cache; unreachable → 503 fail-closed). Earendil SSR pods call their env's cms; the browser's single client-side call (search suggest) rides earendil's same-origin `/api/...` proxy. Mellons reach BOTH by path per `routing.ts` |
 | **Mellon (admin portal)**            | **Public — TLS only** (amended 2026-11-08; was port-forward-only) | `https://console.gofar.id` (production) · `https://staging-console.gofar.id` (staging) · `kubectl port-forward svc/mellon-web-server-<env>` remains **break-glass** | Service stays ClusterIP — only Traefik routes to it, with the console middlewares (headers/HSTS/rate-limit, Phase 3) + JWT sessions minted ONLY by lumen-admin (`tv`-revocation; `mellon/DESIGN.md` §8). Go-public is **HUMAN-GATE #10**: the checklist verifies before DNS flips. Its relay is a ROUTING TABLE (`src/lib/api/routing.ts`): session/users/setup/bao → ADMIN_URL, content + /api → CMS_URL, unknown → throw (no default). Mellons hold no credentials in any era |
-| **Argo CD Control Panel**            | **Private (VPN Only)**                                            | `localhost:8080` (Port-forwarded) / Private Ingress                                                                   | Private NetBird WireGuard Overlay Mesh                                                                                                                                                                                                                                                                                                                  |
+| **Argo CD Control Panel**            | **Public — TLS only** (amended 2026-11-21: the GitOps door `argo.gofar.id`; VPN/port-forward remains break-glass) | `https://argo.gofar.id` · `kubectl port-forward svc/argocd-server` / the NetBird/Tailscale mesh remain break-glass | Service stays ClusterIP — only Traefik routes to it (bases/argocd-ingress + explicit Certificate `argo-gofar-id`; argocd-server runs `--insecure`, TLS terminates at the edge). Argo's OWN admin login (or future SSO) is the auth. The GitOps WRITE path (the repo push + the deploy ladder) never rides this door — it is a read/observe surface plus the sync buttons the owner already uses |
 | **Grafana / VictoriaMetrics / Loki** | **Private (VPN Only)**                                            | Internal Mesh DNS / Local Tunnel                                                                                      | Private NetBird WireGuard Overlay Mesh                                                                                                                                                                                                                                                                                                                  |
 | **Meilisearch**                      | **Cluster-internal only**                                         | `http://meilisearch.search.svc.cluster.local:7700`                                                                    | No public or mesh ingress; API-only access                                                                                                                                                                                                                                                                                                              |
 | **OpenBao (config/secrets store)**   | **Cluster-internal + admin API**                                  | `http://bao.secrets.svc.cluster.local:8200`                                                                           | AppRole/periodic tokens; built-in UI mesh-only behind Traefik private route; never public                                                                                                                                                                                                                                                               |
@@ -146,7 +146,8 @@ _always_ serves the laptop→cluster admin path regardless of that choice.
 > Biznet-era draft; the current procedure with the record table is
 > `runbook/07-go-public.md` Act 1. Hosts: `gofar.id` + `www` (production
 > only), `console.gofar.id`, `anor.gofar.id` (one Grafana door, dashboards
-> filtered per env), `img.gofar.id` (R2 custom domain), plus staging's
+> filtered per env), `img.gofar.id` (R2 custom domain), `argo.gofar.id`
+> (the GitOps door, amended 2026-11-21), plus staging's
 > `staging.gofar.id` / `staging-console.gofar.id`.
 
 ### A. Public Domain DNS (For External Users)
@@ -390,6 +391,18 @@ netbird` for admin access):
    > requirement). Media and backups settle on **Cloudflare R2** (GATE #9
    > closed; restic→R2, separate bucket each). Operating procedure moved to
    > `runbook/` — this doc remains the decision record it cites.
+
+   > **GitOps-door amendment (owner ruling 2026-11-21):** `argo.gofar.id`
+   > becomes the FOURTH human surface — the Argo CD UI, same 443, no new
+   > listener, lockdown unchanged. The invariant stands: **no public API
+   > ingress remains absolute** (lumen/Bao/search/DB/kubectl stay private;
+   > 6443 firewall-denied at the host) — the Argo door exposes the hub's
+   > UI behind its own login, TLS-terminated at the edge
+   > (`argocd-server --insecure`; explicit Certificate `argo-gofar-id`;
+   > the sync-op wedge exemption from the grafana walk). The mesh
+   > path-forward stays for `kubectl`/break-glass; the door is for
+   > observe-and-sync. Same ordering rule as every door: DNS resolves
+   > BEFORE first issuance.
 
 5. **Label Nodes for Placement (used by GitOps overlays in later phases):**
    ```bash

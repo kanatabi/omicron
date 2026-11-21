@@ -62,7 +62,10 @@ real public ghcr v-tags (no placeholder builds / image imports anymore).
    DB creds & TLS are generated in-cluster — reference them, never store them.
 2. **Two sanctioned public surfaces, never a public API** (owner amendment,
    2026-11-08, INFRA §2): `gofar.id` (earendil, content) and `console.gofar.id`
-   (mellon, TLS + GATE #10 checklist). `lumen` and `meilisearch` stay ClusterIP-only
+   (mellon, TLS + GATE #10 checklist). Platform UI doors are separate owner
+   rulings in the same §2 record — `anor.gofar.id` (Grafana, 2026-11-13) and
+   `argo.gofar.id` (Argo CD, 2026-11-21) — they expose logins, not APIs.
+   `lumen` and `meilisearch` stay ClusterIP-only
    by design; browser→API traffic rides the SSR/portal same-origin proxies
    (`earendil/src/routes/api/[...path]/+server.ts`, `mellon/src/routes/(app)/api/`).
    Don't "fix" a 404 on `/api/...` by adding an API ingress — the proxy or `API_BASE`

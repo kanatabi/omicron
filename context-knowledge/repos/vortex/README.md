@@ -138,6 +138,23 @@ detail: [../architecture/gitops.md](../../architecture/gitops.md).
   name, the API rejects an IP); **the fleet + all doors green: gofar.id
   200, console 303, anor 302**; the in-repo INFRA copy retired (stale
   fork — link, don't copy); AGENTS.md added; README slimmed.
+- **2026-11-21 — the GitOps door + the portal's first tuning knob**
+  (**merged to `main` `30e9015`**): `argo.gofar.id` opens the hub's UI as
+  the FOURTH human surface (owner ruling, INFRA §2 amendment) — the
+  anor/grafana shape end-to-end: explicit Certificate `argo-gofar-id`
+  (namespace argocd, tls-argo, DNS-01), `bases/argocd-ingress` authored
+  final (skip-health-check — the Degraded-Ingress sync-op wedge; backend
+  argocd-server:80 http), an Argo-managed Application for Argo's OWN door
+  (no chicken-and-egg: the door isn't needed for the hub to run, and a
+  kubectl-only door drifts invisible to the gate), and `argocd-server
+  --insecure` in platform/argocd (edge TLS termination — without it the
+  server 3-redirects and the door loops). DNS record = the console
+  ordering rule (resolves BEFORE first issuance). Same merge: the first
+  env-agnostic tuning knob rides the config feed —
+  `EDITOR_AUTOSAVE_SECONDS` at kv/mellon/shared (both env ES files pull
+  the same property; the remoteRef has NO fallback → seed BEFORE the
+  overlay reaches a cluster; mellon's code default is 60). The epoch trio
+  bump rides the release ladder — order-safe both ways.
 - **Open:** staging DNS records + vault seeds (when staging first goes
   live); the transition `overlays/` patterns' removal condition.
 

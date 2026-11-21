@@ -433,6 +433,20 @@ has a fallback value`. The shell's hamburger was
   decides WHICH lumen also names the hop). The id rides error objects
   (`AdminApiError.requestId`) for logs and support escalation, never for
   UI (ghost-field doctrine — the wire copy renders verbatim).
+- **2026-11-21 — autosave is a port, not a feature; and the save dialog
+  names attributes, never values.** The pending-edit round's two minted
+  rules: (1) the buffer lives behind `PostEditStore`
+  (`{ draft, baseRev }` — the proposed lumen working-copy wire shape) and
+  the diff functions take snapshot PAIRS — so the server-autosave +
+  versioned-head future is a constructor swap plus an API source, zero UI
+  rework; the staleness knob (`EDITOR_AUTOSAVE_SECONDS`, vault-fed,
+  default 60) means idle-debounce AND max-staleness in one number, so a
+  big value can never starve the buffer. (2) The save-confirm dialog
+  lists changed attribute NAMES only (owner call) — values live on
+  `/posts/[slug]/diff`, whose left side is ALWAYS fresh head from the
+  server (the editor's seed goes stale across tabs; the diff page's
+  conflict notice reads baseRev vs head rev, and its save-anyway rebases
+  onto head rev — the CAS stays the referee).
 - **2026-11-15 — one module, many copies: the register must be global.**
   The runtime executes the metrics registry's SOURCE copy (server.js) AND
   its bundled chunk (the hooks chain) — with per-instance `new Registry()`

@@ -264,6 +264,20 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   admin's own tables were already contained (shadcn wrapper + explicit
   `overflow-x-auto`); first test on the vendored pipeline pins the wrapper.
   Lesson in [LEARNING.md](LEARNING.md).
+- **2026-11-21 — editor autosave + the pending-diff page (**merged to `main`
+  `e336826`**): local autosave behind the `PostEditStore` port
+  (`pending-edit.ts`) — the buffer is localStorage today and a future lumen
+  working-copy by constructor swap (the `{ draft, baseRev }` payload is the
+  proposed wire shape; `baseRev` is the versioning primitive); the staleness
+  knob is vault-fed (`EDITOR_AUTOSAVE_SECONDS`, kv/mellon/shared, integer
+  seconds, code default 60 on missing/invalid); the save-confirm dialog
+  lists changed attribute NAMES and offers Check diff (→
+  `/posts/[slug]/diff` — aligned two-pane markdown split + del/add metadata
+  rows) or Save directly; the conflict (409) story is a review door with
+  save-anyway (rebase to head rev) / discard. The buffer never touches the
+  network — explicit save stays the only server path. 19 new tests (221
+  green); `alignDiff`/`SplitRow` generalized into `diff.ts` (secrets-compare
+  re-exports). Lesson in [LEARNING.md](LEARNING.md).
 - **2026-11-21 — GRADUATED:** `feat/shadcn-integration` merged to `main`
   (PR #4) and tagged **v4.0.0** — the A2 preset is the production UI.
   Same day, its first patch: **v4.0.1 pending** (`49000ef`) — a hydration

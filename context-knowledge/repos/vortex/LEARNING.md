@@ -1,6 +1,6 @@
 ---
 tags: [vortex, lessons]
-updated: 2026-11-15
+updated: 2026-11-21
 ---
 
 # vortex — lesson ledger
@@ -8,6 +8,24 @@ updated: 2026-11-15
 The standing traps live in the repo's
 [AGENTS.md §9](https://github.com/kanatabi/vortex/blob/main/AGENTS.md); this
 ledger records walked events, newest first.
+
+- **2026-11-21 — the hub can manage its own door; the door must not manage
+  the hub.** The `argo.gofar.id` round drew the chicken-and-egg line
+  precisely: the argocd INSTALL stays the bootstrap exception
+  (platform/argocd, kubectl apply -k — it cannot sync before it exists),
+  but the DOOR has no such problem — the hub is long-running by the time
+  an Application for its Ingress appears, and a kubectl-only door drifts
+  invisible to the gate. Second walked fact: edge TLS termination at
+  argocd-server REQUIRES `--insecure` (upstream sets no args, so a
+  strategic-merge `args:` is an add) — without it the server 3-redirects
+  to its own https and the door loops. And the first env-agnostic tuning
+  knob rode the config feed (`EDITOR_AUTOSAVE_SECONDS`, kv/mellon/shared)
+  with a hard truth: an ESO remoteRef has NO value fallback — a missing
+  property fails the ENTIRE ExternalSecret sync, so "code default 60"
+  only protects dev/bare-k3d; in-cluster the seed must land BEFORE the
+  overlay. Knob semantics worth keeping: ONE number = idle debounce AND
+  max-staleness bound (continuous typing flushes on the interval, not
+  only on pause), so a big value never starves the buffer.
 
 - **2026-11-15 — the doors opened: the full first-boot chain walked.**
   cf-token seeded (ch.07 §3.2) → ES rendered → challenges presented →
