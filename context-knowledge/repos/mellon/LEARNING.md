@@ -8,7 +8,19 @@ updated: 2026-11-21
 The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
-ledger records walked events. Newest first.
+
+- **2026-11-21 — a hairline pill is text, not a button (D14).** The owner:
+  "I don't like this kind of button" — the quiet chip's anatomy was
+  bg-transparent + a 1px border-border hairline: on any surface it read as
+  bare text. The fix gave it the SELECT-TRIGGER's anatomy (bg-card + the
+  border — the picker-pill look the owner did NOT flag on the same screen).
+  Standing rule: **a secondary action needs a SURFACE to read as a control;
+  "transparent + hairline" is a label**. When the owner flags a control's
+  look, scan the screen for the sibling control they did NOT flag — the
+  difference between them is the answer. twMerge note: the base's
+  `border border-transparent` + variant's `border-border` merge fine — the
+  hairline WAS rendering; the surface was the missing half.
+  ledger records walked events. Newest first.
 
 - **2026-11-21 — the CLI's `--overwrite` reverts OWNED files; the test net
   catches it.** The S4 vendor run overwrote the cast button, the frost
