@@ -32,7 +32,15 @@ The standing doctrine lives in the repo's
     Also: the vault NEVER HAD a navigation guard — the report's real defect
     was silent loss on leave, and the dialog was the row-× flow wearing the
     wrong clothes.
-    ledger records walked events. Newest first.
+    - **2026-11-21 — the registry's Cancel rides buttonVariants' DEFAULT SIZE
+      (D16).** The confirm footer's verb (primary: h-auto py-2 — auto height)
+      stood beside a Cancel fixed at h-8 — the class override (px-4 py-2) never
+      touched the height because the HEIGHT lives in the size variant. Standing
+      rule: **when a footer mixes a cast Button with a registry
+      Cancel/Action/Close, override the height anatomy on the registry one
+      (h-auto + matching py) or the pair renders uneven**; pin it with a
+      class-list test — happy-dom's getComputedStyle is unreliable for borders.
+      ledger records walked events. Newest first.
 
 - **2026-11-21 — the CLI's `--overwrite` reverts OWNED files; the test net
   catches it.** The S4 vendor run overwrote the cast button, the frost
