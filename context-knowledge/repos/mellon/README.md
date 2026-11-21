@@ -305,7 +305,18 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   per-key used-by notes), a post-seed guard asserts it, and the live
   estate was re-seeded to the law (lumen shared v1 was still the
   walkthrough's 3-key shape — the next mirror save would have flattened
-  it). JWT secret verified byte-identical through the reseed.
+  it). JWT secret verified byte-identical through the reseed. **And the
+  shared path itself is GONE (third ruling, same day):** with uniform
+  shapes, a `shared` path for a per-env app is a class without a consumer
+  (nothing deploys from it — unlike `kv/lumen/shared`, which feeds
+  lumen-admin, a real second foundation-plane deployment). Both mellon
+  ESes now pull ALL FOUR keys from their OWN env path — filled before the
+  remoteRef flip (the render contract's ordering: fill, flip, verify,
+  delete), both renders green, then `kv/mellon/shared` deleted. The knob
+  is per-env-tunable now; the staging trio moved 8 → 10 the same hour
+  (the gate's re-dispatch remedy — ladder epoch #79 predated the
+  recovery writes) and a stale test pin (v8, pin≠head) was cleared en
+  route — the config-gate held BOTH blockages correctly.
   **Test infra lesson (same day, CI walked it):** a dom test can pass every
   assertion and still FAIL the run — happy-dom's Web Animations REJECTS
   `finished` with an AbortError on cancel(), and Svelte's teardown aborts

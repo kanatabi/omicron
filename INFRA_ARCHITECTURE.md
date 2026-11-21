@@ -1301,7 +1301,18 @@ PUT    /v1/kv/data/<app>/<env>  (cas=0)     # create-if-absent = onboard (trio) 
   > the seeded policy granted `read/list` on `kv/metadata/*` without the
   > `patch` this section specifies; the live policy now carries it (pins
   > and unpins verified end-to-end through the AppRole: 204/204, unpin
-  > RFC7396-clears the key).
+  > RFC7396-clears the key). **And the third ruling the same day —
+  > `kv/mellon/shared` RETIRED:** with uniform shapes, a shared path for a
+  > per-env app is a class without a consumer (nothing deploys from it —
+  > unlike `kv/lumen/shared`, which feeds lumen-admin, a SEPARATE
+  > foundation-plane deployment). Each env's ES now pulls ALL FOUR keys
+  > from its OWN path (filled before the flip — the render contract's
+  > ordering); the shared path was deleted after both renders verified
+  > green. The knob is per-env-tunable now. The staging trio also moved
+  > 8 → 10 the same hour: the ladder's epoch (#79) predated the afternoon's
+  > out-of-band recovery writes, and the gate blocked on declared != head —
+  > its documented remedy (re-dispatch with the number the matrix shows)
+  > applied; a stale test pin (v8, pin≠head) was cleared en route.
 - Go client: `hashicorp/vault/api` works unmodified against OpenBao (wire-compatible).
 - Bao **audit devices are the trail**: mellon adds no secret-value logging, and lumen must
   never log values (structured logs redact by key).

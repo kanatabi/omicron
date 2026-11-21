@@ -95,7 +95,7 @@ sequenceDiagram
     L->>A: mount kv-v2 · enable approle · write policies · create roles
     Note over L,V: then the same over HTTP: sys/mounts/kv · sys/auth/approle · sys/policy/eso · auth/approle/role/eso
     L->>L: mint role-id + secret-id, kubectl create secret (the paradox family)
-    L->>V: SEED kv/lumen/shared · lumen/{staging,production} · earendil · mellon (shared+envs)<br/>· grafana · cert-manager · meilisearch — every §6 table, BEFORE any env hub syncs
+    L->>V: SEED kv/lumen/shared · lumen/{staging,production} · earendil · mellon (envs)<br/>· grafana · cert-manager · meilisearch — every §6 table, BEFORE any env hub syncs
 ```
 
 ## 3. Variant A — `kubectl exec` + `bao` CLI
@@ -464,14 +464,20 @@ before either env hub), then staging, then production.
 > The tables below carry a **used-by note per key**: which path's copy the
 > ES actually pulls — the empty copies are placeholders, never consumed.
 > earendil (no `shared` path) and the §6.5 singletons conform trivially.
+> **Scope note (same day, the shared-retirement ruling):** a `shared` path
+> exists ONLY where a foundation-plane DEPLOYMENT does — `kv/lumen/shared`
+> (lumen-admin) is the estate's only one; per-env apps (mellon) read every
+> key from their own env path.
 
 Post-seed guard — silence is the pass condition (key NAMES are not secrets;
-a mismatch line names the drifting path):
+a mismatch line names the drifting path). Paths are enumerated from the
+vault itself — the guard never hardcodes which envs an app has:
 
 ```bash
-for app in lumen mellon; do
+APPS=$(X "export VAULT_TOKEN=$ROOT; bao kv list" 2>/dev/null)
+for app in $APPS; do
   FIRST=""; FIRSTKEYS=""
-  for env in shared staging production; do
+  for env in $(X "export VAULT_TOKEN=$ROOT; bao kv list $app" 2>/dev/null); do
     KEYS=$(X "export VAULT_TOKEN=$ROOT; bao kv get -format=json kv/$app/$env" 2>/dev/null \
       | python3 -c "import json,sys;print('\n'.join(sorted(json.load(sys.stdin)['data']['data'])))")
     [ -z "$FIRSTKEYS" ] && FIRSTKEYS="$KEYS" && FIRST="$app/$env" && continue
@@ -626,27 +632,35 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/earendil/production \
 (`ORIGIN` returned with its reader — earendil reads it for the JSON-LD and
 anything origin-anchored; staging's pod must speak STAGING.)
 
-### 6.4 `kv/mellon/shared` + `kv/mellon/{staging,production}` — the dual-upstream portal (4 keys, uniform)
+### 6.4 `kv/mellon/{staging,production}` — the dual-upstream portal (4 keys, uniform, per-env)
 
-| kv path | Keys (uniform set) | Pulled by the ES from |
+| kv path | Keys (all FILLED — every remoteRef reads from this path alone) | Declared by |
 |---|---|---|
-| `kv/mellon/shared` | `ADMIN_URL` `CMS_URL` `API_BASE` `EDITOR_AUTOSAVE_SECONDS` — **filled here:** `ADMIN_URL`, `EDITOR_AUTOSAVE_SECONDS` — **empty here:** `CMS_URL` `API_BASE` | both mellon ESes pull `ADMIN_URL` + `EDITOR_AUTOSAVE_SECONDS` FROM this path |
-| `kv/mellon/staging` | the same 4 keys — **filled here:** `CMS_URL` `API_BASE` (staging values) — **empty here:** `ADMIN_URL` `EDITOR_AUTOSAVE_SECONDS` | `environments/staging/mellon/externalsecret.yaml` pulls `CMS_URL` (+ `API_BASE` — transitional) from here |
-| `kv/mellon/production` | the same 4 keys — **filled here:** `CMS_URL` `API_BASE` (production values) — **empty here:** `ADMIN_URL` `EDITOR_AUTOSAVE_SECONDS` | the production twin, from here |
+| `kv/mellon/staging` | `CMS_URL` `API_BASE` (staging values) · `ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local` · `EDITOR_AUTOSAVE_SECONDS` (per-env tuning) | `environments/staging/mellon/externalsecret.yaml` |
+| `kv/mellon/production` | the same 4 keys with production values | `environments/production/mellon/externalsecret.yaml` |
+
+> **`kv/mellon/shared` was RETIRED 2026-11-21** (owner ruling): with the
+> uniform-shape law, a `shared` path for a per-env app is a class without
+> a consumer — nothing deploys from it. **`shared` paths exist only where
+> a foundation-plane DEPLOYMENT does** — `kv/lumen/shared` feeding
+> lumen-admin is the estate's only one; mellon is one binary per env, so
+> its ES pulls ALL FOUR keys from its OWN path. Per-env values become
+> possible by design (staging may tune the autosave knob independently).
+> The retirement sequence is the render contract's own: fill the env
+> paths, flip the remoteRefs, verify both renders green, THEN delete the
+> shared path (metadata + versions — history rides Bao's server audit).
 
 ```bash
-X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/shared \
-  ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local \
-  EDITOR_AUTOSAVE_SECONDS=60 \
-  CMS_URL= API_BASE="
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/staging \
   CMS_URL=http://lumen-http-server-staging.lumen.svc.cluster.local \
   API_BASE=http://lumen-http-server-staging.lumen.svc.cluster.local \
-  ADMIN_URL= EDITOR_AUTOSAVE_SECONDS="
+  ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local \
+  EDITOR_AUTOSAVE_SECONDS=60"
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/mellon/production \
   CMS_URL=http://lumen-http-server-production.lumen.svc.cluster.local \
   API_BASE=http://lumen-http-server-production.lumen.svc.cluster.local \
-  ADMIN_URL= EDITOR_AUTOSAVE_SECONDS="
+  ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local \
+  EDITOR_AUTOSAVE_SECONDS=60"
 ```
 
 > **Mirror the routing table, never out-guess it:** mellon's
