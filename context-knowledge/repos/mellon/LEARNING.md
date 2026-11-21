@@ -20,7 +20,19 @@ The standing doctrine lives in the repo's
   difference between them is the answer. twMerge note: the base's
   `border border-transparent` + variant's `border-border` merge fine — the
   hairline WAS rendering; the surface was the missing half.
-  ledger records walked events. Newest first.
+  - **2026-11-21 — native confirm() is the same leak class as native
+    <select> (D15).** The owner hit the OS dialog on the vault — browser-owned
+    UI, unthemeable, custom copy ignored. The replacement: a house `Confirm`
+    over `ui/alert-dialog` (mounts already-open via conditional render, the
+    destructive verb fills --danger, busy-aware dismissal). The unsaved-changes
+    guards rework: `beforeNavigate` CANCELS the navigation, asks in the
+    estate's voice, then re-navigates past a `guardOff` latch — the event's
+    destination is `e.to.url` (a NavigationTarget union; `e.url` does not
+    exist there). `beforeunload` stays native — the browser owns that chrome.
+    Also: the vault NEVER HAD a navigation guard — the report's real defect
+    was silent loss on leave, and the dialog was the row-× flow wearing the
+    wrong clothes.
+    ledger records walked events. Newest first.
 
 - **2026-11-21 — the CLI's `--overwrite` reverts OWNED files; the test net
   catches it.** The S4 vendor run overwrote the cast button, the frost
