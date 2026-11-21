@@ -376,6 +376,26 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   binding — `$state`. The dom tests now MOUNT the real editor (5 tests:
   the marks, the quote's block border, the fence fill, and a live
   follow — a newly typed block gains its cue in the same update).
+  **THE EDITOR GETS A BRAIN** (**merged to `main` `6d57f9b`**): the
+  LIST region tint (the blue family: the row structures — the tables'
+  sibling), the emoji/sub/sup green blocks (the parser ships them
+  natively), and the REGEX CUE LAYER (`regex-cues.ts`) for what the
+  grammar can't see — `==highlight==` (the amber block), the footnote
+  refs/defs, the deflist `:` lines, `{#custom-id}` — viewport-scoped,
+  line-anchored, tree-EXCLUDED (a `==` inside a go fence = comparison,
+  never a cue). **The fence languages**: `@codemirror/language-data`
+  embedded via `codeLanguages` — the fences render TRUE per-language
+  syntax colors (143 languages, lazy). **The completions**
+  (`completions.ts`): the Slack-style `:emoji:` menu (1,903 static
+  shortcodes — no API; the apply inserts the RAW shortcode; the
+  preview renders it live) + the per-language keyword sources inside
+  the fences (the keyword tier — not LSP). The popup = CM's tooltip
+  lifecycle skinned to the shadcn Command's look. The debugging ritual
+  of the round: the plugin was crashing silently (CM disables crashed
+  plugins) — the console.error capture + the DOM span-anatomy dump =
+  the diagnosis; the vite-8 walk's `environments.ssr.resolve.external`
+  = the dev-only CJS escape (the top-level `ssr.external` silently
+  ignored).
   Hunk-level
   conflict resolution PARKED (the two-way compose design is in the vault
   notes — no ancestor exists, posts have no version history).
