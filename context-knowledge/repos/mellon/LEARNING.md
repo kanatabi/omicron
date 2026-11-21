@@ -20,7 +20,13 @@ The standing doctrine lives in the repo's
   change), fenced code keeps its horizontal scroll. Standing rule: whenever
   earendil's `layout.css` prose/raw-CSS blocks change, diff mellon's vendored
   exceptions and mirror the delta immediately — the preview's fidelity is a
-  contract, not a courtesy.
+  contract, not a courtesy. **Audit addendum:** the audit round also minted a
+  mellon-side rule of its own — the preview pane's `overflow-y-auto` masked
+  the table gap (the pane panned instead of the table); parity now means
+  wrapper-for-wrapper (`.table-wrap`, `572c28b`), not just "it doesn't reach
+  the page". And the portal's own text surfaces needed the same base guard:
+  `truncate` covered the lists, but dialog/toast strings and the posts-list
+  title link had no guard at all.
 - **2026-11-21 — a hairline pill is text, not a button (D14).** The owner:
   "I don't like this kind of button" — the quiet chip's anatomy was
   bg-transparent + a 1px border-border hairline: on any surface it read as

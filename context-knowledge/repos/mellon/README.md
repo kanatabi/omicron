@@ -256,7 +256,14 @@ layering; HUMAN-GATE #10 is the go-live checklist.
 - **2026-11-21** — preview parity fix (**merged to `main` `d7e55e5`**): the
   vendored `.preview .prose` carries earendil's `overflow-wrap: break-word`
   prose guard — space-free tokens overflowed the preview column identically
-  (typography ships no wrap rule). Lesson in [LEARNING.md](LEARNING.md).
+  (typography ships no wrap rule). **Audit addendum** (branch
+  `fix/portal-overflow-parity`, `572c28b`, pending merge): preview tables now
+  ride a `.table-wrap` scroll box (vendored renderer parity — previously the
+  whole pane panned), and the base `html { overflow-wrap: break-word }` guard
+  covers dialogs, toasts and the posts-list title link (no truncate). The
+  admin's own tables were already contained (shadcn wrapper + explicit
+  `overflow-x-auto`); first test on the vendored pipeline pins the wrapper.
+  Lesson in [LEARNING.md](LEARNING.md).
 - **2026-11-21 — GRADUATED:** `feat/shadcn-integration` merged to `main`
   (PR #4) and tagged **v4.0.0** — the A2 preset is the production UI.
   Same day, its first patch: **v4.0.1 pending** (`49000ef`) — a hydration

@@ -25,6 +25,14 @@ events that minted entries there and anything newer. Newest first.
   §10 #10; mellon's vendored `.preview .prose` mirrors the guard (`850d1b4`) —
   keep the two blocks in parity. Diagnosed via markdown-it output (tight list →
   bare text node in `<li>`) + typography source (no wrap rule anywhere).
+  **Audit addendum:** the audit walked every article-adjacent surface. Tables
+  are the one thing wrap rules can NEVER fix (min-content is intrinsic) → the
+  renderer wraps every table in a `.table-wrap` scroll box (`94155b3`). The
+  base guard moved to `html` (every text surface: cards, search, about,
+  captions); flex/grid items holding user text still need explicit `min-w-0`
+  (breadcrumb, TOC entries, tag chips). Already safe, verified: images
+  (preflight `max-width:100%`), code blocks (`pre` scrolls), mermaid (svg
+  width 100% + failure path scrolls), `truncate` sites (nowrap unaffected).
 - **2026-11-11 — `adapter-node` builds ship landmines without explicit
   bundling decisions.** The deploy container broke on the markdown family
   until deps were bundled/externalized deliberately (`8609828`, fix/ssr-dep-bundling).
