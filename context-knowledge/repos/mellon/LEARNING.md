@@ -10,6 +10,15 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — `<input pattern>` compiles with the v flag now.** The
+  browser console complained on every keystroke: 'invalid character in
+  class' — modern browsers validate the pattern attribute as a /v regex,
+  and the v flag FORBIDS an unescaped trailing dash inside a character
+  class (`[a-z0-9._-]` dies; `[a-z0-9.\-_]` lives). The pattern never ran,
+  so the constraint silently didn't. Standing rule: **patterns in HTML
+  attributes are v-flag regexes — escape the dash (and friends) inside
+  every class**; the JS-side copies (mock.ts) run without the flag and
+  must NOT be blindly "fixed" to match.
 - **2026-11-21 — the hand-rolled popup lost to the dialog; S4's select
   arrived early.** After the portal + the event shielding STILL failed in
   the owner's browser (while the harness stayed green), the answer was to
