@@ -768,9 +768,11 @@ Reads are never affected: **head keeps serving** — the lock stops writes,
 not traffic. The ritual for changing config under a pin, in order:
 
 1. **unpin** — release the lock; the 403 was the feature telling you it held;
-2. **restore-draft** — Restore on the pinned version overlays its values
-   onto the CURRENT key set in the editor; a refused save keeps the dirty
-   editor, so nothing is retyped under fire;
+2. **restore-draft** — Restore on the pinned version REPLACES the editor
+   form with that version exactly (keys and values — owner ruling
+   2026-11-21, superseding the value-overlay semantics that could never
+   resurrect keys the mirror's fan-out had dropped); a refused save keeps
+   the dirty editor, so nothing is retyped under fire;
 3. **save as vN** — head moves; the frozen pin number does NOT move with it;
 4. the portal then offers **"pin vN?"** — for restore-seeded saves only,
    so the lock re-lands exactly on the content you just released.

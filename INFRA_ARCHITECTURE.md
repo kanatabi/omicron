@@ -1092,7 +1092,8 @@ them into workloads.
    `fzr-portal` AppRole held server-side).
 2. **Mellon (SvelteKit):** scaffold per its DESIGN — relay-only, session from lumen,
    editor + true-to-prod preview, secrets control plane (CAS + history + pin-as-intent
-   D1 + restore-by-overlay D2 + app onboarding;
+   D1 + restore-as-snapshot D2 (amended 2026-11-21 — the form becomes the chosen version
+   exactly; the overlay semantics could not recover mirror-dropped keys) + app onboarding;
    `context-knowledge/decisions/secrets-control-plane.md`).
    Light/dark parity day one. DONE on branches; merges per owner review.
 3. **Vortex:** `bases/lumen/` + `bases/mellon/` (ESO-free bases) with

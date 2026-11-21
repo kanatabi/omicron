@@ -285,6 +285,14 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   §5.5 re-aligned note); ESO stays strictly read-only. The editor's
   `EDITOR_AUTOSAVE_SECONDS` is the first value set through the governing
   surface (kv/mellon/shared — both env feeds read that property).
+  **Restore amended the same day** (owner ruling: "restore should replace
+  everything we had currently in the HEAD with the target version"): the
+  value-overlay restore (D2) could never recover keys the mirror's fan-out
+  dropped — a v2 sharing NO keys with the current shape overlaid NOTHING
+  while the banner claimed success. Restore now REPLACES the form with the
+  chosen version exactly (keys + values, +/− delta named in the banner,
+  dirty draft confirms first); the save rides CAS + the mirror as any
+  write. 2 dom tests (223 green).
   Lesson in [LEARNING.md](LEARNING.md).
 - **2026-11-21 — GRADUATED:** `feat/shadcn-integration` merged to `main`
   (PR #4) and tagged **v4.0.0** — the A2 preset is the production UI.

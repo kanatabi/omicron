@@ -65,10 +65,13 @@ status: >-
    ✅ check: pin it, click save, read the 403 — that's the feature.
 5. **versions** — per-path history; each save is immutable, diffs are
    in the drawer.
-6. **restore** — overlays an old version's values onto the **current
-   key set** and hands you a dirty editor; save as vN and the portal
-   offers **"pin vN?"** — restore-seeded saves only, so the lock
-   re-lands exactly where you released it.
+6. **restore** — REPLACES the editor form with the chosen version exactly
+   (keys and values — owner ruling 2026-11-21, superseding the
+   value-overlay semantics) and hands you a dirty editor; a dirty draft
+   confirms first; save as vN and the portal offers **"pin vN?"** —
+   restore-seeded saves only, so the lock re-lands exactly where you
+   released it. The banner names the shape delta (+/− keys) — mind the
+   mirror: saving a shape change fans it out to the app's sibling paths.
    ✅ check (the full loop): unpin → restore-draft → save as vN → take
    the offer → save refused again (correct) → done.
 
