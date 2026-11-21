@@ -277,7 +277,15 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   save-anyway (rebase to head rev) / discard. The buffer never touches the
   network — explicit save stays the only server path. 19 new tests (221
   green); `alignDiff`/`SplitRow` generalized into `diff.ts` (secrets-compare
-  re-exports). Lesson in [LEARNING.md](LEARNING.md).
+  re-exports). **Same round, the vault side:** the live `portal` policy was
+  seeded NARROWER than INFRA §5.5 — writes worked only on `kv/data/lumen/*`;
+  the first real write to a mellon path (the autosave knob) 403'd at Bao.
+  Owner ruling: **the portal governs the estate's config** — the policy now
+  carries write on every `kv/data/+/…` path (runbook §3.3 amended, INFRA
+  §5.5 re-aligned note); ESO stays strictly read-only. The editor's
+  `EDITOR_AUTOSAVE_SECONDS` is the first value set through the governing
+  surface (kv/mellon/shared — both env feeds read that property).
+  Lesson in [LEARNING.md](LEARNING.md).
 - **2026-11-21 — GRADUATED:** `feat/shadcn-integration` merged to `main`
   (PR #4) and tagged **v4.0.0** — the A2 preset is the production UI.
   Same day, its first patch: **v4.0.1 pending** (`49000ef`) — a hydration

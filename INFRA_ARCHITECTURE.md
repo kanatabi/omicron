@@ -1285,6 +1285,17 @@ PUT    /v1/kv/data/<app>/<env>  (cas=0)     # create-if-absent = onboard (trio) 
   `context-knowledge/decisions/secrets-control-plane.md`):
   onboarding any app requires no policy change, only the trio default applied through
   cas=0 creates.
+  > **Re-aligned 2026-11-21 (walkthrough gap closed):** the cluster's live
+  > `portal` policy had been seeded NARROWER than this section — writes
+  > worked only on `kv/data/lumen/*`; every other app's path was read-only
+  > through the relay, so the control plane's save/pin/rollback UX was dead
+  > UI outside lumen (the first real write attempt — mellon's
+  > `EDITOR_AUTOSAVE_SECONDS` — 403'd at Bao). Owner ruling: the portal
+  > GOVERNS the estate's config — the live policy now carries
+  > `read/list/create/update/patch` on every `kv/data/+/…` path, matching
+  > this section and `scripts/dev-plane.sh`. ESO's `eso` policy stays
+  > strictly `read` — the renderer must never write values (untouched,
+  > load-bearing).
 - Go client: `hashicorp/vault/api` works unmodified against OpenBao (wire-compatible).
 - Bao **audit devices are the trail**: mellon adds no secret-value logging, and lumen must
   never log values (structured logs redact by key).

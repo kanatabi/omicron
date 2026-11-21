@@ -172,15 +172,24 @@ path \"kv/metadata/*\"    { capabilities = [\"read\", \"list\"] }
 EOF"
 
 # PORTAL policy (lumen-admin's relay for mellon): SCOPED per-app paths, not
-# kv/* — INFRA §5.6 cap. With the env model the edit surface spans BOTH
-# envs' lumen paths; every other app/env (and the shared plane) is
-# read/list. Metadata listing is what powers mellon's matrix (§7).
+# kv/* — with the env model the edit surface spans BOTH envs' lumen paths.
+# AMENDED 2026-11-21 (owner ruling — "the whole idea of the mellon portal
+# is that we use it to GOVERN the configuration/vault"): every app path is
+# WRITE-capable through the relay now — the first grant (walkthrough era)
+# kept non-lumen paths read-only, and the first real write attempt to a
+# mellon path 403'd at Bao (the control plane's CAS-save/pin-lock/rollback
+# UX was dead UI for every app but lumen). The load-bearing cap is ESO's:
+# the RENDERER stays read-only ("the renderer must never write values").
+# The safety story for app-config writes is the control plane's own:
+# CAS (cas=N on every save), the pin lock (lumen refuses writes while a
+# pin is set), and version history (every value survives as a version).
+# Metadata listing is what powers mellon's matrix (§7).
 X "export VAULT_TOKEN=$ROOT; bao policy write portal - <<'EOF'
 path \"kv/data/lumen/staging\"     { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }
 path \"kv/data/lumen/production\"  { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }
-path \"kv/data/+/staging\"         { capabilities = [\"read\",\"list\"] }
-path \"kv/data/+/production\"      { capabilities = [\"read\",\"list\"] }
-path \"kv/data/+/shared\"          { capabilities = [\"read\",\"list\"] }
+path \"kv/data/+/staging\"         { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }
+path \"kv/data/+/production\"      { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }
+path \"kv/data/+/shared\"          { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }
 path \"kv/metadata/*\"             { capabilities = [\"read\",\"list\"] }
 EOF"
 # NOTE the `+` (fixed 2026-11-15): in OpenBao policy paths a `*` is a glob
@@ -340,7 +349,7 @@ curl -s -X POST $V/v1/sys/policy/eso -H "X-Vault-Token: $ROOT" --data-binary @- 
 {"policy": "path \"kv/data/*\" { capabilities = [\"read\"] }\npath \"kv/metadata/*\" { capabilities = [\"read\",\"list\"] }"}
 EOF
 curl -s -X POST $V/v1/sys/policy/portal -H "X-Vault-Token: $ROOT" --data-binary @- <<'EOF'
-{"policy": "path \"kv/data/lumen/staging\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/lumen/production\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/staging\" { capabilities = [\"read\",\"list\"] }\npath \"kv/data/+/production\" { capabilities = [\"read\",\"list\"] }\npath \"kv/data/+/shared\" { capabilities = [\"read\",\"list\"] }\npath \"kv/metadata/*\" { capabilities = [\"read\",\"list\"] }"}
+{"policy": "path \"kv/data/lumen/staging\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/lumen/production\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/staging\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/production\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/data/+/shared\" { capabilities = [\"read\",\"list\",\"create\",\"update\",\"patch\"] }\npath \"kv/metadata/*\" { capabilities = [\"read\",\"list\"] }"}
 EOF
 
 # 5. ROLES — secret_id_num_uses 0 BEFORE minting (§3.4's bomb)
