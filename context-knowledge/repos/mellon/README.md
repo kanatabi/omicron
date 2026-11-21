@@ -325,7 +325,20 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   to render the whole document twice); the autosave pill states the truth
   (`Unsaved` → `Autosaved locally · HH:MM`, tooltip: local-only); the
   DIFF_BLOCK vocabulary unifies block highlighting across the compare page
-  and the vault drawer; six lowercase button labels normalized. Hunk-level
+  and the vault drawer; six lowercase button labels normalized. **Perf +
+  streaming round** (**merged `bc3e014` + `b950637`**): the `[slug]` load is
+  STREAMED — the click renders the editor-shaped skeleton immediately
+  (awaiting had stuck the user on the list behind the progress bar; the
+  recent-cookie write moved client-side, `recent.ts`); the preview skeleton
+  covers the FIRST render only (live edits keep the stale render; a seq
+  guard paints only the latest response); the dialog is uniform with the
+  changed list as a LIST; the action bar ordered toggle → Discard (danger)
+  → Save; the mermaid SVG CACHE (source+theme) hydrates unchanged diagrams
+  instead of re-rendering per preview swap; the autosave effect drops the
+  per-keystroke `$state.snapshot` clone; the word count is debounced;
+  slide→fade on pills/banners; preview debounce STAYS 120ms (the cache
+  carries it). A raw NUL byte rode the cache-key literal (git binary-diffed
+  the file) — space separator now. Hunk-level
   conflict resolution PARKED (the two-way compose design is in the vault
   notes — no ancestor exists, posts have no version history).
   **Test infra lesson (same day, CI walked it):** a dom test can pass every
