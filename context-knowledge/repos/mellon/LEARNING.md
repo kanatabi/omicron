@@ -10,6 +10,19 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — once-measured coordinates are a liability: PORTAL the
+  popup.** The transform fix wasn't enough — the Select's popup STILL
+  detached inside the dialog. The deeper truth: the popup measured the
+  trigger ONCE at open and pinned `position:fixed` viewport coordinates in
+  an inline style — any movement of the surrounding layer (the dialog's
+  entrance settle, h-fit resolution, a re-render) orphans the popup: it
+  points at where the trigger USED to be. Standing rule: **a fixed-positioned
+  popup that measures its trigger once must live in document.body** (portaled
+  via an action) — body has no transformed/clipping ancestors in any context,
+  so the measured coordinates can't be invalidated by the host layer. The
+  outside-click handler must then EXEMPT the portaled listbox (it lives
+  outside the component's root), and openPop re-measures on tick + rAF to
+  ride out the host's settling.
 - **2026-11-21 — a transformed ancestor hijacks position:fixed.** The
   user-creation dialog rendered with the Role select's popup floating at the
   viewport's bottom-right. The dialog centered via the block's
