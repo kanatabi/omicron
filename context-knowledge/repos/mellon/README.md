@@ -299,6 +299,16 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   RFC7396-clears the key, final state verified clean). The control
   plane's full designed surface is now live: read/list, CAS save,
   pin/unpin, onboard, add-env.
+  **Test infra lesson (same day, CI walked it):** a dom test can pass every
+  assertion and still FAIL the run — happy-dom's Web Animations REJECTS
+  `finished` with an AbortError on cancel(), and Svelte's teardown aborts
+  any slide/fade still in flight at unmount → unhandled rejection → vitest
+  exits 1 at 223/223 green. Fix: stub `Element.prototype.animate` with a
+  cancel-noop in the test (per-file until a second page needs it). **And a
+  process lesson with teeth: reading the gate's exit code through a pipe
+  (`npm run test:unit | grep …`) reads GREP's exit, not vitest's — the
+  failure was invisible locally and CI caught it. Gates must run unpiped
+  (output to a file, `$?` of the gate itself).**
   Lesson in [LEARNING.md](LEARNING.md).
 - **2026-11-21 — GRADUATED:** `feat/shadcn-integration` merged to `main`
   (PR #4) and tagged **v4.0.0** — the A2 preset is the production UI.

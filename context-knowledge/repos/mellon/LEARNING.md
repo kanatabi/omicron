@@ -9,6 +9,20 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-21 — a green test suite can still fail the run: unmounted
+  transitions reject, and a piped gate lies.** Two findings from one CI
+  red (223/223 tests passed; the run exited 1): (1) happy-dom's Web
+  Animations implementation rejects `finished` with an AbortError on
+  `cancel()` — Svelte's teardown aborts any slide/fade still in flight
+  when testing-library unmounts, and vitest fails the run on unhandled
+  rejections even with zero failed tests. Fix: stub
+  `Element.prototype.animate` with a cancel-noop Animation in the test
+  (vault-page.dom.test.ts; promote to a dom setupFile the next time a
+  page hits it). (2) The failure was INVISIBLE locally: `npm run
+  test:unit | grep …` makes `$?` read GREP's exit code, not vitest's —
+  the gate passed locally and failed in CI. The gate discipline now has
+  teeth: run gates UNPIPED (output to a file, `$?` of the gate itself),
+  and treat a piped exit code as unverified.
 - **2026-11-21 — the preview inherits earendil's prose bugs: vendored CSS takes
   a parity commit in the same round.** earendil's overflow fix (space-free
   tokens painted past the article column; the typography plugin ships no
