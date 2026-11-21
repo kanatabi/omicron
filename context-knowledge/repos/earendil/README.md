@@ -182,13 +182,14 @@ The door: `gofar.id` + `www` via Traefik, DNS-01 TLS. Full flow:
 
 ## 9. State & history (walked)
 
-- **2026-11-21** — the unbreakable-token overflow round (branch
-  `fix/prose-unbreakable-overflow`, `cde35a2` + `45e416d`, pending merge):
-  `.prose` gained `overflow-wrap: break-word` (typography 0.5.19 ships none —
-  space-free tokens painted past the article column and, on phones, panned the
-  whole page) + `break-words` on the post h1/preview; AGENTS §10 #10 minted;
-  mellon's preview mirrors the guard. Proven in the built bundle (the prose
-  rule and the `.break-words` utility both emit `overflow-wrap:break-word`).
+- **2026-11-21** — the unbreakable-token overflow round (**merged to `main`
+  `e2f241b`**): `.prose` carries `overflow-wrap: break-word` (typography 0.5.19
+  ships none — space-free tokens painted past the article column and, on
+  phones, panned the whole page: body looked half-width, fixed chrome slid,
+  full-page captures came out ~2× wide) + `break-words` on the post h1/preview;
+  AGENTS §10 #10 minted (`45e416d`); mellon's preview mirrors the guard.
+  Proven in the built bundle (the prose rule and the `.break-words` utility
+  both emit `overflow-wrap:break-word`). Deploy rides the release ladder.
 - **2026-11-11** — the DNS-side domain cutover verified live (`gofar.id`
   resolves; the old domain 301s in). The SSR dependency-bundling lesson
   minted the bundle-the-markdown-family rule (`8609828`).

@@ -253,11 +253,10 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   diff (no route imports `ui/` yet; JS bundle byte-identical). Docs live in
   `SHADCN.md` + `SHADCN-PLAN.md` (D3: DESIGN.md untouched while experimental);
   lessons in [LEARNING.md](LEARNING.md).
-- **2026-11-21** — preview parity fix (branch `fix/preview-prose-overflow-wrap`,
-  `850d1b4`, pending merge): the vendored `.preview .prose` gained earendil's
-  `overflow-wrap: break-word` prose guard — space-free tokens overflowed the
-  preview column identically (typography ships no wrap rule). Lesson in
-  [LEARNING.md](LEARNING.md).
+- **2026-11-21** — preview parity fix (**merged to `main` `d7e55e5`**): the
+  vendored `.preview .prose` carries earendil's `overflow-wrap: break-word`
+  prose guard — space-free tokens overflowed the preview column identically
+  (typography ships no wrap rule). Lesson in [LEARNING.md](LEARNING.md).
 - **2026-11-21 — GRADUATED:** `feat/shadcn-integration` merged to `main`
   (PR #4) and tagged **v4.0.0** — the A2 preset is the production UI.
   Same day, its first patch: **v4.0.1 pending** (`49000ef`) — a hydration
