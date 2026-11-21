@@ -64,7 +64,21 @@ The standing doctrine lives in the repo's
         Meta-lesson: when a "fix" targets a string that leaves the JS runtime
         (attribute → browser compiler), trace the value through every
         serialization hop — the escape you wrote may vanish before it ships.
-        ledger records walked events. Newest first.
+        - **2026-11-21 — a fallback-bearing bindable rejects undefined at
+          HYDRATION; and no gate mounts a route.** v4.0.0 shipped a 500 on
+          /posts and /photos: three pages declared a drawer trigger as
+          `$state<HTMLElement | undefined>()` and bound it to Button's
+          `ref = $bindable(null)`. SSR never executes bindings (server renders
+          fine), the throw hits the PAGE boundary at hydration (the shell
+          survives — unlike S2's root-boundary shell loss), and NO gate
+          constructs a route component: 198 tests + a green build missed it.
+          The rule was already written (the shell's burger comment) — it needed
+          a SWEEP, and now a layer: route-mount smoke tests (the real page +
+          `as never` fixture data, users-page.dom.test.ts's pattern) fail with
+          the exact production error before the fix. Corollary: a bindable's
+          fallback defines its absence value — ours are all `null` now; a
+          future `$bindable(x)` with a non-null fallback re-arms the trap.
+          ledger records walked events. Newest first.
 
 - **2026-11-21 — the CLI's `--overwrite` reverts OWNED files; the test net
   catches it.** The S4 vendor run overwrote the cast button, the frost
