@@ -351,6 +351,18 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   flushes the live draft to the store first — the diff page's contract
   is HEAD vs what you were ACTUALLY editing (the dialog and the diff
   page cannot disagree); the flush resets the scheduler's window.
+  **The vite-8 dev walk** (mellon `3416b18` + earendil `328b4cc`): the
+  local live-preview died with `{"error":"module is not defined"}` —
+  vite 8's dev module-runner INLINES CJS-only deps as ESM and
+  `markdown-it-task-lists` (2016, module.exports) explodes — ONLY in
+  dev (the built app bundles fine). The knob MOVED in vite 8: the
+  top-level `ssr.external` is IGNORED (silently) — the live one =
+  `environments.ssr.resolve.external`, dev-only (command === 'serve')
+  so the build keeps bundling for the adapter image. The debug ritual
+  that cracked it: instrument the relay's preview branch to log the
+  caught error + curl the endpoint with a session; the stack named the
+  package. The TABLE cue joined the LIST family (blue; the region fill
+  vs the bold mark = the differentiator).
   **The cue layer's rendering round** (**merged `69b20c7`** — the owner
   reported the cues invisible on the LIVE staging (v4.4.0)): three
   rendering bugs — (1) CM's Range constructor is PRIVATE; ranges are
