@@ -39,6 +39,10 @@ real public ghcr v-tags (no placeholder builds / image imports anymore).
 - Each submodule (`earendil/`, `lumen/`, `vortex/`) is its own git repo — GitHub is the
   primary (`git@github.com:kanatabi/<name>.git`, default branch `main`); the GitLab
   `arkoi/omicron/<name>` remotes are kept as mirrors. Conventional Commits, granular.
+- **MERGE RITUAL (owner ruling 2026-11-21): merging a branch to `main` = SQUASH —
+  one conventional commit per round on `main` (`git merge --squash <branch>` +
+  one commit). NEVER fast-forward a branch merge, NEVER rebase.** Syncing
+  `main` itself from its remote stays `--ff-only` (that's not a branch merge).
 - `vortex/` extra rule: **all changes go on branches forked from `main`** — never direct
   commits (the four scaffold commits are the baseline exception).
 - The workspace root is the submodule superproject: changes here are only pins (gitlinks),
