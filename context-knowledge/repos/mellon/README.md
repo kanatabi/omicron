@@ -176,6 +176,17 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   scrape in.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
+- **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
+  pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
+  integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
+  focus scope lands on the arm) and RailDrawer over the block's sheet
+  (side=bottom; the drag-fling NOT preserved — veto-able; the rounded-t-2xl
+  corners are furniture per D9b's sense). The no-transform centering + the
+  radius ceiling reached the new vendored files. 195 tests; bundle 1,906 KiB
+  gz; the exit gate's five mechanical clauses verified in place (§10.1
+  amended to the integration model — the ladder runs ONCE at the end). What
+  remains is the owner's: the §6 parity pass over 14 pages, then promote
+  (DESIGN §11.6 + AGENTS §2, separate round) or delete.
 - **2026-11-21** — **shadcn S4 built and merged** (`feat/shadcn-s4-choice` →
   integration): every choice widget now rides bits-ui — `Select.svelte`
   DELETED (230 lines; compare's four pickers + vault's fill picker join the
