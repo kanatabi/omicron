@@ -1,6 +1,6 @@
 ---
 tags: [mellon, portal]
-updated: 2026-11-20
+updated: 2026-11-21
 ---
 
 # mellon — the private admin portal
@@ -176,6 +176,19 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   scrape in.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
+- **2026-11-21** — **shadcn S3 built and merged** (`feat/shadcn-s3-forms` →
+  integration): the button cast (`primary` violet pill / `quiet` mono chip /
+  `danger` / `soft`, registry names kept for the vendored overlays) mapped
+  from a 48-button evidence sweep — the plan's sm/md-rectangle guess was
+  wrong, the tree's actions are pills. House lines landed verbatim in
+  `ui/input` (the 10× anatomy) and `ui/textarea`; `ui/label` gained the mono
+  variant. Full page sweep (login → photos/[id]): page-level ACTION buttons
+  are 0; the residue (77 buttons / 20 inputs) is moat + brand furniture +
+  stateful segmented chips (deferred to S5 toggle-group) + inline cell
+  editors + action-bound fields (actions can't ride components). 190 tests;
+  bundle 1,867 KiB gz (down 24 from S2). Deviations ledgered in
+  SHADCN-PLAN §3; the tv emit-order + destructure-defaults lessons in
+  [LEARNING.md](LEARNING.md).
 - **2026-11-20** — the editor's syntax palette became token-driven (owner
   report: dark-mode links and fence language washed out). `@codemirror/language`
   - `@lezer/highlight` promoted to direct deps; one non-fallback

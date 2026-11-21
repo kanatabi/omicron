@@ -1,6 +1,6 @@
 ---
 tags: [mellon, lessons]
-updated: 2026-11-20
+updated: 2026-11-21
 ---
 
 # mellon — lesson ledger
@@ -10,6 +10,33 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — tailwind-variants emits variant groups in DEFINITION order.**
+  With `variant` defined before `size` (the registry's own layout), the default
+  size's `h-8 px-2.5` emitted AFTER the cast variant's `h-auto px-3 py-1.5`
+  and WON — every pill would have rendered as a registry rectangle. Standing
+  rules: **when one variant group must override another, define it LAST** (or
+  verify the emit order with a two-probe eval before trusting a merge); and
+  **Svelte 5 destructuring defaults are the component's REAL defaults** — tv's
+  `defaultVariants` is shadowed by the destructure, so a "new default variant"
+  is a two-place edit, and the safe sweep form is explicit variants at every
+  call site (opt-in cast, registry default look stable).
+- **2026-11-21 — actions can't ride components; labels can't nest labels.**
+  `use:focusOnMount` on `<Input>` is a compile error (`component_invalid_directive`
+  — directives bind to elements only), so any field with an action stays a raw
+  `<input>`. And the house wrapper-label pattern (caption span INSIDE the
+  label, implicit association) must never convert its caption to `<Label>` —
+  a label inside a label is invalid HTML. The `ui/label` mono variant is for
+  STANDALONE labels only.
+- **2026-11-21 — sweep the evidence, not the plan.** The S3 button recon (48
+  buttons) falsified three plan guesses at once: the action buttons are PILLS
+  (`rounded-full bg-brand text-white`), not sm/md rectangles; the pages' ghost
+  is text-hover-only (no `bg-accent/60` wash); the tree's toggles are native
+  accent-brand checkboxes (a `switch`/`checkbox` vendor would have been dead
+  weight AND a visual change). Standing rule: **recon the real class grammar
+  before writing the variant map** — the plan's grammar was written from
+  memory of a different file. Also: **static source guards must learn the
+  component's tag** (`<Input` spreads name/type onto the real element, but the
+  setup ghost-field guard parses SOURCE — `<input\b` missed it).
 - **2026-11-21 — `<input pattern>` compiles with the v flag now.** The
   browser console complained on every keystroke: 'invalid character in
   class' — modern browsers validate the pattern attribute as a /v regex,
