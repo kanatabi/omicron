@@ -16,9 +16,16 @@ ledger records walked events, newest first.
   but the DOOR has no such problem — the hub is long-running by the time
   an Application for its Ingress appears, and a kubectl-only door drifts
   invisible to the gate. Second walked fact: edge TLS termination at
-  argocd-server REQUIRES `--insecure` (upstream sets no args, so a
-  strategic-merge `args:` is an add) — without it the server 3-redirects
-  to its own https and the door loops. And the first env-agnostic tuning
+  argocd-server REQUIRES `--insecure` — without it the server 3-redirects
+  to its own https and the door loops. But upstream v3.6.1 puts the
+  BINARY in the container's `args` (the image entrypoint is tini): a
+  strategic-merge on `args:` REPLACES the list, so the flag alone had
+  tini exec `--insecure` and the pod CrashLoopBackOff — the binary rides
+  along (`args: [/usr/local/bin/argocd-server, --insecure]`); the old
+  pod kept serving the loop meanwhile; rollout + 200 verified at the
+  edge. Issuance needed NO A record (DNS-01 mints the challenge TXT via
+  the CF token) — only the BROWSER needs the record, the door's last
+  mile. And the first env-agnostic tuning
   knob rode the config feed (`EDITOR_AUTOSAVE_SECONDS`, kv/mellon/shared)
   with a hard truth: an ESO remoteRef has NO value fallback — a missing
   property fails the ENTIRE ExternalSecret sync, so "code default 60"
