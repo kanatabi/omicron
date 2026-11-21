@@ -351,6 +351,19 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   flushes the live draft to the store first — the diff page's contract
   is HEAD vs what you were ACTUALLY editing (the dialog and the diff
   page cannot disagree); the flush resets the scheduler's window.
+  **The cue layer's rendering round** (**merged `69b20c7`** — the owner
+  reported the cues invisible on the LIVE staging (v4.4.0)): three
+  rendering bugs — (1) CM's Range constructor is PRIVATE; ranges are
+  built via `deco.range(from, to)` and the (from, startSide) ordering
+  contract delegated to `RangeSet.of(ranges, sort=true)` (a hand-rolled
+  comparator could throw the builder and SILENTLY kill the plugin — CM
+  catches + disables crashed plugins); (2) CM injects its highlight
+  styles at runtime — every cue rule is scoped `.cm-editor …` (two
+  classes beat the injected single-class styles deterministically);
+  (3) a dom fixture's plain-let value is invisible to a runes-mode
+  binding — `$state`. The dom tests now MOUNT the real editor (5 tests:
+  the marks, the quote's block border, the fence fill, and a live
+  follow — a newly typed block gains its cue in the same update).
   Hunk-level
   conflict resolution PARKED (the two-way compose design is in the vault
   notes — no ancestor exists, posts have no version history).
