@@ -9,6 +9,28 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (d) — THE LONG-DOC PREVIEW AND THE SMOOTH SYNC (two fixes, one
+  round).** (1) The preview's 2-3s on vault-scale docs = **Shiki
+  re-tokenizing every fence on every render** — O(total code volume) per
+  keystroke. The highlight is a PURE function of (lang, content) (the
+  dual-theme output bakes CSS vars) → a bounded Map cache in the fence
+  wrapper; the data-source-lines anchor re-injection stays PER RENDER (the
+  positions shift). Live typing = one miss, the rest hits. The mermaid SVG
+  cache (bc3e014) = the same pattern. (2) The synced scroll's jagged
+  followers were QUANTIZED, not frame-starved: the preview chased the
+  editor's INTEGER top line; the editor chased the preview in floored
+  line-height jumps. Fix = the sub-line precision over the SAME
+  source-line-anchored map: topLine() = line + the pixel fraction (CM's
+  cached height map — no layout reads); lineForOffset = the float;
+  scrollToLine = block.top + fraction × block.height; the blank seams =
+  the linear bridge. **The line-domain CONTRACT (walked): a block owns
+  [start, end + 1) in line space — the fraction INTO the last line lives
+  above `end`; the seam owns [end + 1, next.start); the two are disjoint
+  and the px map is continuous at the knots — the round-trip
+  offset→line→offset = the identity.** Any floor()/≤end clamp re-jags the
+  chase. Standing rules: cache the pure renders, keep the per-render parts
+  (the anchors) outside the cache; the sync maps are float maps.
+
 - **2026-11-22 (c) — LOCK OPERATIONS RUN UNDER NPM 10 — THE CI'S AND THE
   IMAGE'S NPM — NEVER THE LOCAL npm 11.** The gates went red (`Missing:
   @sveltejs/kit@2.70.4 from lock file`) with a lock the local `npm ci`
