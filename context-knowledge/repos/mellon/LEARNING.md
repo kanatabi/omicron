@@ -9,6 +9,18 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-21 — the preview inherits earendil's prose bugs: vendored CSS takes
+  a parity commit in the same round.** earendil's overflow fix (space-free
+  tokens painted past the article column; the typography plugin ships no
+  overflow-wrap) applies verbatim to mellon's vendored `.preview .prose` block
+  — the editor preview overflowed on the same markdown, breaking §11.4's
+  "renders exactly as the public site will" promise. Mirrored the guard
+  (`850d1b4`, branch `fix/preview-prose-overflow-wrap`): `overflow-wrap:
+  break-word`, not `anywhere` (intrinsic sizing of grids/tables must not
+  change), fenced code keeps its horizontal scroll. Standing rule: whenever
+  earendil's `layout.css` prose/raw-CSS blocks change, diff mellon's vendored
+  exceptions and mirror the delta immediately — the preview's fidelity is a
+  contract, not a courtesy.
 - **2026-11-21 — a hairline pill is text, not a button (D14).** The owner:
   "I don't like this kind of button" — the quiet chip's anatomy was
   bg-transparent + a 1px border-border hairline: on any surface it read as

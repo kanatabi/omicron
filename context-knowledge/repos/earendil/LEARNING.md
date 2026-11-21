@@ -1,6 +1,6 @@
 ---
 tags: [earendil, lessons]
-updated: 2026-11-15
+updated: 2026-11-21
 ---
 
 # earendil — lesson ledger
@@ -10,6 +10,21 @@ The repo's standing lesson list lives in its own
 (ten entries, each minted by a real bug fix). This ledger records the walked
 events that minted entries there and anything newer. Newest first.
 
+- **2026-11-21 — the typography plugin ships NO overflow-wrap; prose needs an
+  explicit unbreakable-token guard.** A space-free token (pasted URL, key
+  material, a keyboard-mash in a nested bullet) painted straight past the
+  article column — and at phone widths the page-wide scrollable overflow turned
+  the whole canvas into a pannable surface (body looked half-width, the fixed
+  BottomNav sat in the left slice, full-page captures came out ~2× wide). The
+  parent bullet "worked" only because its long lines had spaces — wrapping at
+  spaces is not a wrap rule. Fix: one inherited `overflow-wrap: break-word` on
+  `.prose` (`cde35a2`, branch `fix/prose-unbreakable-overflow`) + `break-words`
+  on the post h1/preview. `break-word`, NOT `anywhere`: intrinsic/min-content
+  sizing of grids and tables must not change; fenced code keeps its horizontal
+  scroll (`white-space: pre` never wraps). Standing rule: earendil AGENTS
+  §10 #10; mellon's vendored `.preview .prose` mirrors the guard (`850d1b4`) —
+  keep the two blocks in parity. Diagnosed via markdown-it output (tight list →
+  bare text node in `<li>`) + typography source (no wrap rule anywhere).
 - **2026-11-11 — `adapter-node` builds ship landmines without explicit
   bundling decisions.** The deploy container broke on the markdown family
   until deps were bundled/externalized deliberately (`8609828`, fix/ssr-dep-bundling).
