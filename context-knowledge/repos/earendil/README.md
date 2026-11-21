@@ -190,8 +190,8 @@ The door: `gofar.id` + `www` via Traefik, DNS-01 TLS. Full flow:
   AGENTS §10 #10 minted (`45e416d`); mellon's preview mirrors the guard.
   Proven in the built bundle (the prose rule and the `.break-words` utility
   both emit `overflow-wrap:break-word`). Deploy rides the release ladder.
-  **Audit addendum** (branch `fix/article-overflow-audit`, `94155b3`, pending
-  merge): the same failure class had more exposed surfaces — tables (min-content
+  **Audit addendum** (**merged to `main` `a11d14e`**): the same failure class
+  had more exposed surfaces — tables (min-content
   is intrinsic; the renderer now wraps every table in a `.table-wrap` scroll
   box), the base `html { overflow-wrap: break-word }` guard for every text
   surface outside `.prose`, and `min-w-0` on the flex/grid items holding user

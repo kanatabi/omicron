@@ -257,7 +257,7 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   vendored `.preview .prose` carries earendil's `overflow-wrap: break-word`
   prose guard — space-free tokens overflowed the preview column identically
   (typography ships no wrap rule). **Audit addendum** (branch
-  `fix/portal-overflow-parity`, `572c28b`, pending merge): preview tables now
+  `fix/portal-overflow-parity`, **merged to `main` `1b35941`**): preview tables now
   ride a `.table-wrap` scroll box (vendored renderer parity — previously the
   whole pane panned), and the base `html { overflow-wrap: break-word }` guard
   covers dialogs, toasts and the posts-list title link (no truncate). The
