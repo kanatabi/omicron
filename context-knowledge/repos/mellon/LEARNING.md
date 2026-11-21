@@ -10,6 +10,18 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — the hand-rolled popup lost to the dialog; S4's select
+  arrived early.** After the portal + the event shielding STILL failed in
+  the owner's browser (while the harness stayed green), the answer was to
+  stop patching: the Role field rides the block's `ui/select` (bits-ui) —
+  floating positioning + portal + focus scope are NATIVE, the whole
+  measure-once-popup bug class deleted. Standing rules: **when a hand-rolled
+  widget fights the block's layers twice, the fight IS the signal — pull
+  the planned replacement forward for that site**; and bits-ui's Select
+  commits on the POINTER PAIR (down preventDefaults focus, up commits) —
+  a synthetic `.click()` tests nothing. The wire contract survived via a
+  hidden input (the action still reads formData.get('role')). The other
+  five Select sites stay on the hand-rolled one until S4 sweeps them.
 - **2026-11-21 — a portaled popup is an outsider: shield its events.** The
   portal fixed the geometry and broke the picking — with the popup in
   document.body, a pointerdown on an option reads as INTERACT-OUTSIDE by
