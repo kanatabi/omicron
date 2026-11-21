@@ -9,6 +9,21 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (c) — LOCK OPERATIONS RUN UNDER NPM 10 — THE CI'S AND THE
+  IMAGE'S NPM — NEVER THE LOCAL npm 11.** The gates went red (`Missing:
+  @sveltejs/kit@2.70.4 from lock file`) with a lock the local `npm ci`
+  called fine: bits-ui's nested `runed` peers kit ^2.21; the tree runs kit
+  3; **npm 11 (local node 26) SKIPS the unsatisfied peer when writing the
+  lock; npm 10 (node 22 — the CI's AND the Dockerfile's `node:22-alpine`
+  build) RESOLVES it to a nested copy and demands it in the lock**. The
+  runtime image is node 22 — the local node 26 is the divergent one.
+  Regenerated with `npx npm@10 install --package-lock-only`; verified
+  `npm ci` green under BOTH. bits-ui 2.22.0 (the kit-^3 peer) considered
+  and rejected: its required zod peer (absent here) re-arms the trap.
+  Standing rule: every lock regen = `npx npm@10 …`; a lock written by any
+  other npm is a CI/image build break waiting to fire. (ab1f3cc = the same
+  war, first battle.)
+
 - **2026-11-22 (b) — THE DEFLIST CUE'S TWO WALKS: the space form and the
   lastIndex leak.** The common deflist form is `: definition` (colon + SPACE)
   — the cue's `^\s*:[^\s]` only matched the glued `:def` — the COMMON shape
