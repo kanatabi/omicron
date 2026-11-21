@@ -10,6 +10,40 @@ The standing doctrine lives in the repo's
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 ledger records walked events. Newest first.
 
+- **2026-11-21 — the CLI's `--overwrite` reverts OWNED files; the test net
+  catches it.** The S4 vendor run overwrote the cast button, the frost
+  dialog, and the house input/textarea with registry-raw versions — and the
+  `--overwrite` flag is REQUIRED for the new items. Standing rule: **after
+  every `shadcn-svelte add`, restore the owned files from git BEFORE
+  committing** (`git checkout --` the touched owned dirs); the cast/dom tests
+  are the tripwire — a red suite during a vendor run means a revert, not a
+  regression. Also: `git add` with one bad pathspec aborts the WHOLE add —
+  commit (or `git show --stat`) and verify what actually landed.
+- **2026-11-21 — bits-ui Command: the search is the INPUT's value.** A
+  `bind:value` on `Command.Root` binds the SELECTED item, not the search —
+  typing updated the input but the component's `q` never moved, and the
+  create-row never rendered. Bind the `Command.Input`'s value. Two more:
+  `onSelect` passes NO value (close over the row), and a bare `onOpenChange`
+  attribute = boolean `true` (the shorthand needs braces — svelte-check's
+  "boolean is not assignable to OnChangeFn" is the tell).
+- **2026-11-21 — the registries' calendars smuggle native `<select>`s.** The
+  shadcn calendar's month/year pickers hide a real `<select>` under the
+  styled span — clicking it opens the OS popup, the exact thing the
+  themed-dropdown doctrine bans (§5.3: the popup included). The grep gate
+  (`'<select' src` → 0) caught it the moment `calendar`/`range-calendar`
+  vendored. The fix kept the headless primitives as locale-aware item
+  providers and moved the interaction to the block's Select; the placeholder
+  math (`placeholder.set({month|year})`, multi-month index subtraction)
+  moved to the captions. Also: Calendar requires `type=`, RangeCalendar has
+  none; day cells are DIVS (`[data-bits-day]` inside `[data-calendar-cell]`).
+- **2026-11-21 — a component rewrite keeps the CONTRACT, not the code.** The
+  S4 widgets (Combobox 273→197, DatePicker 191→93, DateRange 240→138) rewrote
+  IN PLACE over the block with byte-identical prop contracts — the five+3
+  mounts didn't change at all, and each contract test (the replace-on-single,
+  append-on-multi, create-then-select, ISO round-trip) pins behavior the old
+  components ran UNTESTED for months. The honest re-seed rule for
+  wire-driven widget state: complete windows sync the grid; a HALF window is
+  an in-progress-pick echo and must not wipe it.
 - **2026-11-21 — tailwind-variants emits variant groups in DEFINITION order.**
   With `variant` defined before `size` (the registry's own layout), the default
   size's `h-8 px-2.5` emitted AFTER the cast variant's `h-auto px-3 py-1.5`

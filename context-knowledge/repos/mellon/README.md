@@ -176,6 +176,17 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   scrape in.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
+- **2026-11-21** — **shadcn S4 built and merged** (`feat/shadcn-s4-choice` →
+  integration): every choice widget now rides bits-ui — `Select.svelte`
+  DELETED (230 lines; compare's four pickers + vault's fill picker join the
+  users dialog), Combobox rewritten IN PLACE over popover+command (the state
+  machine gone, the five mounts untouched), DatePicker and DateRange over
+  the block's calendars (Monday-first held via locale=en-GB). The calendars'
+  4 smuggled native `<select>`s rewired (doctrine §5.3 held). 195 tests
+  (7 new contract tests on behaviors that ran untested for months); bundle
+  1,904 KiB gz (+37 for calendars/command/@internationalized/date); the
+  editor chunk held. The wire re-seed + tv-ordering lessons in
+  [LEARNING.md](LEARNING.md).
 - **2026-11-21** — **shadcn S3 built and merged** (`feat/shadcn-s3-forms` →
   integration): the button cast (`primary` violet pill / `quiet` mono chip /
   `danger` / `soft`, registry names kept for the vendored overlays) mapped
