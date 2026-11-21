@@ -9,6 +9,16 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (b) — THE DEFLIST CUE'S TWO WALKS: the space form and the
+  lastIndex leak.** The common deflist form is `: definition` (colon + SPACE)
+  — the cue's `^\s*:[^\s]` only matched the glued `:def` — the COMMON shape
+  was the one unmatched. And the `g`-flag's `lastIndex` PERSISTS across
+  `exec` calls: after one match, the next line's `^`-anchored match is
+  skipped until a failed exec resets it — the every-other-line alternation.
+  Standing rules: the line-anchored cue patterns must tolerate the space
+  after the trigger; reset `lastIndex` per line for every global regex
+  (or don't share one regex object across lines).
+
 - **2026-11-22 — THE EMOJI MENU'S DEATH WAS THE FILTER, NOT THE PAINT (and the
   two phantom fields that cost four round-trips).** The owner's "the menu
   stopped showing after the skin" walked the entire CM completion pipeline via
