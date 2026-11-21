@@ -1,6 +1,6 @@
 ---
 tags: [mellon, lessons]
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 # mellon — lesson ledger
@@ -8,6 +8,29 @@ updated: 2026-11-21
 The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
+
+- **2026-11-22 — THE EMOJI MENU'S DEATH WAS THE FILTER, NOT THE PAINT (and the
+  two phantom fields that cost four round-trips).** The owner's "the menu
+  stopped showing after the skin" walked the entire CM completion pipeline via
+  console traces: arming ✓ (`input.type` annotated ✓), the source ✓ (1,903
+  returned, `aborted: false`), the resolution ✓ (`setActive` dispatched) — and
+  `CompletionDialog.build` STILL returned null: `sortOptions` filtered EVERYTHING
+  out. The killer: **CM's FuzzyMatcher has a single-character-query rule — a
+  one-char pattern only matches options whose label STARTS with that char**. The
+  skin round's glyph-first label (`⛺ :tent:`) failed it on all 1,903; the stock
+  `:tent:` labels passed — the before/after timeline explained. **The seam CM
+  ships for exactly this: `label` (the filter + apply text) vs `displayLabel`
+  (the rendered row)** — never put decoration at the head of a label the filter
+  sees. Two instrumentation traps to never re-walk: **`ViewUpdate.userEvent` and
+  `Transaction.userEvent` (instance) DO NOT EXIST** — `t.userEvent` reads
+  `undefined` silently (the type error only appears in svelte-check, which
+  vitest strips); the real reads are the annotation
+  `t.annotation(Transaction.userEvent)` (static) and the SPEC's own keys. A
+  `dispatch({})` from `@codemirror/language`'s `forceParsing` is a red herring
+  nobody calls; and `effects: <single StateEffect>` (not an array) makes a
+  `.length` probe read `undefined`. Standing rules: the completion's LABEL is
+  CONTRACT (the trigger-char prefix); decorate via displayLabel; trace at the
+  annotation/spec level, never the phantom properties.
 
 - **2026-11-21 — SHAPE UNIFORMITY: the seeds must establish what the mirror
   enforces.** The key-set mirror reconciles sibling shapes on every portal
