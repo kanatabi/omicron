@@ -9,6 +9,26 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (e) — INCREMENTAL PREVIEW PAINT: render-everything,
+  patch-the-diff.** The parked lever landed: after the fence cache the
+  long-doc tail = the full `{@html}` swap (the browser re-parsed the entire
+  preview per keystroke). The architecture that avoids every plugin
+  landmine: **the pipeline keeps rendering the WHOLE document** (footnotes,
+  link refs, spanning containers — the correctness by construction; the
+  render never learns about the diff), and `preview-diff.ts` patches the
+  container at the BLOCK level. The contracts the tests pin: **the diff key
+  = the rendered CONTENT (outerHTML), never the source range** — an edit
+  shifts every block below, the range keys would mass-mismatch; **the
+  mermaid unit = the pair (pre.mermaid-src + its dataset.mmd sibling),
+  keyed by the fence SOURCE (the hidden attr masquerades as a change) and
+  kept VERBATIM** — the SVG box = expensive hydration state a keystroke
+  must not destroy; the stale box leaves WITH its unit on a source edit.
+  The walk = the two-pointer over the units (markdown = the source order —
+  no reorders exist), the frontier = the old cursor's NODE (an index into
+  the live children shifts under inserts — walked). Standing rules: diff
+  the APPLICATION, never the render; key by content, not position; keep
+  the hydration state inside the diff's units.
+
 - **2026-11-22 (d) — THE LONG-DOC PREVIEW AND THE SMOOTH SYNC (two fixes, one
   round).** (1) The preview's 2-3s on vault-scale docs = **Shiki
   re-tokenizing every fence on every render** — O(total code volume) per
