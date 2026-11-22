@@ -269,6 +269,18 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   regions = ONE body = the ONE DiffFileHeader on EVERY viewport (one
   body, one header — the cells give way); the gap bands survive the
   flattening (view-agnostic) and hide with the collapse.
+- **2026-11-22** — **one split-table everywhere + the preferences menu**
+  (`8b703f4`): the md+/mobile divide in the split view is GONE — the
+  6-column table renders at every width, the body scrolls BOTH axes
+  inside the card (`min-w-[42rem]` floor: a 390px screen pans, the
+  cells still wrap — the scroll is the safety valve). The TraceRow
+  pair retired and **TraceRow.svelte DELETED** (no consumers; its
+  anatomy lives on in the pane headers + DiffFileHeader). The view
+  mode moved to a **preferences DropdownMenu** (the GitHub ⋯ /
+  GitLab ⚙ pattern): the Ellipsis trigger, the checkable items with
+  the check = the active, `closeOnSelect={false}` — the check updates
+  live; the menu opens fine in jsdom (`menuitemcheckbox` roles
+  answer). The Changed-only toggle stays in the band.
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
