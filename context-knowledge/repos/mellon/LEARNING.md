@@ -9,6 +9,28 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (o) — THE SPLIT-TABLE: the GitHub's file-diff anatomy.** The
+  owner's reference = GitHub's split view: the aligned rows, the
+  line-number gutters, the ± signs, the tints per side. The lib carried
+  it: **`alignDiff` emits `SplitRow.ln` (the counters walk: the left
+  increments on the same/del, the right on the same/add; the null side =
+  the no number) — ADD-ONLY: the secrets' version-compare = the same
+  lib's consumer, ignoring the new field** (the lib's shape changes =
+  add-only when a second consumer exists). The trace rows = the GitHub's
+  file-header (the chevron LEFT, the +N −N stats computed from the rows)
+  + **the free collapse: `open = $bindable` per row** — the shared-state
+  mapping had forced an accordion nobody asked for (the 'not allowed to
+  collapse' = the mapping's bug, not the component's). **The scroll =
+  the rows' region; the trace's triggers = `sticky top-0`** — the
+  headers never leave the viewport while the bodies scroll past (the
+  inner-scroll experiment failed: an unbounded Collapsible content has
+  nothing to scroll against). The pane's own label = removed — the
+  trace's title carries it (the md+'s = the grid headers). Standing
+  rules: a scroller needs a HEIGHT BOUND from its ancestors (the
+  `min-h-0 flex-1` chain — an `overflow-y-auto` with no bound scrolls
+  nothing); the row-level state = `$bindable`, never a shared variable
+  mapped through `onOpenChange`.
+
 - **2026-11-22 (n) — THE TRACE ROWS: the shadcn Trace's anatomy, ported.**
   The owner found the shadcn Trace (the collapsible lines — the icon, the
   title, the chevron; the row = the trigger, the detail = the content) and
