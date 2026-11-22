@@ -9,6 +9,27 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (h) — THE PANEL HINTS, THE MARKDOWN IMPORT, AND TWO RULING
+  MISSES.** (1) The owner chose the IN-PANEL hint over the '?' tooltip —
+  the question is asked when a panel opens, and tooltips are poor on
+  touch; `SectionCard` grew an optional `hint` prop (one muted line at
+  the open panel's top). (2) **The markdown import** (the posts list →
+  'Import markdown' → the file picker): the frontmatter = the YAML via
+  **js-yaml — whose ESM interop ships NO default export** (`yaml` from the
+  default import = undefined; the named `load` import is the contract) —
+  the title/date map from it, the H1 fallback STRIPS ITSELF from the
+  content (the blog renders the title; a duplicate H1 would read twice),
+  the malformed frontmatter = prose not a crash. The draft = created
+  review-ready, never auto-published. **The v1 boundary: images stay as
+  text** — the `![[attachments]]` links need the media relay's upload
+  path first (the cue layer flags them visually). (3) The case sweep
+  missed the rail's export labels (the palette's titles were fixed, the
+  rail's weren't — same handlers, two label sites: **grep every label
+  site, not one**). (4) The photos panel: the Save pinned to the uniform
+  h-8; the Delete = **the danger red AT REST** (the ruling — it had only
+  the border/hover danger). Standing rules: js-yaml = the named import;
+  a ruling's fix sweeps every SITE of the pattern, not the first one.
+
 - **2026-11-22 (g) — THE BOOT WARM-UP: a process's expensive one-time builds
   run at BOOT, never on the first request.** The owner's re-test on gofar.id
   (right after the v1.6.0 deploy) still showed a stuck 3–5s click — the
