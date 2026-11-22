@@ -9,6 +9,27 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (l) — THE DIFF PAGE: the doctrine's full application.** The
+  owner's reports: the action buttons overflowed the phone's viewport
+  horizontally; the full comparison stacked two whole documents; the
+  compact view was opt-in. The fixes, under the viewport-fit doctrine:
+  **the sticky verb band** (the photos' pattern, the third use — the
+  Discard/Save pinned to the pane's bottom; the mobile = the stacked
+  full-width, the overflow = impossible); **the view toggle = beside the
+  tabs, right-aligned** (the view control belongs with the view tabs; the
+  band = the verbs only); **the mobile default = Changed only**
+  (the `browser ? matchMedia(...).matches : false` init — the SSR renders
+  the full, the client adopts the compact); **the full comparison = the
+  editor-preview's grammar** (the mobile = the Saved/Pending tabs; the md+
+  = the split) rendered by **ONE snippet pair** — the markup cannot drift
+  between the modes; **the metadata table = its OWN horizontal scroll**
+  (the `overflow-x-auto` wrapper over a `min-w-[48rem]` floor — the values
+  keep their natural readable width; the page never scrolls sideways).
+  Standing rules: the action band = the VERBS, always visible; the view
+  toggles live with the view tabs; a table wider than its pane scrolls in
+  its own box; shared snippets over duplicated markup — drift = the test's
+  job to catch, the snippet = the way to make the test unnecessary.
+
 - **2026-11-22 (k) — THE VIEWPORT-FIT DOCTRINE: the box never scrolls.** The
   owner's principle: **every piece of chrome and every control is always in
   the viewport; only content scrolls, inside its own pane.** Two violations
