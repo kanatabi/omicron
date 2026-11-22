@@ -196,6 +196,19 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   ONE chevron (the HEAD cell) collapses the whole comparison; the same
   snippet pair rides the Changed-only view; NO visible separator (the
   owner: the grid geometry is the separator).
+- **2026-11-22** — **the pane fully contained** (`2922f99`): the diff page
+  lacked the `h-full` bound the b61dead lists got — the tall content grew
+  the whole `min-h-svh` flex chain (the wrapper can GROW, so `min-h-0`
+  clamps nothing), the document became the scroller, the pane had no
+  bottom edge. **The lesson: a `min-h-*` ancestor un-bounds every
+  `flex-1`/`min-h-0` chain below it — percentage (`h-full`) re-binds one
+  element at a time, and EVERY wrapper between the bound and the scroller
+  needs it too (an auto-height block in the chain breaks the percentage).**
+  The scroller now lives INSIDE the pane card: the header pair pinned,
+  only the lines scroll; the metadata tab scrolls both axes in its own
+  pane; the tabpanel remains the mobile full view's scroller (the trace
+  rows' sticky-trigger region). The header typography = the chrome voice
+  (tracked mono uppercase muted) — an indicator, not a headline.
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
