@@ -9,6 +9,24 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (p) — THE ORPHANED-GRANDCHILD REGRESSION + the desktop file-header.**
+  The owner's screenshots: the Posts title, the search bar, and the status chips
+  TOUCHING — a regression from the viewport-fit split (b61dead): grouping the fixed
+  controls into a plain `shrink-0` wrapper made title/search/chips GRANDCHILDREN of
+  the page's `gap-6` flex column, and **a flex gap spaces its DIRECT children only —
+  a plain block stacks its own children with zero margin**. The fix: the wrapper
+  owns its rhythm (`flex flex-col gap-4`; `gap-6` keeps the break to the rows
+  region; the scroller's `pr-1`→`pr-2` — rows no longer kiss the scrollbar). The
+  same round, the md+ split-table's two bare column labels became **the desktop
+  FILE-HEADER** (the GitHub's): one row — the chevron (the desktop collapse, the
+  mobile `$bindable` free-collapse mirrored, the header stays when collapsed), the
+  identity (`title · rev`), the `+N −N` stats in the diff tints, the side story
+  (saved (head) ⇄ pending · forked from rev N) muted at the right edge — the slot
+  the future actions ride. Standing rules: **when a restructure inserts a wrapper,
+  the moved children's spacing dies with the move — re-establish the rhythm ON the
+  wrapper** (flex gap is not inheritance); the dom test pins the header anatomy
+  end-to-end (identity, both stats, the side note, the collapse round-trip).
+
 - **2026-11-22 (o) — THE SPLIT-TABLE: the GitHub's file-diff anatomy.** The
   owner's reference = GitHub's split view: the aligned rows, the
   line-number gutters, the ± signs, the tints per side. The lib carried
