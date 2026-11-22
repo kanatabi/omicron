@@ -9,6 +9,25 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (g) — THE BOOT WARM-UP: a process's expensive one-time builds
+  run at BOOT, never on the first request.** The owner's re-test on gofar.id
+  (right after the v1.6.0 deploy) still showed a stuck 3–5s click — the
+  server acquitted by curl (the post = 13ms, the data request = 15ms; the
+  whole-post cache working) — the real killer: **the Shiki grammar build =
+  the seconds of sync, event-loop-freezing CPU on the first render each pod
+  serves**; the first traffic after a deploy froze the pod (the click's
+  request queued behind the build; the stream could not flush). The fix =
+  the boot warm-up via `hooks.server.ts` (the only eager touchpoint — the
+  render module is DYNAMICALLY imported by the relay route): the engine
+  builds at the pod's startup, where the k8s lifecycle expects the CPU (the
+  old pod serves; the readiness probe retries); the boot logs
+  `[boot] markdown engine warm`. The mobile pane-controls row also gained
+  its own spacing (`pb` over the safe-area inset + the horizontal nudge —
+  the owner's report: the toolbar jammed against the content box's edges).
+  Standing rule: **the cold path = a deploy-window tax, never a
+  visitor/user tax** (earendil's twin landed the same round — its ledger
+  carries the reader-side entry).
+
 - **2026-11-22 (e) — INCREMENTAL PREVIEW PAINT: render-everything,
   patch-the-diff.** The parked lever landed: after the fence cache the
   long-doc tail = the full `{@html}` swap (the browser re-parsed the entire

@@ -32,6 +32,24 @@ events that minted entries there and anything newer. Newest first.
   policy on the article cards = kept (the documented decision); the hover
   upgrade = now affordable if the owner wants it.
 
+  decision); the hover upgrade = now affordable if the owner wants it.
+- **2026-11-22 — THE COLD ENGINE: the last slow moment, retired at the boot.**
+  After the cache + the stream rounds, the owner's re-test still showed a
+  stuck 3–5s click on gofar.id — RIGHT AFTER the deploy. The server was
+  acquitted by curl (the post = 13ms, the `__data.json` = 15ms — the cache
+  working); the real killer: **the Shiki grammar build = the seconds of
+  SYNCHRONOUS, event-loop-freezing CPU on the first render each pod
+  serves** — the first traffic after a deploy froze the whole pod (the
+  click's data request queued behind it; the stream could not flush). The
+  fix = the boot warm-up: `hooks.server.ts` (the only eager touchpoint —
+  the route modules load lazily; mellon's render module is doubly lazy,
+  dynamically imported by the relay route) fires the engine build
+  fire-and-forget at startup, where the k8s lifecycle expects the CPU (the
+  old pod serves; the readiness probe retries). The boot logs
+  `[boot] markdown engine warm`. Standing rule: **a process's expensive
+  one-time builds run at boot, never on the first request** — the cold
+  path is a deploy-window tax, not a visitor tax.
+
 - **2026-11-21 — the typography plugin ships NO overflow-wrap; prose needs an
   explicit unbreakable-token guard.** A space-free token (pasted URL, key
   material, a keyboard-mash in a nested bullet) painted straight past the
