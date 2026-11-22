@@ -113,3 +113,14 @@ ledger records walked events, newest first.
 - **2026-11-13 — an ES missing ONE key wedges the sync-op forever.** The
   observability hub became a manual gate because of exactly this (ch.12 card
   11). Standing rule: AGENTS §9.4.
+- **2026-11-22 — the janitor's PreSync delete races the sync's own patch.**
+  The bump-day red (`Resource not found in cluster: Job:lumen-admin-migrate`):
+  Argo planned the Job's op from the PRE-hook cache (the corpse existed →
+  op = patch); the janitor's PreSync delete removed it; the patch hit a
+  deleted object → red first sync, wave 2 blocked (the second sync =
+  green — a known-red first bump = not "deterministic corpse-removal").
+  **`CreateReplace=true` is the missing remedy** (NOT the walked
+  `Replace=true` — a PUT obeys the same immutability): Argo creates at
+  apply when missing AND deletes+recreates on the immutable-field change.
+  On both migrate Jobs; the janitors stay as the belt. Standing rule: the
+  git-managed Jobs whose pod templates bump carry `CreateReplace=true`.

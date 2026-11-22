@@ -932,6 +932,21 @@ kubectl -n lumen get externalsecret,deploy,secret
 > clusters) plus TTL removed from the git-managed Jobs: bump days
 > become deterministic corpse-removal, no red window, no eternal
 > re-runs.
+>
+> **The janitor's own race (walked 2026-11-22) — `CreateReplace=true` is
+> the missing remedy:** the PreSync delete removes the corpse while
+> Argo's sync op was planned from the PRE-hook cache (the corpse existed
+> → op = **patch**) → the patch hits the deleted object →
+> `Resource not found in cluster: batch/v1/Job:lumen-admin-migrate` →
+> red first sync, wave 2 blocked. (A second Sync = green — the cache
+> then sees it missing — but a known-red first bump is not
+> "deterministic corpse-removal".) The fix, on BOTH migrate Jobs
+> (bases/lumen + the foundation's lumen-admin):
+> `argocd.argoproj.io/sync-options: CreateReplace=true` — Argo
+> creates-at-apply when the object is missing AND deletes+recreates on
+> the immutable-field change (the image bump). NOT the walked
+> `Replace=true` (a PUT — the same immutability); this is its cousin.
+> The janitors stay as the belt.
 
 ✅ end state: all rendered ES `Synced=True`; `kubectl -n external-secrets
 get clustersecretstore bao` → Ready; foundation wave 2 (lumen-admin +
