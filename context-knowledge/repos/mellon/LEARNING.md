@@ -9,28 +9,6 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
-- **2026-11-22 (f) — EARENDIL: THE WHOLE-POST CACHE + THE STREAMED LOAD — THE
-  NAVIGATION NEVER BLOCKS.** The owner's report: the homepage's article
-  click = the 2–5s stuck navigation. The cause: the post page's load
-  awaited the lumen fetch AND the full markdown render before the route
-  resolved — the SvelteKit router navigates only at the load's resolution.
-  The mermaid = innocent (the placeholders + the client hydration — the
-  agreed pattern, already shipped). Two levers: **(1) `renderMarkdownCached`
-  — the whole-post cache keyed by the sha256 OF THE MARKDOWN: the key IS
-  the invalidation** (an edit = new bytes = a new entry — zero staleness,
-  zero invalidation logic, zero cross-replica logic: each pod computes the
-  same answer); the published post = immutable between edits → the
-  steady-state hit rate ≈ 100% → the render's seconds → ~1–5ms. **(2) The
-  streamed load**: only the post's metadata is awaited; `html`/`toc` ride
-  the SAME render promise un-awaited → the route completes at the fetch,
-  the article + the TOC stream behind the prose-shaped shimmer (`{#await}`
-  in the page). The cold post (the first view after an edit) = the shell +
-  the skeleton instead of the stuck homepage; the warm hit = a blink.
-  Standing rules: immutable content is cached content-addressed, never
-  invalidated; a page's shell must never wait on its heaviest subtree.
-  The tap-preload policy on the article cards = kept (the documented
-  decision); the hover upgrade = now affordable if the owner wants it.
-
 - **2026-11-22 (e) — INCREMENTAL PREVIEW PAINT: render-everything,
   patch-the-diff.** The parked lever landed: after the fence cache the
   long-doc tail = the full `{@html}` swap (the browser re-parsed the entire
