@@ -281,6 +281,17 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   the check = the active, `closeOnSelect={false}` — the check updates
   live; the menu opens fine in jsdom (`menuitemcheckbox` roles
   answer). The Changed-only toggle stays in the band.
+- **2026-11-22** — **the menu owns BOTH preferences; the band is one
+  line** (`4ca96b7`): the Changed-only JOINED the menu (the amber
+  button dead) as a checkable item — **and it DEFAULTS ON everywhere**
+  (the compact review view = the first paint; the matchMedia viewport
+  default for it is dead); the uncheck remembers itself
+  (`mellon.diff-changed-only`). The band = the tabs left, the ⋯ right,
+  one line (`flex-nowrap`). And the mobile split = **the TRUE
+  side-by-side** (the owner's correction of the correction): the
+  min-w floor REMOVED — the two panes share the viewport, the cells
+  wrap (the GitHub mobile's look); overflow-auto = the long-token
+  safety valve only.
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
