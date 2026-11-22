@@ -9,6 +9,28 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (j) — THE SNACKBAR v2 + THE HOVER AFFORDANCE.** The owner's
+  reference picked the shadcn Alert's CARD shape: bottom-RIGHT (not the
+  center), ~22rem, the circled icon + the BOLD TITLE + the muted
+  description, the ×. **The lifetimes (the owner's sticky-danger
+  agreement): ok/warn = 5s; danger = STICKY until dismissed — an error
+  that dissolves while unread is a missed failure.** The flash API = the
+  object shape ({kind, title, description?, sticky?, action?}); the ACTION
+  rides in-card — **the save conflict's 'Review diff' door lives IN the
+  snackbar** (the conflict = the actionable state: a momentary surface
+  can never hold it). The editor's save/publish pills = retired; the
+  meta bar keeps only the autosave pill. The section hints migrated to
+  the **CircleHelp + the kit's Tooltip** (the owner: the '?' BUTTON, the
+  native icon not a text glyph; lucide's CircleHelp = the exact shape) —
+  **bits-ui 2.21 ships NO HoverCard primitive** (the module probe
+  walked), so the affordance rides the Tooltip (the hover on desktop;
+  focus/tap on touch — the trigger is focusable). The granularity law:
+  the SECTION hints = the hover affordance; the FIELD hints = inline
+  under their labels. Standing rules: the momentary vs the persistent
+  notification = different surfaces; check the kit BEFORE importing a
+  new primitive; the apostrophe-in-single-quoted-it() = the recurring
+  parse error (the double quotes for any string with a possessive).
+
 - **2026-11-22 (i) — THE SNACKBAR + THE PHOTOS' PANEL RESTRUCTURE.** The
   owner's pick: the shadcn Alert's ANATOMY (the bordered card, the leading
   icon, the variants) built in the kit's own bits-ui idiom — **no base-ui
