@@ -249,6 +249,17 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   when bound) + the `actions` snippet slot — the unified view reuses
   it as-is; the split view keeps its two-cell header (responsive:
   `md:hidden` vs `hidden md:grid` — CSS splits the surfaces, no JS).
+- **2026-11-22** — **the unified inline view** (`d2bb8f9`): the full
+  comparison's body splits by the view mode. `unifiedLines` (pure) —
+  **the alignment FLATTENED, never re-diffed**: a del+add pair row
+  becomes the − then + consecutive lines; the same line carries BOTH
+  numbers, a − line the head's bar only, a + line the pending's only
+  (the GitHub's two-bar anatomy, the owner's reference). The state:
+  **the remembered choice wins** (`mellon.diff-view` localStorage);
+  no memory = the viewport default — INLINE on mobile (the trace
+  pair retires to the explicit Split pick), SPLIT on desktop. The
+  band's segmented control (the tabs' grammar) drives it, hidden
+  while Changed-only owns the pane.
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
