@@ -292,6 +292,17 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   min-w floor REMOVED — the two panes share the viewport, the cells
   wrap (the GitHub mobile's look); overflow-auto = the long-token
   safety valve only.
+- **2026-11-22** — **the leading back arrow + the uniform split**
+  (`9b69a6b`): the title row's text pill died — the ArrowLeft icon
+  button LEADS the title on EVERY viewport ([←] Hello World · pending
+  diff; the mobile app's nav-bar pattern). The link stays a link:
+  **the kit's Tooltip.Trigger renders a BUTTON — it cannot front a
+  navigation; the native `title` + the `aria-label` carry the name**.
+  The empty state's text CTA stays (a CTA in a void is not a back
+  button). And the Changed-only's split mode = the full view's exact
+  anatomy (the two-pane rows + the two-cell header at EVERY width) —
+  **split means the same thing in both views; the phone's
+  single-header stand-in in split mode is dead**.
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
