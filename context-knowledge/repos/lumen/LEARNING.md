@@ -30,6 +30,19 @@ them. Newest first.
   make env — the dev Bao container lacks the `lumen/{env}` kv seeds (the
   runbook's open seed item) and `dev-plane.env` (the appRole) is absent;
   environment state, not code.
+- **2026-11-22 — the EXIF capture: lumen never parses metadata, and the
+  allowlist keeps it that way.** Round B (owner sketch): the capture moved
+  CLIENT-side (mellon's exifr, the curated keys only) and lumen stores an
+  OPTIONAL multipart `exif` field through `SanitizePhotoExif` — pure,
+  offline-gated. The promise held STRUCTURALLY, not by vigilance: **GPS is
+  not a key in the allowlist** (a denylist grows typos; an allowlist grows
+  nothing), wrong-typed values drop, malformed JSON is a 400 (a client
+  bug, never a silent swallow), an empty set stores NULL — the panel's
+  honest empty state. `PhotoDoc` stays UNTOUCHED (EXIF is panel display
+  data, never an engine field); `photos.exif` jsonb rides 0009 (cms plane).
+  The integration walk PLANTS GPSLatitude/GPSLongitude on a real s3mem
+  upload and proves the stored row carries the curated set and no GPS key
+  — the promise is now TESTED at the wire, not just declared.
 
 - **2026-11-15 — the observability amendment: every request and job
   speaks.** Three silent paths were found in ONE debugging night: the

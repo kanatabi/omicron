@@ -137,7 +137,7 @@ Composition happens only in `cmd/lumen`.
 | | `POST /admin/posts/:slug/unpublish` | the status machine in reverse |
 | | `DELETE /admin/posts/:slug` | soft-delete (media retained for the GC window) |
 | Photos | `GET /admin/photos?collection&gallery&from&to&sort&dir&page&q` | paged envelope (the darkroom) |
-| | `POST /admin/photos` (multipart) | **the media relay** (§5): probe dims, hash-name, stream to object storage |
+| | `POST /admin/photos` (multipart) | **the media relay** (§5): probe dims, hash-name, stream to object storage · the OPTIONAL `exif` field = mellon's client-side capture; lumen stores ONLY the allowlist (takenAt/camera/lens/shutter/iso/aperture — GPS denied by construction) as `photos.exif` jsonb |
 | | `PATCH /admin/photos/:id` | curation metadata (alt / collection / gallery) |
 | | `GET /admin/photos/:id` | the detail page's door |
 | | `GET /admin/photos/:id/references` | posts embedding the photo (the used-in guard) |

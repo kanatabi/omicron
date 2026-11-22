@@ -181,6 +181,12 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   row first, object best-effort, siblings keep shared objects alive), so
   "keeps being served until storage GC" was a lie; the embeds warning is
   unchanged (the references warn-list predates this round).
+- **2026-11-22** — **the EXIF capture at upload + the panel's EXIF block**
+  (`439226b`; lumen `bcaf72b` = the allowlist + `photos.exif` jsonb): exifr
+  reads the CURATED keys client-side (GPS never requested), ships as the
+  multipart `exif` field; the panel renders the photographer's order with
+  the resolution in the header and the honest empty state for pre-capture
+  uploads. Lock ops rode npm 10 (exifr 7.1.3).
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
