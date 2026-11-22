@@ -9,6 +9,25 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (n) — THE TRACE ROWS: the shadcn Trace's anatomy, ported.**
+  The owner found the shadcn Trace (the collapsible lines — the icon, the
+  title, the chevron; the row = the trigger, the detail = the content) and
+  asked for it as the diff page's mobile full view. **The base registry =
+  React/TSX — not installable into a Svelte portal**; the ANATOMY ports
+  one-to-one onto the vendored bits-ui Collapsible (`TraceRow.svelte`: the
+  icon chip, the mono title, the optional muted description, the rotating
+  chevron, the scrollable content). The mobile's full comparison = the two
+  trace rows (both documents EXIST on the phone — the desktop-split's
+  semantics, stacked collapsed; the pending open by default); **the scroll
+  = inside the open body — the row's headers never leave the viewport**
+  (the tabs-scrolled-away complaint = dead by construction). The
+  desktop's split = unchanged; ONE snippet pair renders every mode.
+  Standing rules: the shadcn's base registry = React — the Svelte port =
+  the anatomy onto the kit's primitives (check `ui/` first); a script
+  that edits-then-asserts must WRITE before the late assert can void the
+  edit (the lost import, twice-walked now); the kit's alias = `#lib`,
+  never `$lib` (the app-sidebar's pattern).
+
 - **2026-11-22 (m) — THE BAND = THE BOX'S BOTTOM EDGE (the sticky band's
   three sins, walked).** The owner's screenshots caught the diff page's
   band: (1) **the floating** — `sticky bottom-0` inside a parent with no
