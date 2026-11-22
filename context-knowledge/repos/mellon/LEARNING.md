@@ -9,6 +9,25 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (m) — THE BAND = THE BOX'S BOTTOM EDGE (the sticky band's
+  three sins, walked).** The owner's screenshots caught the diff page's
+  band: (1) **the floating** — `sticky bottom-0` inside a parent with no
+  overflow rule = the tall content SPILLS past the bounded section and the
+  band strands mid-view (a sticky can never leave its parent's box — the
+  spill goes past BOTH); (2) **the sore background** — the band painted
+  `bg-card` over the box's `bg-background` (a pinned band inside a surface
+  paints THAT surface); (3) **the gap below** — the box's own padding
+  (`px-4 py-6`) showed under the band. The fixes: the section =
+  `overflow-hidden` (the spill clipped); **the panels = the scroll panes**
+  (`min-h-0 flex-1 overflow-y-auto` — the card's border fixed, the content
+  scrolls inside); **the band = a STATIC flex child (`mt-auto`) in the
+  box's surface, full-bleed (`-mx-4 -mb-6`, re-padded inside)** — the band
+  IS the box's bottom edge, clipped flush by the box's rounded corners;
+  the toggle = the tabs' scale (the controls in one row = one scale).
+  Standing rules: a pinned band = a layout child, not a position chase —
+  bound the pane, static the band; the band's surface = its container's
+  surface; never leave the container's padding under a full-bleed row.
+
 - **2026-11-22 (l) — THE DIFF PAGE: the doctrine's full application.** The
   owner's reports: the action buttons overflowed the phone's viewport
   horizontally; the full comparison stacked two whole documents; the
