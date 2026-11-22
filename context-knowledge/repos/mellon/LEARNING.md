@@ -9,6 +9,24 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (k) — THE VIEWPORT-FIT DOCTRINE: the box never scrolls.** The
+  owner's principle: **every piece of chrome and every control is always in
+  the viewport; only content scrolls, inside its own pane.** Two violations
+  walked: (1) the editor's panes' grid carried a magic height guess
+  (`h-[calc(100svh-13.5rem)]`) — the guess drifted per device, the BOX
+  scrolled, the toolbar/meta left the viewport; the fix = the flex truth
+  (the column gains `min-h-0`; the grid = `min-h-0 flex-1` — whatever space
+  remains IS the pane's height; the fit = BY CONSTRUCTION, zero
+  arithmetic). (2) The lists (posts + photos, the same shape): the whole
+  column scrolled — the title/search/filters scrolled away with the rows;
+  the fix = the split (the controls = `shrink-0`, the rows = the inner
+  scroller `min-h-0 flex-1 overflow-y-auto`). Standing rules: **never
+  guess heights with svh-calc — bound with flex (`min-h-0 flex-1`); the
+  scroll container = the deepest region that owns the data, never the
+  chrome's box.** And the hints went hybrid: **below sm (no hover on
+  touch) the hint renders inline in the open panel; at sm+ the
+  CircleHelp + the Tooltip** — one prop, two renders, zero JS.
+
 - **2026-11-22 (j) — THE SNACKBAR v2 + THE HOVER AFFORDANCE.** The owner's
   reference picked the shadcn Alert's CARD shape: bottom-RIGHT (not the
   center), ~22rem, the circled icon + the BOLD TITLE + the muted
