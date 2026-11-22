@@ -219,6 +219,14 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   cap. And the header cells' flexes are `h-full`: both titles center in
   the SAME row height (the chevron's 24px drove the HEAD cell taller —
   the baselines sat ~3px apart).
+- **2026-11-22** — **the guard makes the toggle** (`4ce50dc`): the
+  Changed-only view's chevron rotated the state but the REGIONS never
+  hid — the `{#if mdOpen}` wiring existed only in the full view's body.
+  The lesson: **a shared collapse state is only as real as its weakest
+  render site** — every view rendering the toggled body carries the
+  guard, or the button lies in the views that don't. mdOpen stays
+  SHARED across both views (one comparison body; collapse in either,
+  both obey).
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
