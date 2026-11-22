@@ -141,7 +141,7 @@ Composition happens only in `cmd/lumen`.
 | | `PATCH /admin/photos/:id` | curation metadata (alt / collection / gallery) |
 | | `GET /admin/photos/:id` | the detail page's door |
 | | `GET /admin/photos/:id/references` | posts embedding the photo (the used-in guard) |
-| | `DELETE /admin/photos/:id` | removes the library row; the OBJECT keeps (GC window) |
+| | `DELETE /admin/photos/:id` | removes the library row AND best-effort deletes the OBJECT (row first, loud log on failure; a sibling row sharing the content-addressed object keeps it — owner call 2026-11-22) |
 | Collections | `GET /admin/collections` · `POST /admin/collections` | curation vocabulary (slugified names) |
 | Tags | `GET /admin/tags` · `POST /admin/tags` | vocabulary (BE-curated; the name is canonical) |
 | | `GET /admin/tags/search?q&page&pageSize` | desk bar: ENGINE fuzzy over the whole vocabulary |

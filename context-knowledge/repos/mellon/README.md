@@ -176,6 +176,11 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   scrape in.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
+- **2026-11-22** — **the delete dialog's copy follows lumen's eager object
+  GC** (`b846a8b`): the file is deleted WITH the row now (lumen 269e423 —
+  row first, object best-effort, siblings keep shared objects alive), so
+  "keeps being served until storage GC" was a lie; the embeds warning is
+  unchanged (the references warn-list predates this round).
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the

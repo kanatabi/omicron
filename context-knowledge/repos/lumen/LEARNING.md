@@ -1,6 +1,6 @@
 ---
 tags: [lumen, lessons]
-updated: 2026-11-15
+updated: 2026-11-22
 ---
 
 # lumen — lesson ledger
@@ -9,6 +9,27 @@ The standing rulings live in the repo's
 [AGENTS.md](https://github.com/kanatabi/lumen/blob/main/AGENTS.md); the wire
 contract in its DESIGN.md. This ledger records walked events that minted
 them. Newest first.
+
+- **2026-11-22 — the photo GC: the delete's object epilogue, and the ledger
+  path was the handle all along.** §8's keep-until-GC line is amended (owner
+  call): the delete removes the row AND the object. The design that made it
+  a one-day change: **the media_assets ledger's `path` IS the GC handle**
+  (§6 said so from M5) — resolved at delete time by the longest SUFFIX-join
+  of the row's src (the URL composes base + "/" + prefixed-path, so the key
+  needs no schema column of its own); a missing ledger row resolves to ""
+  and the GC SKIPS honestly (never guesses). The two traps the design
+  already answered: **content-addressed dedupe** — a sibling photo row
+  citing the same object must KEEP it alive (sibling count rides the same
+  resolution), and **row-first ordering** — the request's contract is the
+  library row; the object delete is a best-effort epilogue whose failure
+  logs LOUD (`media.delete.failed`) but never reddens the request. The
+  decision table is pure (`gcDecide`) — the offline gate owns the logic,
+  the integration walk (real s3mem object: shared survives, last-owner
+  dies) owns the wiring. Same round, found NOT fixed: `TestBaoRelay` /
+  `TestEstateSummary` / `TestRoleSplit` fail on a CLEAN tree with the full
+  make env — the dev Bao container lacks the `lumen/{env}` kv seeds (the
+  runbook's open seed item) and `dev-plane.env` (the appRole) is absent;
+  environment state, not code.
 
 - **2026-11-15 — the observability amendment: every request and job
   speaks.** Three silent paths were found in ONE debugging night: the
