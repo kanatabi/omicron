@@ -209,6 +209,16 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   pane; the tabpanel remains the mobile full view's scroller (the trace
   rows' sticky-trigger region). The header typography = the chrome voice
   (tracked mono uppercase muted) — an indicator, not a headline.
+- **2026-11-22** — **the cards FIT, they don't FILL** (`cd4f618`): `h-full`
+  on the pane cards held the height even for three regions (the void) and
+  even COLLAPSED (the header-only card stretched — the chevron worked,
+  the height lied). **`max-h-full` is the fit-wrap-with-a-cap pattern**:
+  the card hugs its content, the height fixes at the pane only when the
+  content crosses it, the rows scroll inside, headers pinned. `min-h-0`
+  stays on the card — flex's content-based min-height would defeat the
+  cap. And the header cells' flexes are `h-full`: both titles center in
+  the SAME row height (the chevron's 24px drove the HEAD cell taller —
+  the baselines sat ~3px apart).
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
