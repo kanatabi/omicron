@@ -187,6 +187,15 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   multipart `exif` field; the panel renders the photographer's order with
   the resolution in the header and the honest empty state for pre-capture
   uploads. Lock ops rode npm 10 (exifr 7.1.3).
+- **2026-11-22** — **the diff page's pane headers** (`302b5c4`): the
+  combined file-header bar (identity + stats + the side-story blob) was
+  AMBIGUOUS — nothing pointed at a pane. Two cells now, sitting over
+  their panes on the split-table's own grid: `HEAD · rev N` (−dels) left,
+  `PENDING · forked from rev M` (+adds) right — per-side stats (the
+  owner's option 1: the deletion count lives where the deletions live).
+  ONE chevron (the HEAD cell) collapses the whole comparison; the same
+  snippet pair rides the Changed-only view; NO visible separator (the
+  owner: the grid geometry is the separator).
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
