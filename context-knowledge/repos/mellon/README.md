@@ -260,6 +260,15 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   pair retires to the explicit Split pick), SPLIT on desktop. The
   band's segmented control (the tabs' grammar) drives it, hidden
   while Changed-only owns the pane.
+- **2026-11-22** — **the toggle drives the regions too** (`80bb6e1`):
+  the regions were split all along (the cells at md+, the stacked
+  single-header on the phone) — the toggle shows in the markdown tab
+  ALWAYS now. The flattener decomposed: **`unifyRows(rows)` = the
+  rows-level primitive** (the regions' rows ARE SplitRows — the
+  composition is free), `unifiedLines` = its thin wrapper. The inline
+  regions = ONE body = the ONE DiffFileHeader on EVERY viewport (one
+  body, one header — the cells give way); the gap bands survive the
+  flattening (view-agnostic) and hide with the collapse.
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
