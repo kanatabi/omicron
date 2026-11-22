@@ -9,6 +9,26 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-22 (i) — THE SNACKBAR + THE PHOTOS' PANEL RESTRUCTURE.** The
+  owner's pick: the shadcn Alert's ANATOMY (the bordered card, the leading
+  icon, the variants) built in the kit's own bits-ui idiom — **no base-ui
+  mixing** (the estate = bits-ui; the linked alert = the base-ui registry).
+  `flash.svelte.ts` = ONE module owning the state; ONE Snackbar instance in
+  the app layout; the pages fire `flash(kind, text)` — the auto-dismiss at
+  3s, a fresh flash restarts the timer. The momentary flashes moved (the
+  photos' save/failure, the editor's export confirmations); **the
+  persistent statuses keep their homes** (the autosave pill = its own
+  contract). The photos' panel: the Download = up to the file section
+  (below the img URL, the copy-button's style), the Save = the full rail
+  width, the Delete = below it full-width + **the danger red at rest**.
+  Two walks: **the runes modules need the svelte compiler — the node test
+  project deliberately runs without it, so anything touching a
+  `.svelte.ts` module rides `.dom.test.ts`** (the naming contract
+  extended); **never nest a button inside a button** (the Download row's
+  first draft did — the single row-button is the fix); and the commit
+  message's backticks are EXECUTED by zsh (the amend re-worded — quote
+  the code spans in the messages).
+
 - **2026-11-22 (h) — THE PANEL HINTS, THE MARKDOWN IMPORT, AND TWO RULING
   MISSES.** (1) The owner chose the IN-PANEL hint over the '?' tooltip —
   the question is asked when a panel opens, and tooltips are poor on
