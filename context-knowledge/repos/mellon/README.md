@@ -239,6 +239,16 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   a snippet is scoped to its branch; the regions view couldn't see the
   full view's) — numbered context lines, so the blank rows read as
   file lines, not white voids.
+- **2026-11-22** — **the DiffFileHeader component** (`2e0287a`): the
+  mobile Changed-only view's two cells sat over a single-column stack —
+  indicators over nothing. The phone gets the GitHub file-header: ONE
+  row (chevron, the FileDiff chip, the identity, the COLORED combined
+  stats, the muted fork note). **The component is built mode-agnostic
+  on purpose — the owner plans the unified inline diff**: title +
+  `stats?` (colored) + `note?` + `bind:open` (the chevron renders only
+  when bound) + the `actions` snippet slot — the unified view reuses
+  it as-is; the split view keeps its two-cell header (responsive:
+  `md:hidden` vs `hidden md:grid` — CSS splits the surfaces, no JS).
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
