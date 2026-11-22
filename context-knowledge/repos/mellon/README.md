@@ -312,7 +312,11 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   SHARED cell could never own the title without leaking the mask (the
   ghost-field doctrine's neighbor). `DiffTableRow` lives in diff.ts (the
   generic engine's home); the chip maps died at both call sites.
-  Metadata stays table-only (the fields are not lines).
+  Metadata stays table-only (the fields are not lines). The CI caught
+  the leftover `lineCls` helper the move orphaned — and exposed the
+  real sin: the local gate ran with `tail -1` on the chained output,
+  which HID the eslint failure. **The standalone-gates rule exists for
+  exactly this: never pipe the gates, never tail their output** (`6bcba93`).
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
