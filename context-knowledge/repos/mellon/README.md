@@ -227,6 +227,18 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   guard, or the button lies in the views that don't. mdOpen stays
   SHARED across both views (one comparison body; collapse in either,
   both obey).
+- **2026-11-22** — **the trace skin on the pane headers** (`30c8040`):
+  the cells kept their grid position but wear the TraceRow's anatomy —
+  the FileDiff icon chip, the mono title in the trace's voice
+  ('saved (head) · rev N' / 'pending'), the muted fork note in the
+  description slot, the bg-muted band. The per-side stats stay and are
+  COLORED (−dels red, +adds green). Two squeeze fixes rode along: the
+  mobile gutter 2rem→2.75rem + `whitespace-nowrap` on the number span
+  (a 780-line doc wrapped '77 / 7' mid-number), and the regions view
+  renders the SAME `diffCells` snippet (hoisted to the shared scope —
+  a snippet is scoped to its branch; the regions view couldn't see the
+  full view's) — numbered context lines, so the blank rows read as
+  file lines, not white voids.
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
