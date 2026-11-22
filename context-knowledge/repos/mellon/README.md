@@ -303,6 +303,16 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   anatomy (the two-pane rows + the two-cell header at EVERY width) —
   **split means the same thing in both views; the phone's
   single-header stand-in in split mode is dead**.
+- **2026-11-22** — **ONE per-key table: DiffTable** (`caf8259`): the same
+  grain was built twice — the configs/compare's `tableDiff` presentation
+  and the post's metadata tab. The shared skeleton (the semantic table,
+  the headings, the chips, the same-row dimming, the foot) = one
+  component; **the VALUE CELLS = the callers' whole-<td> snippets** —
+  the decisive reason: the configs' cells mask + hover-title, and a
+  SHARED cell could never own the title without leaking the mask (the
+  ghost-field doctrine's neighbor). `DiffTableRow` lives in diff.ts (the
+  generic engine's home); the chip maps died at both call sites.
+  Metadata stays table-only (the fields are not lines).
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
