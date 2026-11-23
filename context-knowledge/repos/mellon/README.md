@@ -317,26 +317,35 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   real sin: the local gate ran with `tail -1` on the chained output,
   which HID the eslint failure. **The standalone-gates rule exists for
   exactly this: never pipe the gates, never tail their output** (`6bcba93`).
-- **2026-11-23** — **the theming round begins: the mode/theme split + the
-  first ported families** (`03c230b` + `6db050b`; rounds 2–3 = custom
-  themes + the editor are pending): ONE composite cookie
-  `theme=<themeId>-<mode>` resolves into TWO attributes — `data-theme`
-  (palette family) + `data-mode` — set by the pre-paint script (no flash);
-  the legacy `light`/`dark` cookies upgrade in place. **The `dark:`
-  variant is MODE-keyed now (`[data-mode='dark']`) — theme-keyed would
-  have starved every future theme's dark half** (and the shiki dark
-  override was portal-scoped: it is mode-keyed too, or catppuccin-dark
-  would have kept light code blocks). The token blocks stay CORE-only
-  per theme — the shadcn aliases live in `:root` and flip per element
-  through var() resolution. The settings Appearance card is now the
-  **theme grid** (each `ThemeCard` paints its light+dark mini-mockup from
-  INLINE custom properties — the house utilities resolve inside the
-  swatch's scope), the palette gains `Theme: <name>` rows, and
-  `theme-registry.ts` is the ONE list — pinned to the CSS by the
-  palette test (every theme × mode defines every CORE token; the swatch
-  preview values equal the CSS values). Ported: **catppuccin**
-  (latte/mocha, brand=mauve) and **tokyonight** (day/night, the day ink
-  is the family's blue; derived blends marked in the CSS).
+- **2026-11-23** — **the theming round COMPLETE: mode/theme split, the
+  first ported families, custom themes, the editor** (`03c230b` + `6db050b`
+  + `37948d3` + `8cff892`): ONE composite cookie `theme=<themeId>-<mode>`
+  resolves into TWO attributes — `data-theme` (palette family) +
+  `data-mode` — set by the pre-paint script (no flash); the legacy
+  `light`/`dark` cookies upgrade in place. **The `dark:` variant is
+  MODE-keyed (`[data-mode='dark']`) — theme-keyed would have starved every
+  future theme's dark half** (and the shiki dark override was portal-scoped:
+  it is mode-keyed too, or catppuccin-dark would have kept light code
+  blocks). The token blocks stay CORE-only per theme — the shadcn aliases
+  live in `:root` and flip per element through var() resolution. The
+  settings Appearance card is the **theme grid** (each `ThemeCard` paints
+  its light+dark mini-mockup from INLINE custom properties — the house
+  utilities resolve inside the swatch's scope); the palette gains
+  `Theme: <name>` rows; `theme-registry.ts` is the ONE list, pinned to the
+  CSS by the palette test. Ported: **catppuccin** (latte/mocha, brand=mauve)
+  and **tokyonight** (day/night, the day ink is the family's blue; derived
+  blends marked in the CSS). Custom themes are DATA in localStorage
+  (`mellon.theme.custom.<slug>`, ~2–3 KB — zero perf cost): the structural
+  validator is the ONLY door into the apply seam; customs apply as INLINE
+  custom properties on `<html>` (they out-rank every CSS block — switching
+  back to a built-in must REMOVE them); the import door lifts ONLY core
+  custom-property declarations out of a detached stylesheet (arbitrary CSS
+  never executes — the injection guard IS the design; gaps inherit the
+  theme being worn). The editor (`/settings/themes/edit/[id]`) seeds via
+  fork (reading a built-in's UNWORN mode out of our own `cssRules` —
+  `getComputedStyle` only sees the worn cascade), paints its live draft
+  over the app through the same seam with a revert-first effect cleanup,
+  and never persists unless Save validates the WHOLE grammar.
 - **2026-11-23** — **the multipart wire + the 100 MB ceilings + the
   Attachment queue** (`e749f03` + `05149a5`; lumen `8aff8db`, vortex
   `0a76ae7`): the mock-era base64 detour is DEAD — `addPhoto` takes

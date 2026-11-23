@@ -24,6 +24,30 @@ The standing doctrine lives in the repo's
   component and touches nothing else. Same round: the registry's spinner
   imports `@lucide/svelte` (a SECOND icon lib) — the vendored copy points
   at the project's `lucide-svelte` instead; one icon vocabulary.
+- **2026-11-23 — a mode-keyed `dark:` variant, not theme-keyed.** When the
+  theme grew from a boolean to a family, the trap was keying the `dark:`
+  utilities (and the shiki dark override) on the theme id: every NEW
+  theme's dark half would silently lose every `dark:` utility and keep
+  light code blocks. The split that survives growth: `data-theme` = the
+  palette family, `data-mode` = light|dark, and EVERYTHING mode-sensitive
+  keys on `[data-mode='dark']`. Per-theme CSS blocks define ONLY the CORE
+  tokens — the shadcn aliases stay in `:root`, because `var()` resolves
+  against the element's own cascaded values (override `--brand` in a theme
+  block and `--primary` flips with it, no alias re-declaration).
+- **2026-11-23 — inline custom properties OUT-RANK every CSS block; the
+  built-in path must REMOVE them.** Custom themes apply as inline custom
+  properties on `<html>` (the only cascade level that beats every theme
+  block). The symmetric half is easy to forget: switching back to a
+  built-in must `removeProperty` every token, or the last custom's values
+  keep overriding every later theme forever. Same seam, two directions —
+  and the pre-paint script must do BOTH synchronously for first paint.
+- **2026-11-23 — `getComputedStyle` only sees the worn cascade; read the
+  theme's UNWORN mode out of `cssRules`.** Forking a built-in needs BOTH
+  modes' token values, but computed style answers only the mode currently
+  applied. Same-origin stylesheets expose `cssRules` — walk them for the
+  `[data-theme=…][data-mode=…]` block (cross-origin sheets throw; skip).
+  And the URL-predicate lesson's sibling for cookies: an id containing
+  dashes must parse its mode from the LAST dash, never `split('-')[1]`.
 - **2026-11-23 — the URL-predicate `invalidate` is a no-op without
   `depends()`.** The picker's per-upload refresh (and the photo-detail
   save's "server facts refresh underneath the form") used
