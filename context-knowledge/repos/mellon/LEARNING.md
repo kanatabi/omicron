@@ -39,6 +39,21 @@ The standing doctrine lives in the repo's
   the previous as a state fact, not a message. And the pointer surfaces
   are real sliders (aria-valuenow/valuetext, tabindex, arrow keys) — a
   drag surface without keyboard is doctrine #4 broken.
+- **2026-11-23 — GENERATED themes: map the palette source, never
+  hand-port.** The AnuPpuccin set (24 schemes, `a1b724e`) exists because
+  its stylesheets re-express every colorscheme in the Catppuccin variable
+  style — one uniform shape, so a script parses → maps onto the CORE
+  grammar (a documented per-mode table) → emits the CSS + registry, and
+  the registry↔CSS palette test covers all 24 for free. The license is
+  part of the artifact: GPL-3.0 demands the credit IN the CSS file.
+- **2026-11-23 — per-theme modes beat a global both-modes rule.** The
+  moment a catalog includes dark-only schemes (Dracula, Coffee), the
+  rule "every theme ships both modes" dies; what survives is
+  **`ThemeDef.modes` everywhere**: the segmented renders only the
+  current theme's modes, `setTheme` validates the pair, the layout's
+  cookie correction flips an impossible pair to an available one. A
+  theme+mode cookie must never be able to describe a combination the
+  theme doesn't ship.
 - **2026-11-23 — an editor for a person, not for its author.** The theme
   editor's first cut was technically honest but owner-unfriendly (the
   report: "too technical"). The restyle (`1e95381`): the MEANING leads —

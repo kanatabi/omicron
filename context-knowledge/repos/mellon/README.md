@@ -317,6 +317,21 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   real sin: the local gate ran with `tail -1` on the chained output,
   which HID the eslint failure. **The standalone-gates rule exists for
   exactly this: never pipe the gates, never tail their output** (`6bcba93`).
+- **2026-11-23** — **the AnuPpuccin set joins the picker** (`a1b724e`):
+  24 generated themes ported from the Obsidian theme's own stylesheets
+  (`scripts/gen-anp-themes.mjs` — Catppuccin-style variables make the
+  port mechanical; the mapping table lives in the generator) — Nord
+  (light+dark+darker), Gruvbox, Dracula, Everforest, Rosé Pine, Kanagawa,
+  Solarized, Flexoki, Atom, Biscuit, Coffee, Notion, Rosebox, Royal
+  Velvet, AMOLED, Material Mint, Luminescence, Sandy Beaches, Thorns,
+  Generic, plus Frappé/Macchiato/Mocha Old/Rosé Pine-light alongside the
+  catppuccin theme. **Per-theme modes** (Dracula is dark-only; Sandy
+  Beaches light-only): the segmented renders only available modes,
+  `setTheme` validates, the layout corrects impossible cookie pairs.
+  The picker **groups by family** — Portal / Catppuccin / Your themes /
+  AnuPpuccin — section headers, never tabs. GPL-3.0 attribution rides
+  the generated CSS; the README carries the credit.
+
 - **2026-11-23** — **the theming round COMPLETE: mode/theme split, the
   first ported families, custom themes, the editor** (`03c230b` + `6db050b`
   + `37948d3` + `8cff892`): ONE composite cookie `theme=<themeId>-<mode>`
