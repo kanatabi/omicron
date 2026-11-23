@@ -24,6 +24,21 @@ The standing doctrine lives in the repo's
   component and touches nothing else. Same round: the registry's spinner
   imports `@lucide/svelte` (a SECOND icon lib) — the vendored copy points
   at the project's `lucide-svelte` instead; one icon vocabulary.
+- **2026-11-23 — the portal color picker rides the SAME seam as the
+  themes: inline style, not a native control.** The stock
+  `<input type="color">` could only speak 6-digit hex (every oklch token
+  showed the neutral chip). The Figma-anatomy picker
+  (`4f51398`): `color.ts` bridges hex↔hsv AND oklch↔srgb (the OKLab
+  matrices — pure, round-trip-tested), the chip paints the value ITSELF
+  via `background-color: {value}` (CSS renders hex AND oklch natively —
+  zero conversion to preview), the picker works in HSV and WRITES hex
+  (alpha < 100% earns `#rrggbbaa`), and an unparsable raw value stays
+  untouched until a real pick. **Single-open is structural, not
+  coordinated:** the page owns ONE `openToken`, each chip's controlled
+  Popover reads `open={openToken === tk}` — opening another chip closes
+  the previous as a state fact, not a message. And the pointer surfaces
+  are real sliders (aria-valuenow/valuetext, tabindex, arrow keys) — a
+  drag surface without keyboard is doctrine #4 broken.
 - **2026-11-23 — an effect must never READ a `$state` it also writes.**
   The theme editor's seed effect assigned `tokens`/`computedBase` and then
   read them in the same run (building `forkBase` from the just-written

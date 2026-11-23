@@ -345,7 +345,15 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   fork (reading a built-in's UNWORN mode out of our own `cssRules` —
   `getComputedStyle` only sees the worn cascade), paints its live draft
   over the app through the same seam with a revert-first effect cleanup,
-  and never persists unless Save validates the WHOLE grammar.
+  and never persists unless Save validates the WHOLE grammar. The picker
+  follow-up (`4f51398`): the stock `<input type="color">` is GONE — the
+  Figma-anatomy picker (`color.ts`: hex↔hsv + the oklch↔srgb bridge,
+  pure and round-trip-tested; Grid/Spectrum/Sliders tabs; the shared
+  checkerboard opacity bar writing `#rrggbbaa`; swatch row = the draft's
+  other token values + recents), the chip painted via inline
+  `background-color` (CSS renders hex AND oklch), single-open owned by
+  the page's ONE `openToken`, and the drag surfaces are real
+  keyboard-operable sliders.
 - **2026-11-23** — **the multipart wire + the 100 MB ceilings + the
   Attachment queue** (`e749f03` + `05149a5`; lumen `8aff8db`, vortex
   `0a76ae7`): the mock-era base64 detour is DEAD — `addPhoto` takes
