@@ -93,6 +93,14 @@ The standing doctrine lives in the repo's
   row, the marker list rows, the diff bars), so every token has a
   judgeable surface in both modes; a pane stretched wide shows off
   nothing a content-rich pane at its natural width doesn't show better.
+  The pane became ONE shared component (`5a9df37`): **`ThemePane` paints
+  the COMPLETE token inventory for the theme card AND the editor** —
+  the card showed 8 tokens while the editor showed 16, two truths about
+  the same theme; and a preview that omits keys inherits the WORN theme
+  and lies, so the preview grammar is the full CORE list by
+  construction. The appearance section followed: the MODE control leads
+  the header (it flips what the grid shows), 4-up portrait cards, panes
+  stacked full card width.
 - **2026-11-23 — a picker control that IS its own indicator.** The
   opacity row was three disconnected pieces (a visual bar, a native
   range beside it, a % label) — the thumb didn't live on the track it
