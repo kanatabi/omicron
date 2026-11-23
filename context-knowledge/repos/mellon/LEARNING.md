@@ -39,6 +39,18 @@ The standing doctrine lives in the repo's
   the previous as a state fact, not a message. And the pointer surfaces
   are real sliders (aria-valuenow/valuetext, tabindex, arrow keys) — a
   drag surface without keyboard is doctrine #4 broken.
+- **2026-11-23 — an editor for a person, not for its author.** The theme
+  editor's first cut was technically honest but owner-unfriendly (the
+  report: "too technical"). The restyle (`1e95381`): the MEANING leads —
+  every row is a named color (a friendly label map; the token name
+  demotes to a subtitle), the picker (with its hex field) is the ONLY
+  editor, the raw inputs and the token filter are cut (16 friendly rows
+  scan; search loses), and the preview is the CO-STAR — a 420px sticky
+  column with a generic portal miniature (chrome bar, card, verbs,
+  markers, diff bars). **The copy rule it minted: name the anatomy,
+  never the page** — page names drift; helper copy that names them goes
+  stale by design. Header: the name IS the title (the rename pattern),
+  secondary actions live in the ⋯ (one primary verb, uniform pills).
 - **2026-11-23 — an effect must never READ a `$state` it also writes.**
   The theme editor's seed effect assigned `tokens`/`computedBase` and then
   read them in the same run (building `forkBase` from the just-written
