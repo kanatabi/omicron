@@ -337,6 +337,18 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   `queued → preparing → uploading → done | error`, size · status per
   row, ONE sr-only live region. And the library grid is gated on
   `onPick` — the /photos dialog's inert grid is gone (lesson ledger).
+  The follow-up round (`05149a5` + the trash round): **Option B row
+  styling** — the row is text-on-dialog by default, the border only
+  speaks when it means something (dashed = waiting, the base's red
+  state border on error); **the trash on done rows** (gated on
+  `!onPick` — the /photos dialog only, where a fresh upload has no
+  references; in the editor the photo is already in the doc) runs
+  lumen's delete through a `deleting` status and flips the row to
+  error with lumen's copy on failure; X dismisses queued/errored
+  rows. And the owner's icon ruling: **X is the DISMISS voice,
+  `Trash2` is the DELETE voice** — the tag desk's `<X /> delete` and
+  the vault's `×`-glyph key-remove (the only two delete-as-X sites;
+  every other X is a clear/dismiss and stays) now wear `Trash2`,
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the
