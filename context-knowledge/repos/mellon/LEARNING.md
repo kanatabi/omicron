@@ -76,7 +76,11 @@ The standing doctrine lives in the repo's
   own radius** — and the track's overflow-hidden belongs to the gradient
   child, not the track, or the thumb gets shaved at the ends; and a
   fixed-item row in a fixed-width popover WRAPS (7 per line, the 8th
-  below), it never overflows.
+  below), it never overflows. The crispness pass (`8be1dc3`): **1px
+  borders alias blocky at fractional zoom — circles wear inset RINGS
+  (painted post-transform) and hovers change rings, never
+  `hover:scale-*`** (a transform resamples the raster); and a
+  checkerboard at swatch size wants 4px/20% tiles, not 8px/30%.
 - **2026-11-23 — an effect must never READ a `$state` it also writes.**
   The theme editor's seed effect assigned `tokens`/`computedBase` and then
   read them in the same run (building `forkBase` from the just-written
