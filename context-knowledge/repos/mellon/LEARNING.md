@@ -1,6 +1,6 @@
 ---
 tags: [mellon, lessons]
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 # mellon — lesson ledger
@@ -8,6 +8,27 @@ updated: 2026-11-22
 The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
+
+- **2026-11-23 — the adapter's knobs are read at IMPORT — image-level ENV
+  or nothing.** `BODY_SIZE_LIMIT` is evaluated when `build/handler.js` is
+  statically imported, so a `server.js` assignment is too late (no dynamic
+  import to pre-empt without churn). The ceiling ships as a Dockerfile
+  `ENV` (`110M`, e749f03) — atomically with the code that enforces the
+  matching pre-check, so no rollout window exists where the old ceiling
+  meets the new offers (and Deployment env can still override it).
+- **2026-11-23 — vendor registry items by DIRECT FETCH when the CLI would
+  clobber a customized component.** `add attachment` resolves to the vega
+  style and works, but its `registryDependencies` includes `button` — and
+  OURS carries the cast variants (SHADCN-PLAN 3.1). Fetching the item JSON
+  and rewriting `$UTILS$`/`$UI$` to the `#lib` aliases lands exactly the
+  component and touches nothing else. Same round: the registry's spinner
+  imports `@lucide/svelte` (a SECOND icon lib) — the vendored copy points
+  at the project's `lucide-svelte` instead; one icon vocabulary.
+- **2026-11-23 — a grid with nothing to pick is dead UI; gate it on the
+  thing that gives it purpose.** The /photos dialog's library buttons were
+  no-ops (`onPick?.(p)` with no onPick) — the gate is `onPick &&` on the
+  section, not a mode check: the editor's `upload` mode DOES pick
+  (upload-THEN-insert), so mode alone is the wrong signal (05149a5).
 
 - **2026-11-22 (p) — THE ORPHANED-GRANDCHILD REGRESSION + the desktop file-header.**
   The owner's screenshots: the Posts title, the search bar, and the status chips

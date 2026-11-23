@@ -1,6 +1,6 @@
 ---
 tags: [lumen, lessons]
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 # lumen — lesson ledger
@@ -9,6 +9,16 @@ The standing rulings live in the repo's
 [AGENTS.md](https://github.com/kanatabi/lumen/blob/main/AGENTS.md); the wire
 contract in its DESIGN.md. This ledger records walked events that minted
 them. Newest first.
+
+- **2026-11-23 — a byte cap does not bound memory; a pixel cap does.** The
+  20 MiB upload limit felt like the memory guard, but a 100 MB JPEG can
+  declare 100+ MP, and the decode heap (~1.5 B/px YCbCr + raw bytes +
+  re-encode) OOMs independently of body size. `Process` now runs
+  `image.DecodeConfig` BEFORE `image.Decode` and rejects >60 MP (415 with
+  the dims) — `8aff8db`. The http-server limit went to 768Mi (vortex
+  `0a76ae7`) as the headroom that makes the bound honest; the error copy
+  derives from the constant (`media.MaxLabel()`), so cap and copy can't
+  drift apart.
 
 - **2026-11-22 — the photo GC: the delete's object epilogue, and the ledger
   path was the handle all along.** §8's keep-until-GC line is amended (owner

@@ -1,6 +1,6 @@
 ---
 tags: [mellon, portal]
-updated: 2026-11-21
+updated: 2026-11-23
 ---
 
 # mellon — the private admin portal
@@ -317,6 +317,26 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   real sin: the local gate ran with `tail -1` on the chained output,
   which HID the eslint failure. **The standalone-gates rule exists for
   exactly this: never pipe the gates, never tail their output** (`6bcba93`).
+- **2026-11-23** — **the multipart wire + the 100 MB ceilings + the
+  Attachment queue** (`e749f03` + `05149a5`; lumen `8aff8db`, vortex
+  `0a76ae7`): the mock-era base64 detour is DEAD — `addPhoto` takes
+  `{ file }` (browser FormData) or `{ body }` (the relay's ONE
+  transport-only path: the incoming multipart streams to lumen VERBATIM,
+  `duplex:'half'`, unparsed — no `request.formData()` buffer on the
+  100 MB path). The ceilings stack honestly: the picker's pre-check
+  (`MAX_UPLOAD_BYTES` = lumen's `media.MaxBytes`, the formatted
+  "132.6 MB · over the 100 MB limit" row, no request) → the relay's
+  101 MiB content-length 413 → lumen's own 413 copy → adapter-node's
+  `BODY_SIZE_LIMIT=110M` as the image-level backstop (it reads the knob
+  at import — Dockerfile ENV, not server.js). `photos.upload` rides a
+  180s budget, `requestTimeout` 10 min, and the hooks reject
+  >16 MiB bodies on every OTHER route. The queue wears the VENDORED
+  shadcn `attachment` (vega registry, direct fetch — the CLI would have
+  clobbered our cast `button`) + an 8-line `spinner` on the project's
+  `lucide-svelte` + the `shimmer` utility; states
+  `queued → preparing → uploading → done | error`, size · status per
+  row, ONE sr-only live region. And the library grid is gated on
+  `onPick` — the /photos dialog's inert grid is gone (lesson ledger).
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the

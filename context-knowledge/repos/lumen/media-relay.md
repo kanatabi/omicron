@@ -1,6 +1,6 @@
 ---
 tags: [lumen, media, r2, upload]
-updated: 2026-11-15
+updated: 2026-11-23
 ---
 
 # Media relay — the upload path (D1, resolved)
@@ -22,9 +22,10 @@ sequenceDiagram
     participant R2 as R2 (S3 API)
     participant CDN as img.gofar.id (the CDN face)
 
-    E->>M: the image (JSON dataUrl) → multipart
+    E->>M: the image (multipart FormData, streamed)
     M->>C: POST /admin/photos (multipart, bearer forwarded)
-    C->>C: probe dimensions (decode the image — an undecodable body = 4xx)
+    C->>C: DecodeConfig FIRST — >60 MP = 415 before a pixel is allocated
+    C->>C: probe dimensions (full decode — an undecodable body = 4xx)
     C->>C: hash the content → the object key: prefix/media/ab/ab<sha>.ext
     C->>R2: PutObject (SigV4, path or virtual-host per FORCE_PATH)
     R2-->>C: stored
@@ -43,6 +44,21 @@ sequenceDiagram
 | `LUMEN_MEDIA_PREFIX` | `production/` / `staging/` | never empty — the envs' objects stay apart in the one bucket |
 | `LUMEN_MEDIA_CDN_BASE` | `https://img.gofar.id` | the returned URLs are the CDN's — the bucket's own URL never leaves |
 | `LUMEN_MEDIA_ACCESS_KEY` / `SECRET_KEY` | the R2 API token (Object Read & Write, scoped to the bucket) | seeded in ch.07's act |
+
+## The two caps (2026-11-23)
+
+The upload is bounded twice, and the two bounds answer different threats:
+
+| Cap | Value | Bounds | Rejection |
+| :-- | :-- | :-- | :-- |
+| `media.MaxBytes` | **100 MB** (`100 << 20`) | abuse / wire volume — camera-originals friendly | 413 `upload exceeds 100 MB` (copy derives from the constant via `media.MaxLabel()` — it can never drift) |
+| `media.MaxPixels` | **60 MP** (`image.DecodeConfig` BEFORE `image.Decode`) | memory — file size does NOT bound decoded pixels: a 100 MB JPEG can be 100+ MP, and the decode heap (~1.5 B/px YCbCr + the raw bytes + the re-encode buffer) is what OOMs, not the body | 415 `W×H is N MP — the cap is 60 MP` |
+
+The memory math that set both numbers: a 60 MP JPEG ≈ 100 MB raw + ~90 MB
+decoded YCbCr + the re-encode buffer ≈ fits the http-server pod's **768Mi**
+limit (bumped from 256Mi in vortex `0a76ae7` in the same round; requests
+stay 128Mi). The pixel guard is the bound that makes that limit honest —
+the byte cap alone never protected the probe.
 
 ## The silent-500 lesson (the logging gap)
 

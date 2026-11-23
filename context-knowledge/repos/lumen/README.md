@@ -1,6 +1,6 @@
 ---
 tags: [lumen, backend]
-updated: 2026-11-15
+updated: 2026-11-23
 ---
 
 # lumen — the REST backend

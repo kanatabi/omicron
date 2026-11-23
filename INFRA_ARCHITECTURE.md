@@ -43,7 +43,7 @@ Memory limits must stay **below** allocatable RAM (node OS + kubelet reserve ~50
 | Grafana Alloy (DaemonSet, 1 per worker) | worker-1 & 2  | 100m/128Mi each  | 300m/256Mi each   | —                    |
 | Grafana UI                              | worker-2      | 150m/256Mi       | 500m/512Mi        | 1 Gi                 |
 | Meilisearch                             | worker-2      | 200m/384Mi       | 500m/700Mi        | 5 Gi                 |
-| Lumen http-server (2 instances)         | worker-1 & 2  | 100m/128Mi each  | 300m/256Mi each   | —                    |
+| Lumen http-server (2 instances)         | worker-1 & 2  | 100m/128Mi each  | 300m/768Mi each   | —                    |
 | Lumen worker (1 instance)               | worker-1 or 2 | 100m/128Mi       | 300m/256Mi        | —                    |
 | Earendil (SvelteKit SSR, 2 instances)   | worker-1 & 2  | 100m/192Mi each  | 300m/384Mi each   | —                    |
 | Mellon (admin portal SSR, 1 instance)   | worker-2      | 100m/192Mi       | 300m/384Mi        | —                    |
