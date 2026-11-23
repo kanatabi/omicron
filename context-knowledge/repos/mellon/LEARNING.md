@@ -53,7 +53,10 @@ The standing doctrine lives in the repo's
   current theme's modes, `setTheme` validates the pair, the layout's
   cookie correction flips an impossible pair to an available one. A
   theme+mode cookie must never be able to describe a combination the
-  theme doesn't ship.
+  theme doesn't ship — and the rule reaches EVERY consumer of the shape:
+  the theme card's hardcoded both-panes killed SSR the moment a
+  dark-only theme joined (e947a17). A new field on a shared shape is a
+  sweep, not a spot fix.
 - **2026-11-23 — an editor for a person, not for its author.** The theme
   editor's first cut was technically honest but owner-unfriendly (the
   report: "too technical"). The restyle (`1e95381`): the MEANING leads —
