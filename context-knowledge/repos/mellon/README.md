@@ -349,6 +349,11 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   `Trash2` is the DELETE voice** — the tag desk's `<X /> delete` and
   the vault's `×`-glyph key-remove (the only two delete-as-X sites;
   every other X is a clear/dismiss and stays) now wear `Trash2`,
+  and the refresh primitive is honest: the per-upload/per-delete
+  `invalidate(url)` predicates were NO-OPS (a load must `depends()` a
+  URL for the predicate to match — none ever did, the lesson ledger
+  has it); `refreshAll()` re-runs the page's loads, so the listing
+  updates live under the open dialog and Done closes onto fresh rows.
 - **2026-11-21** — **shadcn S5 built and merged — the experiment COMPLETE,
   pending the owner's parity pass + graduation** (`feat/shadcn-s5-overlays` →
   integration): DeleteDialog over alert-dialog (type-to-confirm kept, the

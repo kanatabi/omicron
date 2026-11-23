@@ -24,6 +24,17 @@ The standing doctrine lives in the repo's
   component and touches nothing else. Same round: the registry's spinner
   imports `@lucide/svelte` (a SECOND icon lib) — the vendored copy points
   at the project's `lucide-svelte` instead; one icon vocabulary.
+- **2026-11-23 — the URL-predicate `invalidate` is a no-op without
+  `depends()`.** The picker's per-upload refresh (and the photo-detail
+  save's "server facts refresh underneath the form") used
+  `invalidate((u) => u.pathname === …)` — but Kit 3 matches the predicate
+  ONLY against hrefs a load declared via `load.depends()`, and no load in
+  this repo ever did; the calls invalidated nothing and the listing stayed
+  stale. The house refresh primitive is `refreshAll()` (Kit 3's
+  non-deprecated `invalidateAll`: re-runs every load of the active page,
+  keeps `page.state`) — the photos picker and the detail save now ride it.
+  Rule of thumb: `refreshAll` for "the page's own data changed";
+  `invalidate(url)` only when a load has `depends()`ed that URL.
 - **2026-11-23 — a grid with nothing to pick is dead UI; gate it on the
   thing that gives it purpose.** The /photos dialog's library buttons were
   no-ops (`onPick?.(p)` with no onPick) — the gate is `onPick &&` on the
