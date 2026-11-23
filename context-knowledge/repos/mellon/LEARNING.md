@@ -71,7 +71,12 @@ The standing doctrine lives in the repo's
   **two sources wearing the same costume read as one** — THEME and
   RECENT are separate labeled lines now (the same leading-gutter
   grammar as OPACITY), with the remember-+ at the END of the recents
-  line, where "add the current color" reads.
+  line, where "add the current color" reads. The polish walks
+  (`c854077`): **a thumb bigger than its track must travel INSET by its
+  own radius** — and the track's overflow-hidden belongs to the gradient
+  child, not the track, or the thumb gets shaved at the ends; and a
+  fixed-item row in a fixed-width popover WRAPS (7 per line, the 8th
+  below), it never overflows.
 - **2026-11-23 — an effect must never READ a `$state` it also writes.**
   The theme editor's seed effect assigned `tokens`/`computedBase` and then
   read them in the same run (building `forkBase` from the just-written
