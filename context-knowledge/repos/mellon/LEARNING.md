@@ -24,6 +24,19 @@ The standing doctrine lives in the repo's
   component and touches nothing else. Same round: the registry's spinner
   imports `@lucide/svelte` (a SECOND icon lib) — the vendored copy points
   at the project's `lucide-svelte` instead; one icon vocabulary.
+- **2026-11-23 — an effect must never READ a `$state` it also writes.**
+  The theme editor's seed effect assigned `tokens`/`computedBase` and then
+  read them in the same run (building `forkBase` from the just-written
+  tokens, the `new` branch from the just-written `computedBase`) — every
+  read in an effect is a dependency, so each run re-triggered itself until
+  `effect_update_depth_exceeded` killed the page (the owner's 500). The
+  pattern that holds: **compute into LOCALS, write each `$state` exactly
+  once at the end.** Same class hardened next door: the layout's
+  ghost-cookie fallback called `setTheme` (which reads `themeState`)
+  inside the effect that writes it — and `setTheme` now resolves its pair
+  at CALL time so the VT callback reads nothing reactive (in VT-less
+  browsers the callback runs synchronously, inside the caller's tracked
+  scope — correctness must not depend on `startViewTransition` existing).
 - **2026-11-23 — a mode-keyed `dark:` variant, not theme-keyed.** When the
   theme grew from a boolean to a family, the trap was keying the `dark:`
   utilities (and the shiki dark override) on the theme id: every NEW
