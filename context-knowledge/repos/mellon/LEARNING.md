@@ -56,7 +56,13 @@ The standing doctrine lives in the repo's
   selects the half being edited, so the control you look at and the
   control you click are the same thing; `preview live` became a ⋯-menu
   CheckboxItem (the diff page's 'Changed only' pattern) and the editor
-  split 50/50 with full-width panes.
+  split 50/50 with full-width panes. The second correction (owner:
+  "over-stretched, kayak pipih"): the width reverts and the pane grows
+  by ANATOMY instead — **the miniature is the COMPLETE token inventory**
+  (chrome bar, card + input on background, muted strip, the accent hover
+  row, the marker list rows, the diff bars), so every token has a
+  judgeable surface in both modes; a pane stretched wide shows off
+  nothing a content-rich pane at its natural width doesn't show better.
 - **2026-11-23 — an effect must never READ a `$state` it also writes.**
   The theme editor's seed effect assigned `tokens`/`computedBase` and then
   read them in the same run (building `forkBase` from the just-written
