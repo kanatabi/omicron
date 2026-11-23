@@ -50,7 +50,13 @@ The standing doctrine lives in the repo's
   markers, diff bars). **The copy rule it minted: name the anatomy,
   never the page** — page names drift; helper copy that names them goes
   stale by design. Header: the name IS the title (the rename pattern),
-  secondary actions live in the ⋯ (one primary verb, uniform pills).
+  secondary actions live in the ⋯ (one primary verb, uniform pills). The
+  follow-up pass (`45af045`): **the preview panes ARE the light/dark
+  switcher** — a button per pane (aria-pressed, the theme-card grammar)
+  selects the half being edited, so the control you look at and the
+  control you click are the same thing; `preview live` became a ⋯-menu
+  CheckboxItem (the diff page's 'Changed only' pattern) and the editor
+  split 50/50 with full-width panes.
 - **2026-11-23 — an effect must never READ a `$state` it also writes.**
   The theme editor's seed effect assigned `tokens`/`computedBase` and then
   read them in the same run (building `forkBase` from the just-written
