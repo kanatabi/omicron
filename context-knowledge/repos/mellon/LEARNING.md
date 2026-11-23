@@ -100,7 +100,12 @@ The standing doctrine lives in the repo's
   and lies, so the preview grammar is the full CORE list by
   construction. The appearance section followed: the MODE control leads
   the header (it flips what the grid shows), 4-up portrait cards, panes
-  stacked full card width.
+  stacked full card width. The stacking lasted one pass (owner: every
+  card a paired poster): **the variant lens lives IN the card's header**
+  (`3b82dd9`) — one pane per card, a mini segmented flipping a LOCAL
+  preview (default = the worn mode, clamped to the theme's modes; it
+  never writes the cookie — a preview lens is not a mode write), and
+  single-mode themes say so in plain text.
 - **2026-11-23 — a picker control that IS its own indicator.** The
   opacity row was three disconnected pieces (a visual bar, a native
   range beside it, a % label) — the thumb didn't live on the track it
