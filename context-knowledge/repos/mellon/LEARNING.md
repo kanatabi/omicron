@@ -105,7 +105,13 @@ The standing doctrine lives in the repo's
   (`3b82dd9`) — one pane per card, a mini segmented flipping a LOCAL
   preview (default = the worn mode, clamped to the theme's modes; it
   never writes the cookie — a preview lens is not a mode write), and
-  single-mode themes say so in plain text.
+  single-mode themes say so in plain text. And the round's own lesson
+  (`135a660`): the mode control's move to the header was ANNOUNCED in
+  the pane round but its edit script hit a failed assert before writing
+  the file — only the grid sed survived. **A multi-edit script that
+  asserts per-step must not lose the earlier steps' writes to a later
+  failure** — write per-file immediately, or verify the end state, not
+  the intention.
 - **2026-11-23 — a picker control that IS its own indicator.** The
   opacity row was three disconnected pieces (a visual bar, a native
   range beside it, a % label) — the thumb didn't live on the track it
