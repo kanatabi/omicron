@@ -111,7 +111,13 @@ The standing doctrine lives in the repo's
   the file — only the grid sed survived. **A multi-edit script that
   asserts per-step must not lose the earlier steps' writes to a later
   failure** — write per-file immediately, or verify the end state, not
-  the intention.
+  the intention. The round AFTER that: the CI lint caught three loose
+  ends my local gates "passed" — because the runs were TAIL-piped
+  (`npm run lint 2>&1 | tail -1` shows only the prettier line). The
+  standalone-gates rule was repeated, and the repeat is its own lesson:
+  **a gate whose output you summarize is a gate you didn't run.** Plus
+  the shape rule it surfaced: an svelte-ignore directive ends at the
+  code name — trailing prose parses as more ignore codes.
 - **2026-11-23 — a picker control that IS its own indicator.** The
   opacity row was three disconnected pieces (a visual bar, a native
   range beside it, a % label) — the thumb didn't live on the track it
