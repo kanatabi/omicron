@@ -55,7 +55,7 @@ flowchart TB
         SEC["/secrets the cockpit (app picker → env tabs, masked values,<br/>history + diff + CAS save, pin-lock badge)"]
         SUM["/secrets/summary the ESTATE MATRIX<br/>(every app × env: head, pin state, key counts, drift)"]
         TAGS["/tags the tag desk (row dialogs, engine search, bulk)"]
-        SET["/settings appearance · vim toggle · session"]
+        SET["/settings — the master/detail shell: section nav (appearance / editor / security) + users→"]
     end
     subgraph lib["src/lib/api/"]
         RT["routing.ts — THE dual-upstream table"]
@@ -330,7 +330,13 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   `setTheme` validates, the layout corrects impossible cookie pairs.
   The picker **groups by family** — Portal / Catppuccin / Your themes /
   AnuPpuccin — section headers, never tabs. GPL-3.0 attribution rides
-  the generated CSS; the README carries the credit.
+  the generated CSS; the README carries the credit. The settings page
+  became the **master/detail shell** (`66225a2`): `settings/+layout.svelte`
+  = the section nav (sticky on lg, chips on mobile) + slot, sections as
+  child routes (`appearance/` — the theme grid, `editor/` — vim,
+  `security/` — password) with their actions traveling along, `/settings`
+  redirecting to the first; USERS left as a nav item to `/admin/users`.
+  The extendability contract: a new section = a folder + one nav entry.
 
 - **2026-11-23** — **the theming round COMPLETE: mode/theme split, the
   first ported families, custom themes, the editor** (`03c230b` + `6db050b`

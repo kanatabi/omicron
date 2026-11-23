@@ -39,6 +39,18 @@ The standing doctrine lives in the repo's
   the previous as a state fact, not a message. And the pointer surfaces
   are real sliders (aria-valuenow/valuetext, tabindex, arrow keys) — a
   drag surface without keyboard is doctrine #4 broken.
+- **2026-11-23 — the settings master/detail shell.** The single-column
+  settings page died twice: the theme grid alone outran the viewport,
+  and "add another setting" had no answer. The shell (`66225a2`):
+  `settings/+layout.svelte` = a section nav (sticky column on lg, chips
+  on mobile, active by pathname) + slot; sections are CHILD ROUTES
+  (`appearance/`, `editor/`, `security/`) whose actions travel with them;
+  `/settings` redirects to the first section — **and the redirect keeps
+  `requireAuthed`, because the auth-gate guard walks every
+  +page.server.ts and the one exception would be the exception** (the
+  guard caught its own omission within the round). USERS is a nav item
+  that leaves the section, not a card. A new section = a folder + one
+  nav entry.
 - **2026-11-23 — GENERATED themes: map the palette source, never
   hand-port.** The AnuPpuccin set (24 schemes, `a1b724e`) exists because
   its stylesheets re-express every colorscheme in the Catppuccin variable
