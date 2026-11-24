@@ -35,7 +35,12 @@ The standing doctrine lives in the repo's
   repetition: **a gate whose output you summarize is a gate you didn't
   run, and a batch that can't show its gate output verbatim hasn't run
   it either.** The standing rule is now absolute: every gate, full
-  output, every time — no exceptions for "short" fixes.
+  output, every time — no exceptions for "short" fixes. The Scopes
+  section round proved the rule PAYS (`2623721`): the courtesy gate was
+  imported but never wired (an unused import was the only visible
+  symptom of a page that would have let any authenticated user read the
+  catalog through the 403-less door), and the lint caught it before a
+  deploy could.
 - **2026-11-23 — the adapter's knobs are read at IMPORT — image-level ENV
   or nothing.** `BODY_SIZE_LIMIT` is evaluated when `build/handler.js` is
   statically imported, so a `server.js` assignment is too late (no dynamic
