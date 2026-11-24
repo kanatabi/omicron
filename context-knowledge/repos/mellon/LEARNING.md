@@ -58,6 +58,20 @@ The standing doctrine lives in the repo's
   the owner fell into: "restart the server" cannot fix a client-side
   state loop — match the error's stack to a layer before reaching for
   the restart lever.**
+- **2026-11-24 — the gesture split: a draggable parent swallows pointer
+  gestures on its children.** The corner grip "became" drag-and-drop:
+  the article is the HTML5 draggable (the reorder source), and a
+  press+move on ANY child seeds a native drag — pointer capture cannot
+  prevent that (drag initiation lives below the pointer-event layer).
+  Fix (7b66076): the resize zones are drag-immune three ways —
+  `draggable="false"` (never a seed), `pointerdown` `preventDefault`
+  (kills the compat mousedown that seeds one), and a `dragstart` trap
+  (`stopPropagation` + `preventDefault`) as belt-and-braces. **And the
+  compounding-delta bug it uncovered: a resize callback must carry
+  ABSOLUTE targets, not deltas — deltas measured from drag START
+  applied against the LIVE span compound (right-drag = instant
+  full-width). The reference is the drag START geometry, never the
+  live state the drag itself mutates.**
 - **2026-11-24 — the portal renders lumen's scope truth; it never
   enforces.** The RBAC wire flip (f9d0c53): `Principal` carries id+scopes
   (role is GONE), every role-shaped consumer was swept (the nav's Admin
