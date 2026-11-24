@@ -68,7 +68,11 @@ pointer drag the grid converts to span deltas (col unit measured from
 the card's rect, row unit the FIXED 88px track — `grid-auto-rows: 88px`,
 the Grafana model; content outgrowing a span scrolls INSIDE the card),
 applied live and persisted only on release. Full keyboard parity:
-Alt+arrows move, Shift+Alt+arrows resize — one clamp path. Full spec: the omicron plan file
+Alt+arrows move, Shift+Alt+arrows resize — one clamp path. The init
+effect guard (70a940f): the page's $effect fires on every hydration,
+so init runs ONCE per username and never reads the $state it writes
+(reading your own write back registers the effect's own dependency —
+effect_update_depth_exceeded). Full spec: the omicron plan file
 `dashboard-widgets.md`.
 
 ## 2. Stack, and why it mirrors earendil

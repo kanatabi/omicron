@@ -41,6 +41,23 @@ The standing doctrine lives in the repo's
   plain const swallows the write. Also: half-applied batch edits leave
   THREE files inconsistent — after a failed assert mid-batch, re-read
   every file the batch touched before the next edit.
+- **2026-11-24 — an effect must never read the $state it writes (the
+  depth-exceeded loop).** The owner's console: `effect_update_depth_
+  exceeded` on every dashboard hydration. Cause: the page's `$effect`
+  calls `init()`, which assigned `this.entries` and then READ it back
+  for the storage save — that read registered the effect's own write
+  as a dependency, so the next run's write re-triggered it: a
+  self-sustaining loop. Two-part fix in `dashboard.svelte.ts`
+  (70a940f): init never touches `this.entries` (a local carries the
+  reconciled array to both the assignment and the save) and init runs
+  ONCE per username (`loadedKey` guard — per-user init is not a
+  per-navigation one). **The regression pattern worth copying:**
+  `store-fixture.svelte` mounts the page's EXACT shape (an effect whose
+  call writes state) — reverting the fix failed 3/3, applying passed
+  3/3, so the test provably guards the bug. **And the diagnostic trap
+  the owner fell into: "restart the server" cannot fix a client-side
+  state loop — match the error's stack to a layer before reaching for
+  the restart lever.**
 - **2026-11-24 — the portal renders lumen's scope truth; it never
   enforces.** The RBAC wire flip (f9d0c53): `Principal` carries id+scopes
   (role is GONE), every role-shaped consumer was swept (the nav's Admin
