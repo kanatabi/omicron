@@ -72,6 +72,30 @@ The standing doctrine lives in the repo's
   applied against the LIVE span compound (right-drag = instant
   full-width). The reference is the drag START geometry, never the
   live state the drag itself mutates.**
+- **2026-11-24 — the smoothness round (B3): three interlocking machines,
+  and a silent no-op class.** (1) **A CSS hook that exists but is never
+  referenced is a silent no-op** — the grid div never carried
+  `data-dashboard-grid`, so the fixed-row CSS (`grid-auto-rows`) had
+  done nothing since Round B; the build was green the whole time.
+  Attribute hooks need an assertion that the styled element carries
+  them (the grid now does, and the geometry parser reads it). (2) The
+  Grafana feel = fine steps + NO reflow mid-drag: the grid doubled
+  (12/24 cols, 44px rows — `migrateLayout` scales stored layouts ×2 and
+  stamps `version: 2` so the ×2 happens exactly once; sanitize must
+  PASS the version through, not strip it — stripping would re-scale
+  every load), the card floats pixel-continuously while the grid holds
+  a PROVISIONAL span (never applied mid-drag) and renders the blue
+  placeholder from track geometry parsed once per gesture. (3) The
+  reorder ghost is the post-editor sidebar's machine on the grid: the
+  card leaves the flow, a ghost item opens the landing slot, drop lands
+  into it — and FLIP (WAAPI: snapshot rects, invert, play) animates
+  every layout change. **Test-infra pins:** a `<script module>` fixture
+  shares state across tests — keep per-test state in the INSTANCE
+  script; happy-dom drops `clientY` from DragEvent init the same way it
+  drops KeyboardEvent modifiers — define it on the instance; and the
+  old `':after'` marker was parsed with `split(':after')`, whose result
+  can never equal `'after'` — 'below midpoint' silently placed before
+  (the new `beforeIdOf` maps the marker honestly).
 - **2026-11-24 — the portal renders lumen's scope truth; it never
   enforces.** The RBAC wire flip (f9d0c53): `Principal` carries id+scopes
   (role is GONE), every role-shaped consumer was swept (the nav's Admin

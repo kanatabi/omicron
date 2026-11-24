@@ -71,8 +71,13 @@ applied live and persisted only on release (the GRAFANA custom-grid
 feel: right edge = width, bottom edge = height, corner = both — each
 zone drag-immune, the gesture split; targets are ABSOLUTE spans from
 the drag-start geometry, never deltas — deltas compound against the
-live span). Full keyboard parity: Alt+arrows move,
-Shift+Alt+arrows resize — one clamp path. The init
+live span). The B3 smoothness round (3953ea6): the grid is 12 cols
+md / 24 xl with 44px rows (stored layouts migrate ×2, version-stamped),
+resize FLOATS the card pixel-continuously over a held-still layout
+with the blue placeholder snapped to the real tracks, reorder opens a
+sidebar-style ghost slot, and FLIP animates every layout change.
+Full keyboard parity: Alt+arrows move, Shift+Alt+arrows resize — one
+clamp path. The init
 effect guard (70a940f): the page's $effect fires on every hydration,
 so init runs ONCE per username and never reads the $state it writes
 (reading your own write back registers the effect's own dependency —
