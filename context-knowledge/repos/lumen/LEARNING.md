@@ -1,6 +1,6 @@
 ---
 tags: [lumen, lessons]
-updated: 2026-11-23
+updated: 2026-11-24
 ---
 
 # lumen — lesson ledger
@@ -10,6 +10,21 @@ The standing rulings live in the repo's
 contract in its DESIGN.md. This ledger records walked events that minted
 them. Newest first.
 
+- **2026-11-24 — the cms plane was the FIRST scope-separated client; the
+  spine generalized an existing seam.** The RBAC design needed "an app BE
+  checks the token and enforces its scopes" — and `internal/authz` had
+  already built exactly that for the cms plane (introspect at the admin
+  verify door, cache positives ≤30s, fail closed). The spine extended the
+  DOOR (it answers scopes) instead of inventing a new mechanism; JWKS
+  stays the recorded later optimization. The store's assignment lever is
+  token_version itself: **every scope mutation bumps it**, so a demotion
+  is immediate — the 12h TTL never shields a demotion.
+- **2026-11-24 — a permission catalog is DB data, not code.** The scope
+  catalog is portal-managed (`users:manage`-gated; delete REFUSES while
+  held, counts riding the 409) so onboarding a scope is a portal action,
+  never manual SQL. lumen's own route→scope table stays in code (routes
+  are lumen's); app namespaces belong to the apps that enforce them —
+  lumen only stores who holds what.
 - **2026-11-23 — a byte cap does not bound memory; a pixel cap does.** The
   20 MiB upload limit felt like the memory guard, but a 100 MB JPEG can
   declare 100+ MP, and the decode heap (~1.5 B/px YCbCr + raw bytes +

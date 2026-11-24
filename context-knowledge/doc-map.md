@@ -77,3 +77,5 @@ sync duty covers extra files the same as the note itself.
 The vault ([INDEX.md](INDEX.md)) never becomes a second home for a repo doc —
 it links, synthesizes, records decisions, and archives. If you find yourself
 copying a repo doc into the vault, stop: link to it.
+
+- `decisions/rbac-spine.md` — the RBAC spine decision record (2026-11-24).

@@ -9,6 +9,17 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-24 — the portal renders lumen's scope truth; it never
+  enforces.** The RBAC wire flip (f9d0c53): `Principal` carries id+scopes
+  (role is GONE), every role-shaped consumer was swept (the nav's Admin
+  group, the settings shell's Users door, the /admin/users gate, the
+  account menu's label), and the users page became the grant surface —
+  the scope picker IS the creation grant, the per-user editor REPLACES
+  the set (the copy says the user's other sessions die: lumen bumps
+  token_version on every scope mutation). The catalog card makes scope
+  onboarding a portal action; lumen's delete-refusal (409 with the holder
+  counts) renders VERBATIM — the ghost-field doctrine applies to a
+  permission refusal exactly as it did to a pin lock.
 - **2026-11-23 — the adapter's knobs are read at IMPORT — image-level ENV
   or nothing.** `BODY_SIZE_LIMIT` is evaluated when `build/handler.js` is
   statically imported, so a `server.js` assignment is too late (no dynamic

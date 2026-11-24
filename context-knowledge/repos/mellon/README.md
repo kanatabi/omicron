@@ -1,6 +1,6 @@
 ---
 tags: [mellon, portal]
-updated: 2026-11-23
+updated: 2026-11-24
 ---
 
 # mellon — the private admin portal
@@ -33,6 +33,19 @@ defining property is the doctrine ([DESIGN.md §2](https://github.com/kanatabi/m
 5. **GitOps purity** (future infra tab): the portal may PROPOSE
    (commit/PR to vortex) and trigger convergence — it never applies to the
    cluster itself.
+
+## 1b. The RBAC surface (2026-11-24 — the coordinated wire flip)
+
+User ROLES are gone: mellon renders lumen's scope truth as affordances.
+The users page (now the users:manage surface, `/admin/users`) carries the
+scope PICKER at creation (the grant is exact), a per-user scope editor
+(the assignment REPLACES the set — lumen bumps token_version, the user's
+other sessions die), and the PORTAL-MANAGED scope catalog (add/list/
+delete; delete refuses while held — lumen's 409 copy renders verbatim).
+The nav's Admin group, the settings shell's Users door, and the page gate
+all read `principal.scopes`; the account menu wears the scope list.
+`Principal` gains `id`+`scopes` (role is GONE from the wire). Full record:
+[../../decisions/rbac-spine.md](../decisions/rbac-spine.md).
 
 ## 2. Stack, and why it mirrors earendil
 

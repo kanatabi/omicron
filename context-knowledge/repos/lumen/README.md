@@ -1,6 +1,6 @@
 ---
 tags: [lumen, backend]
-updated: 2026-11-23
+updated: 2026-11-24
 ---
 
 # lumen — the REST backend
@@ -46,6 +46,23 @@ flowchart LR
 ```
 
 No role ever gets a public route — the API has no ingress, ever.
+
+## 1b. The RBAC spine (2026-11-24 — migration 0010, the decisions tier)
+
+User ROLES are gone: users carry explicit SCOPES (`content:manage`,
+`secrets:admin`, `users:manage`, `settings:manage` seeded; the catalog is
+PORTAL-MANAGED — onboarding a scope is a portal action, never SQL). users
+gains a surrogate UUID `id` (the relational key; username stays the unique
+login handle). The MINT stamps the grant set (the spine ruling) and every
+scope mutation BUMPS token_version — a demotion is immediate, never
+12h-stale. Enforcement is per-surface middleware (`requireScope` — 403 with
+the scope's own name); the cms desks require `content:manage` on both the
+introspected and legacy-local paths. The verify door answers
+`{username, id, scopes, mustChange}` — the cms introspection client carries
+them. The contract for FUTURE app BEs: introspect (cache ≤30s positives,
+fail closed), enforce your own namespace — lumen stays the identity
+authority, never an app gateway. Full record:
+[../decisions/rbac-spine.md](../../decisions/rbac-spine.md).
 
 ## 2. The deep-dive library (learn a subsystem here)
 
