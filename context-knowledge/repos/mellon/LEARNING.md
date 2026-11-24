@@ -26,6 +26,21 @@ The standing doctrine lives in the repo's
   were wrong twice before the run went green (place-before keeps
   order; sanitize filters rather than rejects) — read the failures,
   don't trust the first expectations.
+- **2026-11-24 — resize round (B): measure, don't assume; and happy-dom
+  realities.** The corner grip emits PIXEL deltas and the GRID converts
+  them to spans (the card stays dumb) — but the column unit must be
+  MEASURED from the card's own rect, never assumed, and the row unit is
+  a FIXED 88px track (`grid-auto-rows`) because resize math needs a
+  constant. Preview applies live WITHOUT persist; the release persists
+  once. **happy-dom lessons (three failures → three pins):** keyboard
+  events must dispatch on the element that OWNS the handler (the
+  article, not the grid wrapper — events propagate up, never down);
+  happy-dom's KeyboardEvent init drops modifier getters — define
+  `key`/`shiftKey`/`altKey` on a plain Event via `defineProperty`; and
+  a fixture asserting a reflow must hold its entries in `$state` — a
+  plain const swallows the write. Also: half-applied batch edits leave
+  THREE files inconsistent — after a failed assert mid-batch, re-read
+  every file the batch touched before the next edit.
 - **2026-11-24 — the portal renders lumen's scope truth; it never
   enforces.** The RBAC wire flip (f9d0c53): `Principal` carries id+scopes
   (role is GONE), every role-shaped consumer was swept (the nav's Admin

@@ -63,8 +63,12 @@ hidden) persisted per-USER in localStorage behind a `DashboardLayout`
 STORAGE SEAM (server-side per-user is the recorded second impl). The
 pure semantics live in `dashboard/layout.ts` (the pane-order.ts
 pattern) with unit coverage. Drag rides HTML5 DnD with dense-flow
-placement; keyboard parity via Alt+arrows; RESIZE (edge-drag → span
-snapping) is Round B. Full spec: the omicron plan file
+placement; RESIZE is LANDED (Round B, 2026-11-24): a corner grip whose
+pointer drag the grid converts to span deltas (col unit measured from
+the card's rect, row unit the FIXED 88px track — `grid-auto-rows: 88px`,
+the Grafana model; content outgrowing a span scrolls INSIDE the card),
+applied live and persisted only on release. Full keyboard parity:
+Alt+arrows move, Shift+Alt+arrows resize — one clamp path. Full spec: the omicron plan file
 `dashboard-widgets.md`.
 
 ## 2. Stack, and why it mirrors earendil
