@@ -136,7 +136,18 @@ Shell facts worth knowing: article links preload **data on tap, code on
 hover** (hover-preloading them causes render storms — AGENTS §10.8); the
 route-progress bar has a minimum-visible-beat state machine; the mobile
 bottom bar auto-hides on deliberate scroll-down; `+error.svelte` covers
-all statuses with brand voice. The full anatomy: earendil
+all statuses with brand voice. **The syndication doors** (the syndication
+round, 0269c3b): `/rss.xml` — the RSS 2.0 channel in the homepage's
+curation order (no sort param — FE renders BE as-is), newest 50,
+absolute links from the deployment's identity anchor, BE-owned previews
+as descriptions, atom:self; `/sitemap.xml` — home + gallery + about +
+every published post with lastmod; `/robots.txt` — allow-all + the
+sitemap advertised; the post page carries the OG tags
+(og:image = the thumbnail when present) and the server-built Article
+JSON-LD (`<` escaped — a title can never close the script; the layout's
+split-tag pattern mirrored server-side). The assembly is PURE in
+`src/lib/site.ts` (`xmlEscape`/`rssXml`/`sitemapXml`/`robotsTxt`) with
+adversarial-escaping tests. The full anatomy: earendil
 [DESIGN.md §2](https://github.com/kanatabi/earendil/blob/main/DESIGN.md).
 
 ## 6. Running it
