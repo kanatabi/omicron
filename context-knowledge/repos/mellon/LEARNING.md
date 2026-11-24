@@ -96,6 +96,29 @@ The standing doctrine lives in the repo's
   old `':after'` marker was parsed with `split(':after')`, whose result
   can never equal `'after'` — 'below midpoint' silently placed before
   (the new `beforeIdOf` maps the marker honestly).
+- **2026-11-24 — the snap-back and the vanishing panel (02710c8), the
+  owner's real-browser reports.** (1) **A preview that lies is worse
+  than no preview:** the resize float and provisional targets had no
+  upper clamp — they promised sizes beyond the grid's own ceiling
+  (GRID_COLS × MAX_ROW_SPAN), and the release "corrected" the lie
+  (the card visibly snapped smaller). Clamp the preview to the same
+  bounds the commit will enforce — the preview and the persisted value
+  must come from ONE arithmetic. (2) **Never unmount a drag source
+  mid-drag:** the browser fires `dragend` on the drag SOURCE; once
+  detached (the old machine replaced the card with the ghost), the
+  end-handling never runs, `dragId` sticks, and the card stays hidden
+  until a remount — the owner's "clicked the grip, panel gone until
+  refresh". Fix: keep the source mounted, `display:none` in place (the
+  gap still closes; the component and its fetch survive), ghost as a
+  sibling, plus a document-CAPTURE dragend listener as the guaranteed
+  net (dragend does not bubble; capture still descends to a connected
+  target; and it fires AFTER drop, so it can never pre-empt the
+  landing). FLIP must skip 0×0 rects — hidden elements would animate
+  from the top-left corner. (3) **Process pin: never sweep unexplained
+  working-tree changes into a commit** — an owner hand-edit to the
+  registry's minSpans rode into a fix commit unnoticed because whole
+  directories were staged; stage the files the round touched, and ask
+  about anything else.
 - **2026-11-24 — the portal renders lumen's scope truth; it never
   enforces.** The RBAC wire flip (f9d0c53): `Principal` carries id+scopes
   (role is GONE), every role-shaped consumer was swept (the nav's Admin
