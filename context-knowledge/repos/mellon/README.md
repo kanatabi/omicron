@@ -68,16 +68,18 @@ pointer drag the grid converts to span deltas (col unit measured from
 the card's rect, row unit the FIXED 88px track — `grid-auto-rows: 88px`,
 the Grafana model; content outgrowing a span scrolls INSIDE the card),
 applied live and persisted only on release (the GRAFANA custom-grid
-feel: right edge = width, bottom edge = height, corner = both — each
-zone drag-immune, the gesture split; targets are ABSOLUTE spans from
-the drag-start geometry, never deltas — deltas compound against the
-live span). The B3 smoothness round (3953ea6): the grid is 12 cols
-md / 24 xl with 44px rows (stored layouts migrate ×2, version-stamped),
-resize FLOATS the card pixel-continuously over a held-still layout
-with the blue placeholder snapped to the real tracks, reorder opens a
-sidebar-style ghost slot, and FLIP animates every layout change.
-Full keyboard parity: Alt+arrows move, Shift+Alt+arrows resize — one
-clamp path. The init
+feel: right edge = width, bottom edge = height, corner = both).
+The COORDINATE round (66ab9ed): the layout core is the Grafana
+classic schema — `{ id, x, y, w, h, hidden }` on a 24-column canvas of
+44px rows, absolute placement, holes stay holes; a pure engine
+(collision, vertical-gravity compaction, drop resolution) backs it,
+stored layouts migrated v2→v3 by simulating the old flow, and the
+card HEADER is the free-drag handle (pointer machine, 4px click
+threshold — HTML5 DnD retired entirely): other widgets glide out of
+the way live via the resolved shadow layout, the blue placeholder
+marks the landing cell, Escape cancels. Keyboard parity: Alt+arrows
+nudge by whole cells, Shift+Alt+arrows resize — one clamp path;
+below md the canvas stacks. The init
 effect guard (70a940f): the page's $effect fires on every hydration,
 so init runs ONCE per username and never reads the $state it writes
 (reading your own write back registers the effect's own dependency —

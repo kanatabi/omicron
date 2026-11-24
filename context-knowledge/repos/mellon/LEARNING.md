@@ -119,6 +119,30 @@ The standing doctrine lives in the repo's
   registry's minSpans rode into a fix commit unnoticed because whole
   directories were staged; stage the files the round touched, and ask
   about anything else.
+- **2026-11-24 — the coordinate model (Round C, 66ab9ed): the layout
+  core became the Grafana classic schema.** Every widget carries
+  `{ id, x, y, w, h, hidden }` on a 24-column canvas of 44px rows —
+  free placement, holes stay holes. The engine lessons: **(1) gravity
+  must preserve the store's array order** — process sorted top-down,
+  write back in input order, or the tray's listing churns. **(2) A
+  hand-edited store can lie about its version stamp** — migrate by
+  SHAPE (`'x' in entries[0]`), not by stamp. **(3) With gravity, a drop
+  onto "between two stacked widgets" legitimately re-settles the
+  stack** — the moved item rises to its free slot; don't write tests
+  that expect gravity to respect a mid-air target. **(4) Test fixtures
+  must keep their state in the INSTANCE script** (module scope bleeds
+  across tests — bitten twice now). **(5) Revert-proofs must stash the
+  MACHINERY, not the tests** — stashing the whole test dir proves
+  nothing. The drag machine: HTML5 DnD retired entirely (one pointer
+  gesture system — the native-drag hijack class is structurally
+  impossible now); the card header is the handle with a 4px click
+  threshold; the wrapper pointer-follows in px while the store previews
+  the RESOLVED shadow layout (`view = $derived(resolveDrop(...))`) so
+  other widgets glide out of the way through their position
+  transitions; release persists, Escape cancels. **And a process slip
+  caught and recovered: C1 was committed straight to main — park on a
+  branch, `reset --hard` main back, squash-merge properly; the pin
+  ritual has no fast-forwards and no direct commits.**
 - **2026-11-24 — the portal renders lumen's scope truth; it never
   enforces.** The RBAC wire flip (f9d0c53): `Principal` carries id+scopes
   (role is GONE), every role-shaped consumer was swept (the nav's Admin
