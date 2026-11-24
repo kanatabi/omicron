@@ -24,7 +24,12 @@ The standing doctrine lives in the repo's
   hot-reload on different clocks** — mellon's Vite reloads in seconds,
   lumen's Go binary needs a restart; when the wire flips, restart BOTH
   halves before diagnosing (the gates now degrade on a scopes-less whoami
-  instead of 500ing the portal).
+  instead of 500ing the portal). The nav-scope round (`975cce2`): **the
+  menu shows only what the principal may open** — the rail's groups
+  declare their requirement as data, empty groups collapse, the palette
+  inherits the same honesty (its rows arrive from the mounted page), and
+  the courtesy gates in each section's page server land a bookmarked URL
+  on the dashboard — affordance, not enforcement, in the honest order.
 - **2026-11-23 — the adapter's knobs are read at IMPORT — image-level ENV
   or nothing.** `BODY_SIZE_LIMIT` is evaluated when `build/handler.js` is
   statically imported, so a `server.js` assignment is too late (no dynamic
