@@ -143,6 +143,18 @@ The standing doctrine lives in the repo's
   caught and recovered: C1 was committed straight to main — park on a
   branch, `reset --hard` main back, squash-merge properly; the pin
   ritual has no fast-forwards and no direct commits.**
+- **2026-11-24 — the canvas gutter (0d216af): absolute placement
+  removes the grid's gap for free.** The coordinate canvas tiled cells
+  perfectly (x + w = next x) — neighboring widgets TOUCHED. The fix is
+  the react-grid-layout margin rule: the CELL pitch is
+  `(canvasWidth + gap) / 24` and each widget renders one gap narrower —
+  adjacent cells keep exactly one gap, a full-width widget still spans
+  the canvas exactly. The ROWS already followed this shape (that's why
+  vertical gaps always worked) — the bug was only ever the columns.
+  Responsive `calc()` (percent + px gap) keeps the browser re-deriving
+  on resize without JS. **Rule: when absolute placement replaces a
+  gapped grid, the gutter must move INTO the geometry — every consumer
+  (entries, placeholder, drag pitch) shares one pair of helpers.**
 - **2026-11-24 — the portal renders lumen's scope truth; it never
   enforces.** The RBAC wire flip (f9d0c53): `Principal` carries id+scopes
   (role is GONE), every role-shaped consumer was swept (the nav's Admin
