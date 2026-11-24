@@ -143,6 +143,19 @@ The standing doctrine lives in the repo's
   caught and recovered: C1 was committed straight to main — park on a
   branch, `reset --hard` main back, squash-merge properly; the pin
   ritual has no fast-forwards and no direct commits.**
+- **2026-11-25 — the docs round (439fa07): the walkthrough found its
+  tier.** Adding a widget now has a dedicated runbook chapter (ch. 15)
+  at the owner's request — a DEVELOPMENT procedure in the runbook is a
+  deliberate tier amendment (recorded in doc-map.md), not a tier
+  violation: the runbook's shape (junior-readable, exact commands, a
+  close-out ritual) IS the walkthrough's shape, and single-homing
+  holds — runbook ch. 15 = the walkthrough, mellon DESIGN §11.4 = the
+  contract, the vault = the history and scars. The docs audit also
+  caught the stale voices: the vault's §1c was a two-round patchwork
+  (Round A text contradicting the coordinate paragraphs) and DESIGN's
+  `/` route row still described the pre-widget-home mega-load — both
+  rewritten to the coordinate reality, and the local plan-file pointer
+  dropped for links a contributor can actually open.
 - **2026-11-24 — the resize float's minimum-size grab (b3842a1): a
   rename smuggled a unit change past the tests.** The C-round prop
   rename (colSpan/rowSpan → w/h) made the machine's `start` capture the
