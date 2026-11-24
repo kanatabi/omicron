@@ -19,7 +19,12 @@ The standing doctrine lives in the repo's
   token_version on every scope mutation). The catalog card makes scope
   onboarding a portal action; lumen's delete-refusal (409 with the holder
   counts) renders VERBATIM — the ghost-field doctrine applies to a
-  permission refusal exactly as it did to a pin lock.
+  permission refusal exactly as it did to a pin lock. And the dev-loop
+  rule the bug taught (2026-11-24): **the two halves of the wire
+  hot-reload on different clocks** — mellon's Vite reloads in seconds,
+  lumen's Go binary needs a restart; when the wire flips, restart BOTH
+  halves before diagnosing (the gates now degrade on a scopes-less whoami
+  instead of 500ing the portal).
 - **2026-11-23 — the adapter's knobs are read at IMPORT — image-level ENV
   or nothing.** `BODY_SIZE_LIMIT` is evaluated when `build/handler.js` is
   statically imported, so a `server.js` assignment is too late (no dynamic
