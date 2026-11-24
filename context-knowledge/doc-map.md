@@ -1,6 +1,6 @@
 ---
 tags: [docs, doctrine]
-updated: 2026-11-15
+updated: 2026-11-25
 ---
 
 # Doc map — which document lives where, and why
@@ -17,7 +17,7 @@ The estate has a doc tier. Knowing it answers "where do I record this?" and
 | `DESIGN.md` (code repos) | everyone | the living spec / contract; tracked; atomic with the code it describes |
 | `PLAN.md` (earendil, mellon) | **the owner only** | **LOCAL-ONLY** — gitignored, on the owner's disk, never in Git, never recreated in a repo. Append-only journals with decision records |
 | `INFRA_ARCHITECTURE.md` (root) | everyone | the decision record for the estate's shape — **single-homed at the workspace root**; child repos link to it, never fork it (the vortex copy was retired 2026-11-15 as a stale fork) |
-| `runbook/` (root) | everyone operating | THE operating procedure — VPS-first, milestone-ordered; claims become proof when a chapter walks green |
+| `runbook/` (root) | everyone operating | THE operating procedure — VPS-first, milestone-ordered; claims become proof when a chapter walks green. **Tier amendment (owner ruling 2026-11-25): ch. 15 hosts a DEVELOPMENT procedure too** — "adding a widget to mellon's dashboard" — a junior-readable step-by-step with exact commands and a close-out ritual, which is the runbook's shape; the CONTRACT stays in mellon's DESIGN §11.4 and the history in the vault (single-homing holds: the runbook chapter holds the walkthrough alone). |
 
 ## Where each doc lives now
 

@@ -2,7 +2,7 @@
 tags: [runbook, index]
 updated: 2026-11-15
 status: >-
-  draft — chapter numbering IS execution order (M0→M6; 09–14 are day-2
+  draft — chapter numbering IS execution order (M0→M6; 09–15 are day-2
   references). Claims marked rehearsed come from the k3d walk; every VPS step
   is only PROVEN once walked, and each chapter marks its own proof state.
   Re-cut for the Phase 11 environment model (three planes, role split,
@@ -138,9 +138,10 @@ Let's Encrypt cert, Full strict). Responses travel back out the same path.
 | 12 | [Operations Calendar](12-operations.md) | day-2 | weekly/monthly/quarterly + incident cards |
 | 13 | [References](13-references.md) | — | official docs for every claim |
 | 14 | [Onboarding a New App](14-onboarding.md) | day-2 | the seven stops — portal doors vs Git's map |
+| 15 | [The Portal's Widget Home](15-portal-widgets.md) | day-2 | adding a widget to mellon's dashboard — one folder + one registry line |
 
 The numbering is the execution order: M0→M6 in one straight walk (00a holds
-the checkbox ledger). 09–14 are reference chapters — you read them on a
+the checkbox ledger). 09–15 are reference chapters — you read them on a
 Tuesday, not on a build night.
 
 ## Decisions already made (owner rulings — don't re-litigate in a hurry)

@@ -47,44 +47,49 @@ all read `principal.scopes`; the account menu wears the scope list.
 `Principal` gains `id`+`scopes` (role is GONE from the wire). Full record:
 [../../decisions/rbac-spine.md](../decisions/rbac-spine.md).
 
-## 1c. The dashboard home (2026-11-24 — the widget round, Round A)
+## 1c. The dashboard home — the coordinate widget canvas (2026-11-24/25)
 
-The dashboard is the USER'S HOME: out of the Content nav group, visible
-to every authenticated user, and its server load dials NO scoped API
-(the 500-cliff source — a scope-less user's home is the empty-state
-hint, never an error page). The architecture is THREE layers:
-`DashboardGrid` (6 cols md / 12 xl, dense flow) → `WidgetCard` (the
-shared shell — title, drag handle, see-all, pin/unpin) → per-widget
-BODY components (self-contained: own fetch, own states). The
-`widgets/registry.ts` is the plugin seam — adding a widget = one folder
-+ one registry line; scope gates the MOUNT (unheld = the body never
-mounts, its calls never fire). Layout = data (id, colSpan, rowSpan,
-hidden) persisted per-USER in localStorage behind a `DashboardLayout`
-STORAGE SEAM (server-side per-user is the recorded second impl). The
-pure semantics live in `dashboard/layout.ts` (the pane-order.ts
-pattern) with unit coverage. Drag rides HTML5 DnD with dense-flow
-placement; RESIZE is LANDED (Round B, 2026-11-24): a corner grip whose
-pointer drag the grid converts to span deltas (col unit measured from
-the card's rect, row unit the FIXED 88px track — `grid-auto-rows: 88px`,
-the Grafana model; content outgrowing a span scrolls INSIDE the card),
-applied live and persisted only on release (the GRAFANA custom-grid
-feel: right edge = width, bottom edge = height, corner = both).
-The COORDINATE round (66ab9ed): the layout core is the Grafana
-classic schema — `{ id, x, y, w, h, hidden }` on a 24-column canvas of
-44px rows, absolute placement, holes stay holes; a pure engine
-(collision, vertical-gravity compaction, drop resolution) backs it,
-stored layouts migrated v2→v3 by simulating the old flow, and the
-card HEADER is the free-drag handle (pointer machine, 4px click
-threshold — HTML5 DnD retired entirely): other widgets glide out of
-the way live via the resolved shadow layout, the blue placeholder
-marks the landing cell, Escape cancels. Keyboard parity: Alt+arrows
-nudge by whole cells, Shift+Alt+arrows resize — one clamp path;
-below md the canvas stacks. The init
-effect guard (70a940f): the page's $effect fires on every hydration,
-so init runs ONCE per username and never reads the $state it writes
-(reading your own write back registers the effect's own dependency —
-effect_update_depth_exceeded). Full spec: the omicron plan file
-`dashboard-widgets.md`.
+The dashboard is the USER'S HOME: visible to every authenticated user,
+and its server load dials NO scoped API (a scope-less user's home is
+the empty-state hint, never an error page — the 500-cliff rule). The
+layout core is the **Grafana classic schema** (the coordinate round,
+66ab9ed): every widget carries `{ id, x, y, w, h, hidden }` on a
+24-column canvas of fixed 44px rows — free placement, holes stay
+holes. A pure engine (`dashboard/layout.ts`, 21+ unit tests) backs it:
+collision, vertical-gravity compaction (gaps with something above stay;
+voids fill), drop resolution, and the v2→v3 migration (simulates the
+old dense flow so stored arrangements render identically; migrations
+run by SHAPE, not by a version stamp that can lie). Entries render
+absolutely — percent columns with the gutter in the geometry (the RGL
+margin rule: cell pitch = `(canvasWidth + 16px)/24`, each widget one
+gap narrower), position transitions make engine moves glide.
+
+The machinery on top: the card HEADER is the free-drag handle (a
+pointer machine with a 4px click threshold — HTML5 DnD retired
+entirely, so the native-drag hijack class is structurally impossible);
+other widgets glide out of the way live via the resolved shadow layout
+(`view = $derived(resolveDrop(...))` in the store), the blue
+placeholder marks the landing cell, Escape cancels. Resize = right
+edge (width) / bottom edge (height) / corner (both) — the card floats
+pixel-continuously from its own PIXEL size (a unit-mix regression
+taught: a rename is a semantic change — the float once collapsed to
+the minimum because unit counts fed pixel math). Keyboard parity:
+Alt+arrows nudge by whole cells, Shift+Alt+arrows resize — one clamp
+path. Below md the canvas stacks.
+
+The plugin seam is `widgets/registry.ts` — **adding a widget = one
+folder + one registry line**; `scope` gates the MOUNT (unheld = the
+body never mounts, its calls never fire — lumen's truth over the
+browser's memory). Layout persists per-USER in localStorage behind a
+`DashboardLayoutStorage` seam (schema version 3; a server-side
+per-user table is the recorded second implementation). The init effect
+guard (70a940f) keeps `init()` once-per-username and never reading its
+own $state write (that loop depth-exploded every hydration once).
+
+**Where the docs live:** the walkthrough for adding a widget is the
+omicron runbook **ch. 15** (`runbook/15-portal-widgets.md`); the
+contract is mellon `DESIGN.md` §11.4 ("The widget home"). The full
+rounds A→C spec lived in the owner's local plan file.
 
 ## 2. Stack, and why it mirrors earendil
 
@@ -101,7 +106,7 @@ flowchart TB
         NAV["left nav (Content / Control Plane / Admin) + topbar (⌘K pill centered · account avatar menu)<br/>ONE chrome mass — no internal borders; content scrolls in the rounded box: flush top/left at lg, 12px ring right/bottom (§11.1, 2026-11-16/17)<br/>breadcrumbs IN-PAGE, sub-pages only, parent-naming (editor `posts ›`), Secrets kv-path above the title<br/>collapsed rail = centered icon column (36px squares, labels out of layout)<br/>dropdowns are the house Select (no native <select>); content-mode palette rows wear cast-hued type pills"]
     end
     subgraph app["src/routes/(app)/"]
-        DASH["/ dashboard: recent posts, publish queue, quick actions"]
+        DASH["/ dashboard: the widget home — the registry's widgets on a coordinate canvas"]
         POSTS["/posts list + /posts/[slug] editor+preview<br/>(split or toggle · Ctrl+Enter save/publish · source pane colored from the §11 tokens, not CodeMirror's light default)"]
         PHOTOS["/photos the darkroom (tiles⇄table, bulk bar, uploads)<br/>/photos/[id] canvas + metadata pane"]
         SEC["/secrets the cockpit (app picker → env tabs, masked values,<br/>history + diff + CAS save, pin-lock badge)"]
