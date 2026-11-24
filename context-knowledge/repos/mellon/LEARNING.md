@@ -30,6 +30,12 @@ The standing doctrine lives in the repo's
   inherits the same honesty (its rows arrive from the mounted page), and
   the courtesy gates in each section's page server land a bookmarked URL
   on the dashboard — affordance, not enforcement, in the honest order.
+  The CI lint's second catch (`6b55b9c`) — requireScope's unused url
+  param and the dead KeyRound/Plus imports — and the confession, third
+  repetition: **a gate whose output you summarize is a gate you didn't
+  run, and a batch that can't show its gate output verbatim hasn't run
+  it either.** The standing rule is now absolute: every gate, full
+  output, every time — no exceptions for "short" fixes.
 - **2026-11-23 — the adapter's knobs are read at IMPORT — image-level ENV
   or nothing.** `BODY_SIZE_LIMIT` is evaluated when `build/handler.js` is
   statically imported, so a `server.js` assignment is too late (no dynamic
