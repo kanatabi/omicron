@@ -143,6 +143,19 @@ The standing doctrine lives in the repo's
   caught and recovered: C1 was committed straight to main — park on a
   branch, `reset --hard` main back, squash-merge properly; the pin
   ritual has no fast-forwards and no direct commits.**
+- **2026-11-24 — the resize float's minimum-size grab (b3842a1): a
+  rename smuggled a unit change past the tests.** The C-round prop
+  rename (colSpan/rowSpan → w/h) made the machine's `start` capture the
+  GRID-UNIT counts where the float arithmetic needs PIXELS — corner
+  grabs collapsed to `max(minW, 12 + pixels)` (the minimum the owner
+  saw), and edge modes rendered literally 12px. Fix: `start` carries
+  BOTH worlds explicitly — pxW/pxH (the float's reference) beside w/h
+  (the target arithmetic). **The pin: a rename is a semantic change —
+  re-audit every consumer of the renamed value, not just the compiler
+  errors.** The regression needed honest pixel geometry: happy-dom's
+  zero rects cannot tell pixels from grid units, so the dom file mocks
+  `getBoundingClientRect` for the canvas and card (restoring the
+  dropped edge-lock test with exact values in the bargain).
 - **2026-11-24 — the canvas gutter (0d216af): absolute placement
   removes the grid's gap for free.** The coordinate canvas tiled cells
   perfectly (x + w = next x) — neighboring widgets TOUCHED. The fix is
