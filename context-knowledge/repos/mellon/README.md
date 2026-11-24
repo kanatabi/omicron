@@ -87,7 +87,10 @@ on open), multi-select rows and a one-action footer commit
 retired, reconcile stopped appending (deleted stays deleted), and a
 brand-new user's canvas auto-adds their scope-held widgets.
 
-The plugin seam is `widgets/registry.ts` — **adding a widget = one
+The picker's previews show the widget's REAL structure with
+placeholder content (every body honors a `preview` prop that never
+fetches — the owner's middle path between static thumbnails and live
+bodies). The plugin seam is `widgets/registry.ts` — **adding a widget = one
 folder + one registry line**; `scope` gates the MOUNT (unheld = the
 body never mounts, its calls never fire — lumen's truth over the
 browser's memory). Layout persists per-USER in localStorage behind a

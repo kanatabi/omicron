@@ -69,6 +69,11 @@ The body component's contract (it has **no props**):
 - **Don't swallow the grid keys**: `Alt+arrows` (move) and
   `Shift+Alt+arrows` (resize) are the card's handlers; links and buttons
   inside the body are fine.
+- **Honor `preview`**: the body takes an optional `preview` prop — when
+  set, render the widget's REAL structure with placeholder shapes
+  (skeleton bars in the real row layout, real chrome like a status
+  pill) and NEVER fetch. The Add-Widget panel mounts bodies in preview
+  mode so the user sees the shape they'll get at zero relay cost.
 
 ### Step 2 — register it (ONE entry)
 
