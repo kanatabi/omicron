@@ -77,6 +77,16 @@ the minimum because unit counts fed pixel math). Keyboard parity:
 Alt+arrows nudge by whole cells, Shift+Alt+arrows resize — one clamp
 path. Below md the canvas stacks.
 
+The availability model is **placed-or-absent** (Round D, f985b2a,
+schema v4): the canvas holds only placed widgets — the card's trash
+button deletes (no confirm; re-add restores the default span at a free
+slot), and the **Add Widget** side panel lists the registry with
+STATIC previews (the real body never mounts there — zero relay calls
+on open), multi-select rows and a one-action footer commit
+(`firstFit` — the first free slot, holes before growth); the tray
+retired, reconcile stopped appending (deleted stays deleted), and a
+brand-new user's canvas auto-adds their scope-held widgets.
+
 The plugin seam is `widgets/registry.ts` — **adding a widget = one
 folder + one registry line**; `scope` gates the MOUNT (unheld = the
 body never mounts, its calls never fire — lumen's truth over the

@@ -30,8 +30,13 @@ status: >-
 - `scope` gates the **mount**: a widget whose scope the signed-in user
   doesn't hold never mounts, and its data calls never fire. `undefined`
   = any authenticated user.
-- Each user's arrangement persists per-user (localStorage behind a
-  storage seam — a server table is the recorded second implementation).
+- **Placed-or-absent** (schema v4): the canvas holds only placed
+  widgets. Deleting a panel removes it entirely — the picker offers it
+  unselected again (re-add gives the default span at the first free
+  slot; the old position is not kept, the Grafana rule). Each user's
+  arrangement persists per-user (localStorage behind a storage seam —
+  a server table is the recorded second implementation), and a
+  brand-new user's canvas auto-adds the widgets their scopes allow.
 
 ## The walkthrough: five steps
 
@@ -96,11 +101,13 @@ Field semantics:
 
 ### Step 3 — nothing else. Really.
 
-Reconcile handles the rest at load: a widget missing from a stored
-layout **appends at the first free slot bottom-left** (it never covers
-an existing arrangement); an unknown id **drops**; spans **clamp**. The
-tray ("available widgets") lists anything unplaced or unpinned for its
-scope-holders, one click to re-add.
+Reconcile handles the rest at load: an unknown id **drops** and spans
+**clamp** — but unplaced widgets are NOT auto-appended (deleted stays
+deleted). Adding is the picker's verb: the **Add Widget** button opens
+the side panel (static previews — the real bodies never mount there,
+so opening it fires zero relay calls), rows multi-select, and the
+footer commits the whole selection; each lands at the first free slot
+via `firstFit`.
 
 ### Step 4 — the data behind it
 
