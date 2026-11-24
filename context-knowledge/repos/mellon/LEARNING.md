@@ -9,6 +9,23 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-24 — the widget home: three layers, one plugin seam.** The
+  dashboard became the user's home (Round A, `9fc0eeb`): the grid, the
+  card shell, and the widget BODIES are separate — **a widget is a
+  folder + a registry line**, and the registry is the only thing the
+  grid/store/persistence read. The layout is DATA (id/span/hidden)
+  reconciled against the registry at read (unknown ids dropped, new
+  widgets appended — the theme-registry drift pin, reused) with spans
+  CLAMPED to grid+minimum. **The scope gate sits above persistence:**
+  an unheld scope means the body never mounts, its calls never fire —
+  lumen's truth over the browser's memory. **The server load dials no
+  scoped API** — that was the 500 cliff; the bodies fetch client-side.
+  And the storage seam (localStorage behind an interface) keeps the
+  future server-side per-user layout a second implementation, not a
+  rewrite. Remaining honest gaps: the pure test's place expectations
+  were wrong twice before the run went green (place-before keeps
+  order; sanitize filters rather than rejects) — read the failures,
+  don't trust the first expectations.
 - **2026-11-24 — the portal renders lumen's scope truth; it never
   enforces.** The RBAC wire flip (f9d0c53): `Principal` carries id+scopes
   (role is GONE), every role-shaped consumer was swept (the nav's Admin

@@ -47,6 +47,26 @@ all read `principal.scopes`; the account menu wears the scope list.
 `Principal` gains `id`+`scopes` (role is GONE from the wire). Full record:
 [../../decisions/rbac-spine.md](../decisions/rbac-spine.md).
 
+## 1c. The dashboard home (2026-11-24 — the widget round, Round A)
+
+The dashboard is the USER'S HOME: out of the Content nav group, visible
+to every authenticated user, and its server load dials NO scoped API
+(the 500-cliff source — a scope-less user's home is the empty-state
+hint, never an error page). The architecture is THREE layers:
+`DashboardGrid` (6 cols md / 12 xl, dense flow) → `WidgetCard` (the
+shared shell — title, drag handle, see-all, pin/unpin) → per-widget
+BODY components (self-contained: own fetch, own states). The
+`widgets/registry.ts` is the plugin seam — adding a widget = one folder
++ one registry line; scope gates the MOUNT (unheld = the body never
+mounts, its calls never fire). Layout = data (id, colSpan, rowSpan,
+hidden) persisted per-USER in localStorage behind a `DashboardLayout`
+STORAGE SEAM (server-side per-user is the recorded second impl). The
+pure semantics live in `dashboard/layout.ts` (the pane-order.ts
+pattern) with unit coverage. Drag rides HTML5 DnD with dense-flow
+placement; keyboard parity via Alt+arrows; RESIZE (edge-drag → span
+snapping) is Round B. Full spec: the omicron plan file
+`dashboard-widgets.md`.
+
 ## 2. Stack, and why it mirrors earendil
 
 SvelteKit 3 + Svelte 5 runes + TypeScript + Tailwind v4 + `adapter-node`
