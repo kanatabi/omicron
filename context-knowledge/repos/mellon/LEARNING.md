@@ -1,6 +1,6 @@
 ---
 tags: [mellon, lessons]
-updated: 2026-11-23
+updated: 2026-11-25
 ---
 
 # mellon — lesson ledger
@@ -143,6 +143,36 @@ The standing doctrine lives in the repo's
   caught and recovered: C1 was committed straight to main — park on a
   branch, `reset --hard` main back, squash-merge properly; the pin
   ritual has no fast-forwards and no direct commits.**
+- **2026-11-25 — Round D (f985b2a): placed-or-absent — the schema, the
+  picker, and the semantics that follow.** The availability model
+  changed: a widget is PLACED or ABSENT — schema v4 drops `hidden`
+  (the migration chains v2 → coordinates → strips hidden; v3's
+  unpinned entries DELETE under the new model). **The load-bearing
+  semantic: reconcileLayout must NOT append unplaced registry widgets**
+  — that Round A behavior would resurrect deleted panels on every
+  reload; appending is the explicit `add` verb via `firstFit` (fills
+  the first free slot — holes before growth, matching the picker's
+  promise). The picker's previews mount REAL bodies in `preview` mode
+  (the contract: every body honors the prop — render the structure,
+  never fetch; the fetch-spy test proves opening the panel fires ZERO
+  relay calls). The owner's calls are recorded in the contract: delete
+  without confirm, first-run seed, static previews → then the
+  structure-preview upgrade the same day. **And a hazard with teeth:
+  a stash pop whose pathspec misses a file leaves MERGE CONFLICT
+  MARKERS in unrelated files (tsconfig.json sprouted markers during
+  the Round D revert-proof) — after any stash dance, grep for `<<<<<<<`
+  before trusting the tree.**
+- **2026-11-24 — the mobile header (26c2c1f): percentage-of-viewport
+  thinking beats squeezing.** The Dashboard title + two pill buttons
+  sat in one non-wrapping flex row — the buttons overflowed the phone
+  viewport (horizontal scroll) and wrapped their own text. The fix is
+  the standard pattern: stack on mobile (title, then the two buttons
+  side by side — both fit at 375px), `whitespace-nowrap` on the pills,
+  back to one row at sm+. Smaller lesson from the same day: the posts
+  preview's placeholder bars collapsed to zero width — percentage
+  widths inside an indefinite flex-parent need the parent to say
+  `flex-1` (the tags preview dodged it with fixed widths; the pins are
+  structural, since happy-dom computes no flex layout).
 - **2026-11-25 — the docs round (439fa07): the walkthrough found its
   tier.** Adding a widget now has a dedicated runbook chapter (ch. 15)
   at the owner's request — a DEVELOPMENT procedure in the runbook is a

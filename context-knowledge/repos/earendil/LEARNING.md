@@ -1,6 +1,6 @@
 ---
 tags: [earendil, lessons]
-updated: 2026-11-22
+updated: 2026-11-25
 ---
 
 # earendil — lesson ledger
@@ -10,6 +10,21 @@ The repo's standing lesson list lives in its own
 (ten entries, each minted by a real bug fix). This ledger records the walked
 events that minted entries there and anything newer. Newest first.
 
+- **2026-11-25 — the syndication round: the JSON-LD pattern gains a
+  SERVER variant, and the at-html disable comment must be ONE line.**
+  The layout's Person JSON-LD walks AGENTS §10.9's two traps with the
+  split-tag pattern client-side; the per-post Article JSON-LD (built in
+  `+page.server.ts`, injected via `{@html data.jsonLd}`) needed a third
+  guard: **`<` escaped to `\u003c` in the stringified JSON** — a post
+  title containing `</script>` would otherwise close the tag early
+  (server-side strings aren't inside a script block, but the RENDERED
+  page is). And the second trap: eslint's `svelte/no-at-html-tags`
+  disable must be a **SINGLE-LINE** `eslint-disable-next-line` comment
+  — a multi-line HTML comment breaks the association and the rule fires
+  anyway (cost one lint cycle). Same-day corollary: the picker-preview
+  bar lesson from mellon — percentage widths inside an indefinite
+  flex-parent collapse to zero; earendil's prose guards exist for the
+  same class. Update note in the vault README §5/§9.
 - **2026-11-22 — THE WHOLE-POST CACHE + THE STREAMED LOAD: the navigation
   never blocks.** The owner's report: the homepage's article click = the
   2–5s stuck navigation. The cause: the post page's load awaited the lumen

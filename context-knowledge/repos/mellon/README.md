@@ -1,6 +1,6 @@
 ---
 tags: [mellon, portal]
-updated: 2026-11-24
+updated: 2026-11-25
 ---
 
 # mellon — the private admin portal
@@ -53,11 +53,13 @@ The dashboard is the USER'S HOME: visible to every authenticated user,
 and its server load dials NO scoped API (a scope-less user's home is
 the empty-state hint, never an error page — the 500-cliff rule). The
 layout core is the **Grafana classic schema** (the coordinate round,
-66ab9ed): every widget carries `{ id, x, y, w, h, hidden }` on a
+66ab9ed): every widget carries `{ id, x, y, w, h }` on a
 24-column canvas of fixed 44px rows — free placement, holes stay
-holes. A pure engine (`dashboard/layout.ts`, 21+ unit tests) backs it:
+holes (the Round D model, f985b2a: schema v4 dropped the hidden flag —
+placed-or-absent, below). A pure engine (`dashboard/layout.ts`, 21+ unit tests) backs it:
 collision, vertical-gravity compaction (gaps with something above stay;
-voids fill), drop resolution, and the v2→v3 migration (simulates the
+voids fill), drop resolution, and the chained v2→v3→v4 migration
+(simulates the
 old dense flow so stored arrangements render identically; migrations
 run by SHAPE, not by a version stamp that can lie). Entries render
 absolutely — percent columns with the gutter in the geometry (the RGL

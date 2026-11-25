@@ -1,6 +1,6 @@
 ---
 tags: [earendil, frontend]
-updated: 2026-11-15
+updated: 2026-11-25
 ---
 
 # earendil — the blog frontend
@@ -193,6 +193,18 @@ The door: `gofar.id` + `www` via Traefik, DNS-01 TLS. Full flow:
 
 ## 9. State & history (walked)
 
+- **2026-11-25 — the syndication round (`0269c3b`; DESIGN note `03fa58c`):
+  the blog's outward contract.** `/rss.xml` (RSS 2.0, the homepage's
+  curation order — no sort param, newest 50, origin via `resolveOrigin`,
+  atom:self, 10-min cache), `/sitemap.xml` (home + static doors + every
+  post with lastmod), `/robots.txt` (allow-all + sitemap); the post page
+  gained og:title/type/url/description, article:published_time,
+  og:image (the thumbnail when present) and the server-built Article
+  JSON-LD; the home gained og:title/type/url + the RSS autodiscovery
+  link, deliberately without a new featured-photo call on the hottest
+  page. The assembly is PURE in `src/lib/site.ts`
+  (`xmlEscape`/`rssXml`/`sitemapXml`/`robotsTxt`) with
+  adversarial-escaping tests. Lessons in [LEARNING.md](LEARNING.md).
 - **2026-11-21** — the unbreakable-token overflow round (**merged to `main`
   `e2f241b`**): `.prose` carries `overflow-wrap: break-word` (typography 0.5.19
   ships none — space-free tokens painted past the article column and, on
