@@ -5,6 +5,20 @@ updated: 2026-11-25
 
 # earendil — lesson ledger
 
+- **2026-11-25 — duplicate src is LEGAL payload — a src-keyed each is a
+  500.** The owner enabled in-gallery on a second upload of the SAME
+  file (different alt text) and /gallery went down: lumen's storage
+  lets multiple media rows share one object (identical bytes ->
+  identical content-hash path — the eager-GC contract), so the gallery
+  payload legally carries two items with the same src. Both photo
+  loops (PhotoGallery, PhotoStrip) keyed `{#each}` on `photo.src` ->
+  each_key_duplicate. Fix: key by the LIST INDEX — the grids are
+  static (no client reordering), so the index is the honest identity,
+  and no payload shape can crash them. **The rule: a keyed each must
+  key on something the BE contract guarantees UNIQUE — or on the
+  index.** The admin is unaffected (it keys by the unique media-row
+  id). Recorded corollary: the FE-renders-BE-as-is doctrine means both
+  duplicates RENDER — curation decides what belongs in the gallery.
 The repo's standing lesson list lives in its own
 [AGENTS.md §10](https://github.com/kanatabi/earendil/blob/main/AGENTS.md)
 (ten entries, each minted by a real bug fix). This ledger records the walked

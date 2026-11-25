@@ -145,7 +145,10 @@ every published post with lastmod; `/robots.txt` — allow-all + the
 sitemap advertised; the post page carries the OG tags
 (og:image = the thumbnail when present) and the server-built Article
 JSON-LD (`<` escaped — a title can never close the script; the layout's
-split-tag pattern mirrored server-side). The assembly is PURE in
+split-tag pattern mirrored server-side). The gallery payload may carry DUPLICATE src values (lumen's storage
+lets media rows share one object) — the photo loops key by index, and
+mellon's upload warning on identical bytes is the recorded optional
+nicety. The assembly is PURE in
 `src/lib/site.ts` (`xmlEscape`/`rssXml`/`sitemapXml`/`robotsTxt`) with
 adversarial-escaping tests. The full anatomy: earendil
 [DESIGN.md §2](https://github.com/kanatabi/earendil/blob/main/DESIGN.md).
