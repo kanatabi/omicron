@@ -27,7 +27,10 @@ them. Newest first.
   for pre-0013 rows: delete and re-register (their BE is unknowable from
   the row). Lesson: storage is protocol-shallow only until the validator
   reads a field back — enumerate what it compares, not what the happy
-  path needs.
+  path needs. The same pass derived the role-subset count from the
+  classification map (`MigrationCountForRole`): the hand-kept `want 5`
+  had already drifted red with 0013 — a duplicated count is a golden
+  that lies, arithmetic over the truth is the assertion.
 
 - **2026-11-27 — the passkey audit: a TTL shorter than the prompt, an
   unread clone signal, and a 500 where a 409 belonged.** The full read of
