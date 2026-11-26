@@ -272,7 +272,12 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   mint, a duplicate registration is a 409 (23505 mapped), the label is
   capped at 64 runes, the register response carries a real `createdAt`,
   and the mode's comment says TAMPER-proof (not "replay-proof"). §8 now
-  documents the six routes + the rp-id/env contract.
+  documents the six routes + the rp-id/env contract. The same day's LIVE
+  login caught the audit's last gap: the credential's WebAuthn flags were
+  never stored, so every **synced** passkey (BE=1) registered fine and
+  then 401'd with "BackupEligible flag inconsistency". 0013 adds
+  `backup_eligible`/`backup_state`; rows written before it must be
+  deleted and re-registered.
 - **2026-11-15** — the observability round (`a9d71f9`): `internal/obs`
   (RED pairs + timeouts + `/metrics` on 9090 every shape), adapters
   wrapped, sample made loadable, `.gitignore` doctrine gap closed. The

@@ -10,6 +10,25 @@ The standing rulings live in the repo's
 contract in its DESIGN.md. This ledger records walked events that minted
 them. Newest first.
 
+- **2026-11-27 (later) — persist every credential field the validator
+  COMPARES; a synced passkey is BE=1.** The first real passkey login on
+  staging-console answered 401 with the browser showing only "invalid
+  credentials"; the admin log carried the truth:
+  `validate: BackupEligible flag inconsistency detected during login
+  validation`. The library records the WebAuthn flags at registration and
+  demands the assertion's BE equal the stored one — a Bitwarden/iCloud
+  passkey is BE=1, a device-bound one BE=0. Our table kept id/user/
+  public_key/sign_count/transports/label and NOTHING about flags, so
+  `toLib` rebuilt every credential as BE=0: registration succeeded, login
+  was impossible for every synced passkey. 0013 adds `backup_eligible`
+  (invariant) and `backup_state` (refreshed on login; BE=0+BS=1 is
+  illegal); the fake authenticator now models BE/BS, and stashing the fix
+  reproduces the exact live 401 — the regression test is proven. Repair
+  for pre-0013 rows: delete and re-register (their BE is unknowable from
+  the row). Lesson: storage is protocol-shallow only until the validator
+  reads a field back — enumerate what it compares, not what the happy
+  path needs.
+
 - **2026-11-27 — the passkey audit: a TTL shorter than the prompt, an
   unread clone signal, and a 500 where a 409 belonged.** The full read of
   the C1 round found four classes the happy-path battery didn't. (1) The

@@ -197,6 +197,12 @@ The three failures this round produced, in the order they bit:
   failure payloads, and the battery builds every fixture through
   `devalue.stringify` — a hand-built plain-object fixture hides exactly
   this bug.
+- **401 "invalid credentials" on login, while the admin log says
+  `BackupEligible flag inconsistency`** — the credential row predates
+  0013: the store kept no WebAuthn flags, and a SYNCED passkey
+  (Bitwarden/iCloud) is BE=1, which the library compares on every login.
+  Delete that passkey and re-register it after the 0013 deploy; the
+  browser only says "invalid credentials" — the admin log is the truth.
 - **`passkey ceremony incomplete`** — the finish action parsed
   `request.json()` while the client sent form fields (the 415 fix moved
   only the client half). Both halves of a wire move in one commit.
