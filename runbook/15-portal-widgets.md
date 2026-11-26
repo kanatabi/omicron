@@ -150,6 +150,20 @@ decision record in the vault's decisions tier, never manual SQL.
   `dragend` on the source; the card shell's machines already handle
   this, which is one more reason bodies stay inside the shell.
 
+## A note on the passkey login (the auth-method seam, C1)
+
+ mellon's login screen gained **Login with passkey** beside the password form
+ (WebAuthn — the private key lives in your authenticator: Bitwarden, iCloud, a
+ key). Operationally it needs TWO optional env keys on the lumen-admin pod:
+ `LUMEN_WEBAUTHN_RP_ID` (the domain the credentials bind to, e.g.
+ `console.gofar.id`) and `LUMEN_WEBAUTHN_ORIGIN` (`https://` + that domain).
+ BOTH unset = the feature is OFF and the login page's button degrades
+ gracefully (lumen's methods endpoint omits it). Staging's different domain is
+ CORRECT — its passkeys are separate credentials. The first passkey is
+ registered from the Security settings page (authenticated), then the login
+ button works. The real-db ceremony was proven by the fake-authenticator
+ integration test; the browser walk is the last-mile QA item.
+
 ## Where the other docs live
 
 - **Contract** (field semantics, canvas geometry, invariants):

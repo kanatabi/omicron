@@ -92,7 +92,21 @@ brand-new user's canvas auto-adds their scope-held widgets.
 The picker's previews show the widget's REAL structure with
 placeholder content (every body honors a `preview` prop that never
 fetches — the owner's middle path between static thumbnails and live
-bodies). The plugin seam is `widgets/registry.ts` — **adding a widget = one
+bodies). The **auth-method seam** (the passkey round, d0a9250 + the portal half
+dbab7ee): login methods normalize to begin → finish → the ONE session
+mint — `passkey` is the first implementation (WebAuthn; the private key
+never leaves the authenticator; lumen stores the public half in
+`webauthn_credentials`, schema 0012), **oauth:github/google later adds a
+sibling method file, not a second mint**. The transport:
+`/admin/session/auth/methods` (the capability probe — the login UI is
+data-driven), `webauthn/login/begin|finish` (public — the mint happens
+inside finish), register/roster/delete (authenticated setup). Env:
+`LUMEN_WEBAUTHN_RP_ID`/`_ORIGIN` (optional — unset = off). The browser
+half: `#lib/webauthn.client.ts`; the settings page's Passkeys card is the
+setup door; the fake-authenticator integration test drives the whole
+flow offline.
+
+The plugin seam is `widgets/registry.ts` — **adding a widget = one
 folder + one registry line**; `scope` gates the MOUNT (unheld = the
 body never mounts, its calls never fire — lumen's truth over the
 browser's memory). Layout persists per-USER in localStorage behind a
