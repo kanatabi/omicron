@@ -184,6 +184,15 @@ The standing doctrine lives in the repo's
   every action-fetch sends `content-type: application/json` with an
   empty `{}` body when there is nothing to say. Rule: **an action
   fetch is never naked — the header rides even on empty bodies.**
+  **CORRECTION (the curl probe, same day): the header choice was wrong
+  too — this Kit version's action dispatch accepts FORM content types
+  ONLY (`is_form_content_type`); application/json is 415-refused no
+  matter what the action reads. The ceremony fetches now speak
+  `application/x-www-form-urlencoded` with the response JSON
+  stringified inside its form field, and the finish actions parse
+  `request.formData()`. Pin: a curl probe against the dev server costs
+  seconds and settles content-type questions the HAR can't — the first
+  fix (adding the JSON header) was itself insufficient.**
 - **2026-11-25 — Round D (f985b2a): placed-or-absent — the schema, the
   picker, and the semantics that follow.** The availability model
   changed: a widget is PLACED or ABSENT — schema v4 drops `hidden`
