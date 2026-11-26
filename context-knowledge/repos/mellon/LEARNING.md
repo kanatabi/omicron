@@ -143,6 +143,27 @@ The standing doctrine lives in the repo's
   caught and recovered: C1 was committed straight to main — park on a
   branch, `reset --hard` main back, squash-merge properly; the pin
   ritual has no fast-forwards and no direct commits.**
+- **2026-11-26 — adding a named action poisons every plain form on the
+  page (c68d3cf): the staging login 500.** The passkey round's
+  passkeyBegin/passkeyFinish actions joined the login page's `default`
+  - and SvelteKit REFUSES an un-named form POST when named actions are
+  exported (`kit/action_default_with_named`): every fresh login POST
+  crashed INSIDE mellon before the relay fired (6ms, zero lumen-side
+  mint log — the lumen pod's log was the tell: the POST is simply
+  absent). **Production fresh logins broke identically; existing
+  sessions masked it** (the cookie keeps working — only new logins
+  hit the poisoned form). The fix: `action="?/default"` on the form.
+  **The rules: (1) a page with named actions must not keep an un-named
+  POST form — the compiler and svelte-check cannot see this class; the
+  audit is a grep for `method="POST"` without `action=` on pages whose
+  actions export named entries. (2) when a fresh login 500s in
+  milliseconds, check the MELLON pod (the action's throw) — the lumen
+  pod's silence (no mint log) is the tell that the relay never fired.
+  (3) the post-deploy login smoke on EVERY env would have caught this
+  before the owner did.** And the deployment finding: the staging
+  estate was UNCLAIMED (the setup probes returned unclaimed=true — the
+  staging users table is empty); the /setup wizard is staging's front
+  door — claim it before expecting the login screen to authenticate.
 - **2026-11-25 — Round D (f985b2a): placed-or-absent — the schema, the
   picker, and the semantics that follow.** The availability model
   changed: a widget is PLACED or ABSENT — schema v4 drops `hidden`
