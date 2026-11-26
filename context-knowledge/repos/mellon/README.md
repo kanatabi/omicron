@@ -101,8 +101,11 @@ sibling method file, not a second mint**. The transport:
 `/admin/session/auth/methods` (the capability probe — the login UI is
 data-driven), `webauthn/login/begin|finish` (public — the mint happens
 inside finish), register/roster/delete (authenticated setup). Env:
-`LUMEN_WEBAUTHN_RP_ID`/`_ORIGIN` (optional — unset = off). The browser
-half: `#lib/webauthn.client.ts`; the settings page's Passkeys card is the
+`LUMEN_WEBAUTHN_RP_ID` (the REGISTRABLE DOMAIN gofar.id — one shared
+admin serves every env's mellon; the passkey space is shared, matching
+the shared users table) + `LUMEN_WEBAUTHN_ORIGINS` (the comma-separated
+browser origins; optional — unset = off). The browser half:
+`#lib/webauthn.client.ts`; the settings page's Passkeys card is the
 setup door; the fake-authenticator integration test drives the whole
 flow offline.
 

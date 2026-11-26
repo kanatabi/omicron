@@ -155,14 +155,19 @@ decision record in the vault's decisions tier, never manual SQL.
  mellon's login screen gained **Login with passkey** beside the password form
  (WebAuthn — the private key lives in your authenticator: Bitwarden, iCloud, a
  key). Operationally it needs TWO optional env keys on the lumen-admin pod:
- `LUMEN_WEBAUTHN_RP_ID` (the domain the credentials bind to, e.g.
- `console.gofar.id`) and `LUMEN_WEBAUTHN_ORIGIN` (`https://` + that domain).
- BOTH unset = the feature is OFF and the login page's button degrades
- gracefully (lumen's methods endpoint omits it). Staging's different domain is
- CORRECT — its passkeys are separate credentials. The first passkey is
- registered from the Security settings page (authenticated), then the login
- button works. The real-db ceremony was proven by the fake-authenticator
- integration test; the browser walk is the last-mile QA item.
+ `LUMEN_WEBAUTHN_RP_ID` (the REGISTRABLE DOMAIN — `gofar.id`: one shared
+ lumen-admin serves every environment's mellon, so the registrable-domain
+ rp-id lets console AND staging-console run the ceremony against the same
+ credentials; a staging-registered passkey is offered on production too) and
+ `LUMEN_WEBAUTHN_ORIGINS` (comma-separated browser origins, e.g.
+ `https://console.gofar.id,https://staging-console.gofar.id`). BOTH unset =
+ the feature is OFF and the login page's button degrades gracefully (lumen's
+ methods endpoint omits it). Local dev: `LUMEN_WEBAUTHN_RP_ID=localhost` +
+ `LUMEN_WEBAUTHN_ORIGINS=http://localhost:5173` (the origin must include the
+ dev PORT). The first passkey is registered from the Security settings page
+ (authenticated), then the login button works. The real-db ceremony was
+ proven by the fake-authenticator integration test; the browser walk is the
+ last-mile QA item.
 
 ## Where the other docs live
 
