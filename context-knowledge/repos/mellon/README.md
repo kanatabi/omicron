@@ -1,6 +1,6 @@
 ---
 tags: [mellon, portal]
-updated: 2026-11-25
+updated: 2026-11-27
 ---
 
 # mellon — the private admin portal
@@ -105,9 +105,16 @@ inside finish), register/roster/delete (authenticated setup). Env:
 admin serves every env's mellon; the passkey space is shared, matching
 the shared users table) + `LUMEN_WEBAUTHN_ORIGINS` (the comma-separated
 browser origins; optional — unset = off). The browser half:
-`#lib/webauthn.client.ts`; the settings page's Passkeys card is the
-setup door; the fake-authenticator integration test drives the whole
-flow offline.
+`#lib/webauthn.client.ts` (codec + `navigator.credentials`); the ACTION
+half rides `#lib/action-post.ts` — the ONE place that unwraps Kit's
+`{type,status,data}` envelope, follows a `redirect()` envelope to the
+server's `location` (cookies already set) and turns `fail()` into
+`ActionFailure`. Action bodies are FORM fields (JSON stringified inside
+its field); `request.json()` on that wire is the 415 round's other half.
+The settings page's Passkeys card is the setup door; the
+fake-authenticator integration test drives the lumen flow offline, and
+the browser walk (register → sign out → sign in with the passkey) is
+the QR-able last mile.
 
 The plugin seam is `widgets/registry.ts` — **adding a widget = one
 folder + one registry line**; `scope` gates the MOUNT (unheld = the

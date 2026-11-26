@@ -1,6 +1,6 @@
 ---
 tags: [lumen, lessons]
-updated: 2026-11-24
+updated: 2026-11-26
 ---
 
 # lumen — lesson ledger
@@ -9,6 +9,26 @@ The standing rulings live in the repo's
 [AGENTS.md](https://github.com/kanatabi/lumen/blob/main/AGENTS.md); the wire
 contract in its DESIGN.md. This ledger records walked events that minted
 them. Newest first.
+
+- **2026-11-26 — "no such method" is the unconfigured-feature voice, and an
+  ES data list can omit a key the code binds.** console.gofar.id's passkey
+  button answered 400 `no such method`; the string was lumen's own
+  (`internal/api/admin/webauthn.go` — an unconfigured feature is ABSENT),
+  relayed verbatim by mellon's action catch, so it read like a Kit error.
+  Two halves were missing: no RELEASED image called `EnableWebAuthn`
+  (12b95c5 wired it AFTER v5.2.0 shipped), and foundation/lumen's
+  ExternalSecret never rendered the pair — even though `lumen config keys
+  --role admin` had listed it since the role split, i.e. the admin render
+  contract had silently lost a bound key. Standing rule: the ES data list
+  ≡ `config keys --role <plane>`; a mismatch there IS the bug class, and
+  the boot log (`webauthn: not configured — the passkey method is off`)
+  names it out loud.
+  The rename trap underneath: 12b95c5 renamed the BINDING to
+  `LUMEN_WEBAUTHN_ORIGINS` while the vault key kept its singular. One key
+  SET per app is load-bearing here — the relay's mirror reconciles a
+  path's shape toward the saved sibling's, so a shared-only new key would be
+  STRIPPED (with a version bump = a surprise epoch desync) by the next cms
+  save. The ES maps property -> env name; that seam is the migration's home.
 
 - **2026-11-24 — the cms plane was the FIRST scope-separated client; the
   spine generalized an existing seam.** The RBAC design needed "an app BE

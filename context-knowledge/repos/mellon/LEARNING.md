@@ -1,6 +1,6 @@
 ---
 tags: [mellon, lessons]
-updated: 2026-11-25
+updated: 2026-11-27
 ---
 
 # mellon — lesson ledger
@@ -8,6 +8,25 @@ updated: 2026-11-25
 The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
+
+- **2026-11-27 — an action fetch is NOT the action's return value, and a
+  wire's two halves move in one commit.** `fetch('?/name')` answers Kit's
+  ENVELOPE (`{type,status,location,data}`); both passkey pages read the
+  payload one level too high, so `webauthnCreate` got `undefined` and the
+  browser threw `can't access property "publicKey", r is undefined` — a
+  client-side crash wearing a server-side costume. Behind it sat the
+  mirror-image bug: the 415 fix (`fbebee3`) moved the CLIENT to
+  form-encoding while `passkeyRegisterFinish` kept `request.json()`, so the
+  next step would have died with "ceremony incomplete". Both halves of a
+  wire are one edit. The repair is a seam, not a patch: `#lib/action-post.ts`
+  (`submitAction`) is the ONLY place that knows the envelope — success
+  returns `data`, `redirect()` returns the server's `location` (the cookie
+  is already on the response: Kit's `action_json_redirect` runs
+  `add_cookies_to_headers`), `fail()` throws `ActionFailure` carrying the
+  payload. The vitest battery pins all four shapes, so the next action
+  fetch learns the contract from a test, not from a stack trace. Corollary:
+  the loose `unknown` on the ceremony helpers is what let the missing
+  unwrap compile — type the payload AT the call site.
 
 - **2026-11-24 — the widget home: three layers, one plugin seam.** The
   dashboard became the user's home (Round A, `9fc0eeb`): the grid, the

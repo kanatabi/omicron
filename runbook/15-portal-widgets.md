@@ -169,6 +169,31 @@ decision record in the vault's decisions tier, never manual SQL.
  proven by the fake-authenticator integration test; the browser walk is the
  last-mile QA item.
 
+### The browser walk (and the failure modes that bit)
+
+Deploy order is the usual ladder — the admin plane (`foundation` chain)
+FIRST: without its WebAuthn env every passkey route answers
+`no such method`, and no mellon release can change that. Then mellon.
+The walk: Settings → Security → **Add a passkey** → name it → the
+authenticator prompt (`"name" is ready — use it on the login screen`),
+then sign out → **Login with passkey** → the server's destination (the
+portal, or `/setup?change=1` for a temp-password account).
+
+The three failures this round produced, in the order they bit:
+
+- **400 `no such method` on Add** — lumen's unconfigured-feature 404: the
+  admin pod has no relying-party identity. Check
+  `kubectl logs -n lumen deploy/lumen-admin-http-server | grep webauthn`
+  (`not configured` = the env never arrived; the fix is the ES + epoch
+  flip, not mellon).
+- **`can't access property "publicKey", r is undefined`** — mellon read
+  Kit's action ENVELOPE instead of its payload. `fetch('?/action')`
+  answers `{type,status,location,data}`: the value is `data`, never the
+  body itself. Fixed as a seam (`#lib/action-post.ts`, 2026-11-27).
+- **`passkey ceremony incomplete`** — the finish action parsed
+  `request.json()` while the client sent form fields (the 415 fix moved
+  only the client half). Both halves of a wire move in one commit.
+
 ## Where the other docs live
 
 - **Contract** (field semantics, canvas geometry, invariants):

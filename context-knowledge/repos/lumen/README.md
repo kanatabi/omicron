@@ -1,6 +1,6 @@
 ---
 tags: [lumen, backend]
-updated: 2026-11-24
+updated: 2026-11-26
 ---
 
 # lumen — the REST backend
@@ -21,7 +21,7 @@ value):
 
 | Role | Instances | Serves | Namespace |
 | :-- | :-- | :-- | :-- |
-| `admin` | exactly ONE (the Control Plane) | sessions, users, the TOFU setup wizard, the Bao relay (`/admin/bao/*`), admin writes | `lumen` (foundation-owned, unsuffixed) |
+| `admin` | exactly ONE (the Control Plane) | sessions, users, passkey ceremonies (WebAuthn, C1), the TOFU setup wizard, the Bao relay (`/admin/bao/*`), admin writes | `lumen` (foundation-owned, unsuffixed) |
 | `cms` | per environment | the public content API + introspection of admin writes | `lumen`, suffixed (`lumen-http-server-{staging,production}`) |
 | `all` | dev only | everything in one process (the dev loop) | — |
 
@@ -254,6 +254,18 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
 ## 10. State & history (walked)
 
 - **2026-11-09** — M1–M6 merged to `main` (the API is LIVE code).
+- **2026-11-26** — the passkey round (C1) is LIVE code: `d0a9250` +
+  `12b95c5` (discoverable credentials, the auth-method seam, rp-id = the
+  REGISTRABLE DOMAIN `gofar.id` so ONE admin serves console AND
+  staging-console), proven by a fake-authenticator integration walk. Its
+  operational half was missing and cost a debugging session: the admin
+  ExternalSecret never rendered `LUMEN_WEBAUTHN_RP_ID`/`_ORIGINS`
+  (vortex `976e510`), so every passkey route 404'd "no such method" while
+  mellon showed it as a generic failure. The pair is part of the admin
+  render contract (§9's epoch machinery): the vault property keeps its
+  PRE-RENAME singular name and the ES maps it to the canonical pod env —
+  see [LEARNING.md](LEARNING.md), 2026-11-26, for why one key SET per app
+  forbids adding a shared-only key.
 - **2026-11-15** — the observability round (`a9d71f9`): `internal/obs`
   (RED pairs + timeouts + `/metrics` on 9090 every shape), adapters
   wrapped, sample made loadable, `.gitignore` doctrine gap closed. The
