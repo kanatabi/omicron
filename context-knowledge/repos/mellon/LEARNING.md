@@ -164,6 +164,16 @@ The standing doctrine lives in the repo's
   estate was UNCLAIMED (the setup probes returned unclaimed=true — the
   staging users table is empty); the /setup wizard is staging's front
   door — claim it before expecting the login screen to authenticate.
+  **CORRECTION (same day, the second 500): `?/default` was NOT the
+  fix — with named actions present, Kit's default action is
+  UNREACHABLE ENTIRELY (the error fires for ?/default too). The rule
+  is absolute: a page with named actions has NO default — every login
+  method is a NAMED action (password, passkey, oauth later), which is
+  also the auth-method seam's uniform shape. Pin: when a SvelteKit
+  page gains its first named action, sweep the page for every
+  plain/`?/default` form and name them all — the runtime error fires
+  per attempt, not at build; two deploys were burned learning the
+  rule's full shape.**
 - **2026-11-25 — Round D (f985b2a): placed-or-absent — the schema, the
   picker, and the semantics that follow.** The availability model
   changed: a widget is PLACED or ABSENT — schema v4 drops `hidden`
