@@ -278,6 +278,14 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   then 401'd with "BackupEligible flag inconsistency". 0013 adds
   `backup_eligible`/`backup_state`; rows written before it must be
   deleted and re-registered.
+- **2026-11-27 (later)** — the tasks application's **M0** landed
+  (`efb2928`): `0014_tasks.sql` (projects/members/invites/tasks/
+  subtasks/comments/activity — soft delete + completion flags, many
+  admins per project, 24h invites, no ordering) and
+  `0015_notifications.sql` (the estate-generic table: plain title,
+  sanitized-HTML body, JSONB payload, TTL). Both ADMIN-classified; the
+  scope trio `tasks:create|update|manage` seeded. The module code (M1+)
+  follows the approved plan in `/home/fzr/.opencode/plan/tasks-notifications.md`.
 - **2026-11-15** — the observability round (`a9d71f9`): `internal/obs`
   (RED pairs + timeouts + `/metrics` on 9090 every shape), adapters
   wrapped, sample made loadable, `.gitignore` doctrine gap closed. The
