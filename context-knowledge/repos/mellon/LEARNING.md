@@ -174,6 +174,16 @@ The standing doctrine lives in the repo's
   plain/`?/default` form and name them all — the runtime error fires
   per attempt, not at build; two deploys were burned learning the
   rule's full shape.**
+- **2026-11-26 — SvelteKit actions refuse BARE POSTs (415): every
+  action-fetch carries a content-type.** The passkey ceremony's begin
+  fetches posted with Content-Length: 0 and no content-type header —
+  Kit's actions accept form-encoded, multipart, or application/json;
+  a bare POST is refused with 415 Unsupported Media Type before the
+  action's code runs (the owner's HAR pinned it: the finish fetches
+  worked, the begin fetches didn't — the asymmetry was the tell). Fix:
+  every action-fetch sends `content-type: application/json` with an
+  empty `{}` body when there is nothing to say. Rule: **an action
+  fetch is never naked — the header rides even on empty bodies.**
 - **2026-11-25 — Round D (f985b2a): placed-or-absent — the schema, the
   picker, and the semantics that follow.** The availability model
   changed: a widget is PLACED or ABSENT — schema v4 drops `hidden`
