@@ -107,14 +107,20 @@ the shared users table) + `LUMEN_WEBAUTHN_ORIGINS` (the comma-separated
 browser origins; optional — unset = off). The browser half:
 `#lib/webauthn.client.ts` (codec + `navigator.credentials`); the ACTION
 half rides `#lib/action-post.ts` — the ONE place that unwraps Kit's
-`{type,status,data}` envelope, follows a `redirect()` envelope to the
-server's `location` (cookies already set) and turns `fail()` into
-`ActionFailure`. Action bodies are FORM fields (JSON stringified inside
-its field); `request.json()` on that wire is the 415 round's other half.
-The settings page's Passkeys card is the setup door; the
-fake-authenticator integration test drives the lumen flow offline, and
-the browser walk (register → sign out → sign in with the passkey) is
-the QR-able last mile.
+`{type,status,data}` envelope AND decodes the **devalue string** inside
+`data` (the two-layer wire; a plain-object fixture hides it), follows a
+`redirect()` envelope to the server's `location` (cookies already set)
+and turns `fail()` into `ActionFailure` carrying the decoded payload.
+Action bodies are FORM fields (JSON stringified inside its field);
+`request.json()` on that wire is the 415 round's other half. The login
+load asks `/admin/session/auth/methods` and renders the passkey button
+only when lumen lists it (probe failure keeps the password door); the
+settings page's Passkeys card is the setup door (delete failures render,
+delete success confirms). The fake-authenticator integration test drives
+the lumen flow offline — including a REPLAYED assertion (401: the counter
+tripwire), a duplicate registration (409), the label cap, delete, and a
+disabled plane's honest 404 — and the browser walk (register → sign out →
+sign in with the passkey) is the QR-able last mile.
 
 The plugin seam is `widgets/registry.ts` — **adding a widget = one
 folder + one registry line**; `scope` gates the MOUNT (unheld = the

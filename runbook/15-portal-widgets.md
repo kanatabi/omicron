@@ -190,6 +190,13 @@ The three failures this round produced, in the order they bit:
   Kit's action ENVELOPE instead of its payload. `fetch('?/action')`
   answers `{type,status,location,data}`: the value is `data`, never the
   body itself. Fixed as a seam (`#lib/action-post.ts`, 2026-11-27).
+- **the same message AGAIN after the envelope fix** — the envelope is
+  TWO layers deep: `data` is a **devalue STRING** (Kit serializes the
+  action's return with `stringify`; the client half is `deserialize` =
+  JSON.parse + devalue.parse). The seam now decodes both success and
+  failure payloads, and the battery builds every fixture through
+  `devalue.stringify` — a hand-built plain-object fixture hides exactly
+  this bug.
 - **`passkey ceremony incomplete`** — the finish action parsed
   `request.json()` while the client sent form fields (the 415 fix moved
   only the client half). Both halves of a wire move in one commit.

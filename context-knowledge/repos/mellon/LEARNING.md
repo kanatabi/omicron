@@ -9,24 +9,26 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
-- **2026-11-27 — an action fetch is NOT the action's return value, and a
-  wire's two halves move in one commit.** `fetch('?/name')` answers Kit's
-  ENVELOPE (`{type,status,location,data}`); both passkey pages read the
-  payload one level too high, so `webauthnCreate` got `undefined` and the
-  browser threw `can't access property "publicKey", r is undefined` — a
-  client-side crash wearing a server-side costume. Behind it sat the
-  mirror-image bug: the 415 fix (`fbebee3`) moved the CLIENT to
-  form-encoding while `passkeyRegisterFinish` kept `request.json()`, so the
-  next step would have died with "ceremony incomplete". Both halves of a
-  wire are one edit. The repair is a seam, not a patch: `#lib/action-post.ts`
-  (`submitAction`) is the ONLY place that knows the envelope — success
-  returns `data`, `redirect()` returns the server's `location` (the cookie
-  is already on the response: Kit's `action_json_redirect` runs
+- **2026-11-27 — the action wire is TWO layers, and a fixture that invents
+  it hides both.** `fetch('?/name')` answers Kit's ENVELOPE
+  (`{type,status,location,data}`) whose `data` is a **devalue STRING**
+  (server: `try_serialize(…, stringify)`; client: `deserialize` =
+  JSON.parse + devalue.parse). The passkey pages got it wrong twice — first
+  reading `begin.options` off the envelope, then returning the still-encoded
+  `data` — and both times the browser threw the SAME
+  `can't access property "publicKey", r is undefined`. The battery was green
+  because its fixtures put plain objects in `data`: a test that invents the
+  wire proves intention, not protocol. Behind the crash sat the mirror-image
+  bug: the 415 fix (`fbebee3`) moved the CLIENT to form encoding while
+  `passkeyRegisterFinish` kept `request.json()` — both halves of a wire are
+  one edit. The repair is a seam (`#lib/action-post.ts`): success returns the
+  DECODED `data`, `redirect()` returns the server's `location` (the cookie is
+  already on the response — Kit's `action_json_redirect` runs
   `add_cookies_to_headers`), `fail()` throws `ActionFailure` carrying the
-  payload. The vitest battery pins all four shapes, so the next action
-  fetch learns the contract from a test, not from a stack trace. Corollary:
-  the loose `unknown` on the ceremony helpers is what let the missing
-  unwrap compile — type the payload AT the call site.
+  decoded payload. Every fixture now goes through `devalue.stringify`, so the
+  next action fetch learns the contract from a test, not a stack trace.
+  Corollary: the loose `unknown` on the ceremony helpers is what let the
+  missing unwrap compile — type the payload AT the call site.
 
 - **2026-11-24 — the widget home: three layers, one plugin seam.** The
   dashboard became the user's home (Round A, `9fc0eeb`): the grid, the

@@ -10,6 +10,28 @@ The standing rulings live in the repo's
 contract in its DESIGN.md. This ledger records walked events that minted
 them. Newest first.
 
+- **2026-11-27 — the passkey audit: a TTL shorter than the prompt, an
+  unread clone signal, and a 500 where a 409 belonged.** The full read of
+  the C1 round found four classes the happy-path battery didn't. (1) The
+  begin-state TTL was 3 minutes while the library advertises a 5-minute
+  prompt (`webauthn/const.go`) — slow ceremonies died with "challenge
+  invalid or expired"; TTL is now 5m, coupling documented. (2) The
+  library's `Authenticator.CloneWarning` (set when the counter does NOT
+  advance; 0→0 never warns) was ignored, so a cloned authenticator could
+  mint — now refused with an audit line. (3) A duplicate registration hit
+  the credential-id PK and became a 500; 23505 now maps to
+  `ErrCredentialExists` → 409. (4) A `len(id)==16 → []byte(id)` branch in
+  `uuidBytes` would have returned a 16-CHARACTER string as an ASCII user
+  handle — dead, removed. Also: the register response's `createdAt` was
+  never read back (empty), the label had no server cap (64 runes now), and
+  `state.go`'s comment claimed "replay-proof" when the token is only
+  TAMPER-proof (replay inside the TTL is bounded by the counter — the
+  recorded trade-off). The integration battery now proves the denials:
+  replayed assertion 401, duplicate 409, label 400, scoped delete 204, and
+  an unconfigured plane's 404 "no such method". Lesson: a happy path plus
+  a tampered-state check is not an audit — read the library's own signals
+  and the wire's status table.
+
 - **2026-11-26 — "no such method" is the unconfigured-feature voice, and an
   ES data list can omit a key the code binds.** console.gofar.id's passkey
   button answered 400 `no such method`; the string was lumen's own

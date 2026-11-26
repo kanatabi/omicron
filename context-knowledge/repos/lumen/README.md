@@ -1,6 +1,6 @@
 ---
 tags: [lumen, backend]
-updated: 2026-11-26
+updated: 2026-11-27
 ---
 
 # lumen — the REST backend
@@ -266,6 +266,13 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   PRE-RENAME singular name and the ES maps it to the canonical pod env —
   see [LEARNING.md](LEARNING.md), 2026-11-26, for why one key SET per app
   forbids adding a shared-only key.
+- **2026-11-27** — the passkey audit hardened the C1 flow: the begin-state
+  TTL now matches the library's 5-minute prompt (3m failed slow
+  ceremonies), the library's clone signal (counter regression) refuses the
+  mint, a duplicate registration is a 409 (23505 mapped), the label is
+  capped at 64 runes, the register response carries a real `createdAt`,
+  and the mode's comment says TAMPER-proof (not "replay-proof"). §8 now
+  documents the six routes + the rp-id/env contract.
 - **2026-11-15** — the observability round (`a9d71f9`): `internal/obs`
   (RED pairs + timeouts + `/metrics` on 9090 every shape), adapters
   wrapped, sample made loadable, `.gitignore` doctrine gap closed. The
