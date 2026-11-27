@@ -295,7 +295,9 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   page-title scale for the desks (24px settings/entities, 4xl only on
   login/setup), neutral selection (`bg-accent` + brand border) so violet means
   the primary verb/focus/active nav again, sticky headers on the posts/photos
-  tables, and 40px list rows. **Same round:** the palette's
+  tables, and 40px list rows; form selects now match the input height (the
+  shadcn trigger's `sm` default was 28px), and the date popovers size to the
+  calendar (`w-auto`) instead of a dead `w-64` column. **Same round:** the palette's
   `go to` rows derive from `src/lib/destinations.ts` — the SAME table and
   `held()` gate as the rail, so Tasks appears with any of the tasks trio
   and scoped doors are never offered to 403 accounts (Users now points at
