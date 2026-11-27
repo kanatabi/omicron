@@ -316,7 +316,13 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   only on the `mellon;` wordmark + login/setup — and the mobile headers were
   normalized: Tasks title+New task on one row, Posts `Import`/`New Post` no-wrap,
   Users' short copy + title-row button, Compare's labeled app/env + from/to +
-  view/content groups. The vault header was left on its pre-pass layout (the
+  view/content groups. The auth gate was rebuilt as one shared `AuthShell`
+  (login + setup): form right / visual left, a token-hued aurora with grain,
+  ASCII glyphs, a floating invented-data glass postcard and Level-3 ambient
+  motion (aurora drift, card bob, glyph drift, desktop pointer parallax;
+  reduced-motion freezes it). The visual is decorative and makes no API call;
+  login gained a password eye + a real reset/session note. The vault header
+  was left on its pre-pass layout (the
   owner's view; no further reflows there). **Same round:** the palette's
   `go to` rows derive from `src/lib/destinations.ts` — the SAME table and
   `held()` gate as the rail, so Tasks appears with any of the tasks trio
