@@ -569,9 +569,11 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
 > origin; `LUMEN_WEBAUTHN_ORIGIN` is the comma list of browser origins
 > (`https://console.gofar.id,https://staging-console.gofar.id`; local dev
 > uses `localhost` + `http://localhost:5173`). The pair is admin-plane
-> only; the cms copies stay empty (uniform shape). Unset = the passkey
-> methods endpoint omits itself (honest absence), so a fresh seed that
-> skips these keys silently ships a passkey-less estate.
+> only; the cms copies stay empty (uniform shape). Unset/empty on the pod =
+> the passkey methods endpoint omits itself (honest absence) — and a miss
+> here is not harmless: a MISSING property fails the whole admin render
+> (ESO), while the old 15-key seed left them empty and silently shipped a
+> passkey-less estate.
 >
 > **`LUMEN_NOTIFICATION_TOKEN` is NOT a key here** (tasks/notifications
 > rounds, 2026-11-27): the notification send door reads it straight from
