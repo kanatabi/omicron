@@ -291,7 +291,11 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   group; `text-white` on brand fills
   became `text-primary-foreground` (theme-correct on light-brand dark
   themes) and `hover:brightness-110` became a token hover. A shape-guard
-  test pins the circle signatures. **Same round:** the palette's
+  test pins the circle signatures. The hierarchy pass followed: one 30px
+  page-title scale for the desks (24px settings/entities, 4xl only on
+  login/setup), neutral selection (`bg-accent` + brand border) so violet means
+  the primary verb/focus/active nav again, sticky headers on the posts/photos
+  tables, and 40px list rows. **Same round:** the palette's
   `go to` rows derive from `src/lib/destinations.ts` — the SAME table and
   `held()` gate as the rail, so Tasks appears with any of the tasks trio
   and scoped doors are never offered to 403 accounts (Users now points at
