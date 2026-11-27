@@ -286,6 +286,14 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   sanitized-HTML body, JSONB payload, TTL). Both ADMIN-classified; the
   scope trio `tasks:create|update|manage` seeded. The module code (M1+)
   follows the approved plan in `/home/fzr/.opencode/plan/tasks-notifications.md`.
+- **2026-11-27 (later)** — the tasks application's **M1 stores** landed:
+  `internal/notifications` (`9890f80`: batch send, TTL-filtered reads,
+  cursor, mark-read denials) and `internal/tasks` (`a581871`: membership
+  as authorization for reads AND writes, project-row locks for the
+  last-admin invariant, KEY SHARE assignment races, soft delete, the
+  invite state machine, timezone-aware views/stats, the user-delete
+  repair hook). Both proven against real Postgres in private schemas.
+  **M2 (services + routes) is next.**
 - **2026-11-15** — the observability round (`a9d71f9`): `internal/obs`
   (RED pairs + timeouts + `/metrics` on 9090 every shape), adapters
   wrapped, sample made loadable, `.gitignore` doctrine gap closed. The
