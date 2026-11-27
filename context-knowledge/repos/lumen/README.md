@@ -286,6 +286,13 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   then 401'd with "BackupEligible flag inconsistency". 0013 adds
   `backup_eligible`/`backup_state`; rows written before it must be
   deleted and re-registered.
+- **2026-11-29** — **the profile round** (migration `0016`): `users` gains
+  `display_name` (backfilled to username; 1–80; the future public byline) and
+  optional `email` (lowercase; unique when set; **private** — never published).
+  `GET/PATCH /admin/profile` is self-service auth-only (no scope), `whoami`
+  now carries `name`+`email` for the portal shell, and the admin-only users
+  list includes both fields. Username stays the immutable login handle; no
+  verification/avatar/bio fields yet. The cms databases still never own users.
 - **2026-11-27 (later)** — the tasks application's **M0** landed
   (`efb2928`): `0014_tasks.sql` (projects/members/invites/tasks/
   subtasks/comments/activity — soft delete + completion flags, many

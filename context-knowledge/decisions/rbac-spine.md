@@ -97,8 +97,10 @@ ALTER TABLE users ADD CONSTRAINT users_username_key UNIQUE (username);
 | `settings:manage` | portal-level settings (reserved; gated when settings grow) | (none yet) |
 - Migration grants: `role='admin'` → all four; `role='editor'` → `content:manage`.
   Then `users.role` is DROPPED. TOFU (`InsertUser`) grants the full set.
-- Self-service routes (whoami, change-password) require AUTHENTICATION only —
-  no scope. Public `/api/*` + media stay ANONYMOUS.
+- Self-service routes (whoami, change-password, **profile**) require
+  AUTHENTICATION only — no scope. The profile is the caller's own display
+  name + private email (`GET/PATCH /admin/profile`); username remains the
+  immutable login handle. Public `/api/*` + media stay ANONYMOUS.
 
 > **Amended 2026-11-27 (tasks/notifications round):** the catalog is now
 > **SEVEN** — `0014_tasks.sql` seeds `tasks:create|update|manage` next to

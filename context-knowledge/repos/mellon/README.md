@@ -328,9 +328,13 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   and theme-color meta for the browser chrome. The account surface was then
   redesigned: an identity pill (avatar + username) opens a grouped icon menu —
   Account (Settings/Security), Preferences (Appearance + in-place theme
-  segmented), and a danger sign-out; scopes moved to a tooltip. Profile and
-  Devices/OTP slots are reserved for the next rounds; no fake plan/billing
-  rows. The auth gate was rebuilt as one shared `AuthShell`
+  segmented), and a danger sign-out; scopes moved to a tooltip. The profile
+  round (2026-11-29) filled the Profile slot: `/settings/profile` edits display
+  name + private email (username read-only, access chips); the account menu
+  header shows name/email, the settings nav leads with Profile, and the admin
+  users table shows name/email under each username. Devices/OTP remain reserved
+  under Security. No fake plan/billing rows. The auth gate was rebuilt as one
+  shared `AuthShell`
   (login + setup): form right / visual left, a token-hued aurora with grain,
   ASCII glyphs, a floating invented-data glass postcard and Level-3 ambient
   motion (aurora drift, card bob, glyph drift, desktop pointer parallax;
