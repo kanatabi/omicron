@@ -293,6 +293,13 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   now carries `name`+`email` for the portal shell, and the admin-only users
   list includes both fields. Username stays the immutable login handle; no
   verification/avatar/bio fields yet. The cms databases still never own users.
+- **2026-11-29 (later)** — the tasks **people-label + invite-search** round:
+  assignee/creator rollups read `users.display_name`; `TaskMember.name` added;
+  `GET /admin/task-projects/{id}/people?q=` is the project-admin typeahead
+  (username/display-name prefix, or an EXACT case-insensitive email; members,
+  pending invitees and disabled accounts excluded; email is never returned).
+  Every reference stays a `users.id` UUID; comments/activity/invite copy stay
+  handles by scope.
 - **2026-11-27 (later)** — the tasks application's **M0** landed
   (`efb2928`): `0014_tasks.sql` (projects/members/invites/tasks/
   subtasks/comments/activity — soft delete + completion flags, many

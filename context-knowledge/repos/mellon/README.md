@@ -347,6 +347,13 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   and scoped doors are never offered to 403 accounts (Users now points at
   `/admin/users`); the tasks page registers its verbs and one flat row per
   visible task. DESIGN §7 and §11.3 carry both contracts.
+- **2026-11-29 (later)** — tasks show **display names**: the assignee pickers
+  (drawer + composer) and the project roster label with `TaskMember.name`,
+  appending `(@username)` only when display names collide; selections still
+  submit the member's `userId`. The invite field is now a `@`-triggered people
+  search (debounced, generation-guarded, keyboard-driven) fed by lumen's
+  `/task-projects/{id}/people`; rows show display name + `@username`, and the
+  server matches username/display-name prefixes or an exact email.
 - **2026-11-27** — **the tasks app + notifications are COMPLETE in the
   portal** (`0afa48c`): the `/tasks` workspace (client-rendered through
   the relay: stats in the client zone, the three views, the projects
