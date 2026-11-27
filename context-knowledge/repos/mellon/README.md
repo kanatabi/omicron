@@ -297,7 +297,11 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   the primary verb/focus/active nav again, sticky headers on the posts/photos
   tables, and 40px list rows; form selects now match the input height (the
   shadcn trigger's `sm` default was 28px), and the date popovers size to the
-  calendar (`w-auto`) instead of a dead `w-64` column. **Same round:** the palette's
+  calendar (`w-auto`) instead of a dead `w-64` column. The tasks workspace
+  then gained its filter row (status/assignee/priority + sort in the toolbar;
+  the sidebar's sort control retired) with palette parity (Filter status /
+  assignee / priority, Clear); assignee options derive from the loaded view,
+  so a member with no task there is absent by design. **Same round:** the palette's
   `go to` rows derive from `src/lib/destinations.ts` — the SAME table and
   `held()` gate as the rail, so Tasks appears with any of the tasks trio
   and scoped doors are never offered to 403 accounts (Users now points at
