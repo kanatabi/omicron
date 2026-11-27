@@ -293,7 +293,12 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   last-admin invariant, KEY SHARE assignment races, soft delete, the
   invite state machine, timezone-aware views/stats, the user-delete
   repair hook). Both proven against real Postgres in private schemas.
-  **M2 (services + routes) is next.**
+  **M2.A landed** (`31a1daf`): the notifications service (bluemonday
+  inline-HTML policy, slug/payload/URL rules, 100-recipient cap, 120/min
+  limiter, ONE env-only send token) + the five routes (four bell reads
+  any-authenticated, the public token-gated SEND door unmounted when the
+  token is unset) + the mount/matrix/wiring. **M2.B (tasks service +
+  routes) is next.**
 - **2026-11-15** — the observability round (`a9d71f9`): `internal/obs`
   (RED pairs + timeouts + `/metrics` on 9090 every shape), adapters
   wrapped, sample made loadable, `.gitignore` doctrine gap closed. The
