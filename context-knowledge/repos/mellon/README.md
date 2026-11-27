@@ -278,6 +278,14 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   scrape in.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
+- **2026-11-27** — **the tasks + notifications contract lands** (`4143579`):
+  13 domain types + 28 AdminApi methods (13 tasks types; the SEND door is
+  app-to-app only and absent from the portal), both adapters (admin
+  upstream, enumerated ops, the `X-Client-Timezone` day-math header, the
+  explicit three-way PATCH body), the five admin routing prefixes, the
+  coherent two-user mock twin with lumen's status table and test-only
+  `{now}`/`as(user)` seams, and the relay's 30 local-namespace branches.
+  The UI rounds (workspace, drawer, bell, widget) build on it.
 - **2026-11-22** — **the delete dialog's copy follows lumen's eager object
   GC** (`b846a8b`): the file is deleted WITH the row now (lumen 269e423 —
   row first, object best-effort, siblings keep shared objects alive), so

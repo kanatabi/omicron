@@ -9,6 +9,16 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-27 (later) — the browser client speaks the RELAY's namespace,
+  not lumen's wire paths.** The tasks contract was first written with
+  `/admin/tasks`-style URLs in `#lib/api/client.ts`; the same-origin relay
+  speaks LOCAL names (`/session`, `/posts`) and maps them onto AdminApi
+  methods, so those calls would have 404'd at the browser even though the
+  server adapter was right. Two namespaces, one seam: the server adapter
+  ships lumen's paths; the browser ships the relay's, and every new
+  browser verb needs its relay branch. The same round added the 30 relay
+  branches and moved the client tests onto `/api/tasks...`.
+
 - **2026-11-27 — the action wire is TWO layers, and a fixture that invents
   it hides both.** `fetch('?/name')` answers Kit's ENVELOPE
   (`{type,status,location,data}`) whose `data` is a **devalue STRING**
