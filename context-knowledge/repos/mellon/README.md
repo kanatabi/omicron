@@ -316,7 +316,8 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   only on the `mellon;` wordmark + login/setup — and the mobile headers were
   normalized: Tasks title+New task on one row, Posts `Import`/`New Post` no-wrap,
   Users' short copy + title-row button, Compare's labeled app/env + from/to +
-  view/content groups, and the vault app/env labels. **Same round:** the palette's
+  view/content groups. The vault header was left on its pre-pass layout (the
+  owner's view; no further reflows there). **Same round:** the palette's
   `go to` rows derive from `src/lib/destinations.ts` — the SAME table and
   `held()` gate as the rail, so Tasks appears with any of the tasks trio
   and scoped doors are never offered to 403 accounts (Users now points at
