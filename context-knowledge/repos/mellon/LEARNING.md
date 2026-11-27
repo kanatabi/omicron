@@ -16,8 +16,11 @@ The standing doctrine lives in the repo's
   actions, 6px filter chips/segmented cells, 4px data tags, and circles ONLY
   for search fields, icon-only controls and marks (avatars, badges, dots,
   swatches, switches). Hierarchy needs contrast between action, filter and
-  data — not maximum roundness or maximum squareness. The shape-guard test
-  now enforces line signatures instead of a file whitelist.
+  data — not maximum roundness or maximum squareness. One owner exception
+  survived the round: the diff + task-drawer TAB strips keep the pill
+  switcher (a tab is a place-marker, not a verb — the underline read as too
+  quiet there). The shape-guard test now enforces line signatures instead
+  of a file whitelist.
 
 - **2026-11-27 (later) — the palette is a CONSUMER of the nav table, not a
   copy of it.** The rail had `SCOPED_NAV`; the palette kept its own route

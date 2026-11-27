@@ -286,8 +286,9 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   controls (bell, theme toggle, close X, clear), avatars, count badges,
   dots, swatches and switch tracks. The first pass over-squared (one 6px
   radius everywhere) and the owner corrected it the same day — see
-  LEARNING; content tabs (diff, task drawer) are underline tabs, mode
-  switches are one bordered segmented group; `text-white` on brand fills
+  LEARNING; the diff + task-drawer TAB strips keep the pill switcher
+  (owner's explicit later call), mode switches are one bordered segmented
+  group; `text-white` on brand fills
   became `text-primary-foreground` (theme-correct on light-brand dark
   themes) and `hover:brightness-110` became a token hover. A shape-guard
   test pins the circle signatures. **Same round:** the palette's
