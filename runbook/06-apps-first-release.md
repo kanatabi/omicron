@@ -1,6 +1,6 @@
 ---
 tags: [runbook, apps, first-release]
-updated: 2026-11-14
+updated: 2026-11-27
 status: >-
   rehearsal-proven shape (walk ledger); VPS = first real instance —
   every check below is written to be run for the first time, not trusted;
@@ -195,8 +195,9 @@ that: **no new image** — values and their declared epoch land together.
    optional `config-epoch` input with the number the portal matrix shows
    (leave it empty for normal image releases). The input is honored **only
    for a single-environment dispatch** — a trio value is env-scoped (the
-   values legitimately differ: production's lumen trio sits at `7`,
-   everything else at `0`), so a multi-env dispatch refuses it.
+   values legitimately differ per env; read the current number from that
+   env's overlay, or the portal matrix, never from another env), so a
+   multi-env dispatch refuses it.
 2. The chain opens one bump PR **per environment** on branch
    `bump/<app>-<env>-<tag>`, each editing ONLY `environments/<env>/**`:
    the epoch TRIO flips — all three lines, one commit — and the `lumen`
@@ -228,6 +229,21 @@ that: **no new image** — values and their declared epoch land together.
    template carries the new epoch. And because the flip was env-scoped,
    ✅ the OTHER environment's pods sit untouched — an epoch flip gates
    ONLY that env's rollout (00a A10's fourth proof).
+
+> **🟠 Fresh-cluster alignment — the declared epoch is a claim about ONE
+> vault (added 2026-11-27).** A fresh bootstrap's seed ([05 §6](05-vault.md))
+> writes each path for the FIRST time → **head v1**. The declarations in
+> Git are the LIVE estate's counter, so a hub applied against a fresh
+> vault fails the gate by design (`config-gate: <app>/<env> declared 4;
+> vault head 1, pin unset — declared != head`). Before that env's hub
+> opens ([00a A7→A9](00a-run-order.md)), align each gated app/env to the
+> seeded head: dispatch its `release` workflow for that ONE env with
+> `config-epoch=1` and merge the bump PR the chain opens — that dispatch
+> is also the app's first image release, so the fresh estate gets both at
+> once. Afterwards the trio tracks the vault normally. Do **not** try to
+> seed "up to" the Git number with repeated puts: version numbers are not
+> content, and the skipped versions would look like history that never
+> happened.
 
 The auto-merge fence rides this flow too, and it is **env-scoped from the
 branch name**: files `environments/<env>/**` ONLY (the env parsed from

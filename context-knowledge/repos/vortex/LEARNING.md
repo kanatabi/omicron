@@ -1,6 +1,6 @@
 ---
 tags: [vortex, lessons]
-updated: 2026-11-21
+updated: 2026-11-27
 ---
 
 # vortex — lesson ledger
@@ -8,6 +8,25 @@ updated: 2026-11-21
 The standing traps live in the repo's
 [AGENTS.md §9](https://github.com/kanatabi/vortex/blob/main/AGENTS.md); this
 ledger records walked events, newest first.
+
+- **2026-11-27 — a declared epoch is a claim about ONE vault; a fresh seed
+  starts at v1.** The doc audit found the seed/gate handshake missing a
+  step: [runbook 05 §6](../../../runbook/05-vault.md) puts every lumen path
+  for the first time → head **v1**, while the trio in Git carries the LIVE
+  estate's counter (`lumen/shared` 4, staging 4, production 5). A fresh
+  bootstrap therefore fails its own PreSync gate by design (`declared 4;
+  vault head 1`) — and the runbook's "wave 2 rolls in its wake" was
+  optimistic. The documented road: after seeding, dispatch each gated
+  app/env's release with `config-epoch=<seeded head>` and merge the bump
+  PR (that dispatch is also the app's first image release); NEVER seed "up
+  to" the Git number with repeated puts — skipped versions would look like
+  history that never happened. Same round's live proof of the rule: the
+  production lumen app sat OutOfSync (`config-gate-production` exhausting
+  its backoff) because the vault head was **6** after a portal save while
+  Git declared **5**; the cure is a `config-epoch=6` dispatch, not an
+  image change. And an old `bump/lumen-production-v5.2.2` branch lingered
+  against main's v5.5.0 — a bump branch is only mergeable while its tag is
+  the NEXT version; once main passes it, merging is a downgrade.
 
 - **2026-11-21 — the hub can manage its own door; the door must not manage
   the hub.** The `argo.gofar.id` round drew the chicken-and-egg line

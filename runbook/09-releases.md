@@ -1,6 +1,6 @@
 ---
 tags: [runbook, releases]
-updated: 2026-11-14
+updated: 2026-11-27
 status: >-
   PROVEN live (lumen v4.0.1, mellon v3.0.1, earendil v1.2.0 rode the
   full chain 2026-11-14 — parks, approvals, auto-merged bumps, all seven
@@ -119,8 +119,8 @@ purpose — the estate's software is exactly as versioned as you want).
   released `vX.Y.Z` or nothing (never a branch name). A `config-epoch`
   input is honored only
   on a SINGLE-environment dispatch — the trio's value is env-scoped and
-  the chains' values legitimately differ (production's lumen trio is at
-  `7`, the rest of the estate at `0`). Never `kubectl`-patch an image
+  the chains' values legitimately differ (read the current number from
+  that env's overlay; never copy another env's). Never `kubectl`-patch an image
   tag: selfHeal reverts you (ch.04).
 
 ## 4. Where versions live, and what the fence accepts

@@ -223,9 +223,17 @@ make worker / make server   # the prod-split processes
 | `LUMEN_DB_URL` | the DSN (ESO-rendered from the env's Bao path) |
 | `LUMEN_SESSION_JWT_SECRET` | the signing key (admin plane only — ONE home) |
 | `LUMEN_ADMIN_URL` | cms → the admin plane (introspection) |
+| `LUMEN_WEBAUTHN_RP_ID` | admin plane: the REGISTRABLE DOMAIN (`gofar.id`) — passkey ceremonies, one value for every portal origin |
+| `LUMEN_WEBAUTHN_ORIGINS` | admin plane: comma list of browser origins (ES maps vault property `LUMEN_WEBAUTHN_ORIGIN` to this name) |
 | `LUMEN_MEILI_URL` / `LUMEN_MEILI_INDEX_*` | search engine + per-env index names |
+| `LUMEN_NOTIFICATION_TOKEN` | OPTIONAL app-to-app send token — **env-only**, from the hand-made k8s Secret `lumen-notification-token`; absent = the send door is not mounted. Never a kv/ES key, never an epoch flip |
 
 `env.yaml.sample` is the schema; real values never leave Bao/dev-plane.env.
+The passkey pair is part of the admin render contract (`kv/lumen/shared`,
+both filled there; the cms paths carry the keys EMPTY under the
+uniform-shape law). The notification token joins the hand-made Secret
+family next to `lumen-bao-credentials` — see runbook ch. 05 §3.5 and
+ch. 15's ops section.
 
 ## 8. Testing (the battery, strictness order)
 

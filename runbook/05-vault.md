@@ -1,6 +1,6 @@
 ---
 tags: [runbook, secrets, vault]
-updated: 2026-11-15
+updated: 2026-11-27
 status: >-
   ritual incident-proven (rehearsal walk + two unseal drills); the
   THREE-plane seed contract below is the Phase 11 shape — verified key-by-key
@@ -325,6 +325,25 @@ kubectl -n external-secrets get clustersecretstore bao   # → READY: True
 > events name the real cause: auth denied = the pair in the Secret is
 > wrong (re-mint block 1 above); connection refused = store/server check.
 
+**The optional notification token — the second hand-made Secret (added
+2026-11-27).** The tasks/notifications send door (`POST
+/admin/notifications`, app-to-app) is gated by ONE shared token that is
+deliberately **NOT** a Bao/ES value: no kv key, no render, no epoch flip.
+It rides a plain k8s Secret in `lumen`, consumed as an env var — absent,
+the route is simply not mounted:
+
+```bash
+kubectl -n lumen create secret generic lumen-notification-token \
+  --from-literal=LUMEN_NOTIFICATION_TOKEN="$(openssl rand -base64 32)"
+kubectl -n lumen rollout restart deploy/lumen-admin-http-server
+```
+
+Rotate by replacing the Secret and restarting (the token is read once at
+boot). The vortex envFrom that lets the admin pod see it rides the
+`feat/notifications-token-secret` branch — merge it (and re-sync the app)
+before creating the Secret, or the Secret exists unseen. Full ops notes:
+[ch. 15](15-portal-widgets.md).
+
 ## 4. Variant B — `port-forward` + plain `curl` (no pod shell needed)
 
 ```bash
@@ -442,7 +461,10 @@ commands printed non-empty strings.
 ## 6. Seed the values — the CRs are the contract, path by path
 
 Every key below exists because an ExternalSecret declares it —
-**1:1, property == secretKey, no translations.** For lumen the truth is
+**1:1, property == secretKey**, with ONE documented exception: the admin
+ES binds `secretKey: LUMEN_WEBAUTHN_ORIGINS` from property
+`LUMEN_WEBAUTHN_ORIGIN` (the vault key predates the wire-name rename; the
+value is the same comma list). For lumen the truth is
 machine-readable: `lumen config keys --role admin|cms`. Generate fresh
 values on the spot (`openssl rand -hex 16|32`); reuse nothing from the
 rehearsal. The paths are what the store mounts: `remoteRef: { key:
@@ -524,21 +546,38 @@ done
 > inside `X` blocks, values arrive as exported variables — the table
 > above — never as pasted angle brackets.
 
-### 6.1 `kv/lumen/shared` — the Control Plane's identity (15 keys, 3 filled)
+### 6.1 `kv/lumen/shared` — the Control Plane's identity (17 keys, 5 filled)
 
 | kv path | Keys | Declared by |
 |---|---|---|
-| `kv/lumen/shared` | the 15-key lumen set (below); **filled here:** `LUMEN_DB_URL` `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` — **empty here:** the 12 cms-only keys | `environments/foundation/lumen/externalsecret.yaml` (first two; the admin ES binds exactly what role=admin reads) + the two cms ESes read `LUMEN_ADMIN_URL` FROM this path |
+| `kv/lumen/shared` | the 17-key lumen set (below); **filled here:** `LUMEN_DB_URL` `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` — **empty here:** the 12 cms-only keys | `environments/foundation/lumen/externalsecret.yaml` (four bindings: DB, JWT, RP_ID, ORIGINS←`_ORIGIN`) + the two cms ESes read `LUMEN_ADMIN_URL` FROM this path |
 
 ```bash
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
   LUMEN_DB_URL=postgres://db_user_admin:$ADMIN_DB_PW@lumen-pg.db.svc:5432/lumen_admin \
   LUMEN_SESSION_JWT_SECRET=$(openssl rand -hex 32) \
   LUMEN_ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local \
+  LUMEN_WEBAUTHN_RP_ID=gofar.id \
+  LUMEN_WEBAUTHN_ORIGIN=https://console.gofar.id,https://staging-console.gofar.id \
   LUMEN_MEILI_URL= LUMEN_MEILI_KEY= LUMEN_MEILI_INDEX_POSTS= LUMEN_MEILI_INDEX_PHOTOS= \
   LUMEN_MEDIA_ENDPOINT= LUMEN_MEDIA_REGION= LUMEN_MEDIA_BUCKET= LUMEN_MEDIA_ACCESS_KEY= \
   LUMEN_MEDIA_SECRET_KEY= LUMEN_MEDIA_CDN_BASE= LUMEN_MEDIA_FORCE_PATH= LUMEN_MEDIA_PREFIX="
 ```
+
+> **Passkeys (amended 2026-11-27):** `LUMEN_WEBAUTHN_RP_ID` is the
+> REGISTRABLE DOMAIN (`gofar.id`) — one value shared by every portal
+> origin; `LUMEN_WEBAUTHN_ORIGIN` is the comma list of browser origins
+> (`https://console.gofar.id,https://staging-console.gofar.id`; local dev
+> uses `localhost` + `http://localhost:5173`). The pair is admin-plane
+> only; the cms copies stay empty (uniform shape). Unset = the passkey
+> methods endpoint omits itself (honest absence), so a fresh seed that
+> skips these keys silently ships a passkey-less estate.
+>
+> **`LUMEN_NOTIFICATION_TOKEN` is NOT a key here** (tasks/notifications
+> rounds, 2026-11-27): the notification send door reads it straight from
+> the pod env, fed by the hand-made k8s Secret `lumen-notification-token`
+> (§3.5) — env-only by design, deliberately outside Bao/ES/epoch. The
+> tasks/notifications migrations (0014/0015) add **no** kv keys.
 
 > **`LUMEN_SESSION_JWT_SECRET`'s VALUE has exactly ONE home:** this path
 > (amended 2026-11-21: the uniform-shape contract puts the KEY on every
@@ -553,20 +592,21 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
 > — and it must name the UNSUFFIXED Service `lumen-admin` (foundation owns
 > it; the Naming contract guarantees the name).
 
-### 6.2 `kv/lumen/{staging,production}` — each cms plane (15 keys, identical shape)
+### 6.2 `kv/lumen/{staging,production}` — each cms plane (17 keys, identical shape)
 
 | kv path | Keys | Declared by |
 |---|---|---|
-| `kv/lumen/staging` | the SAME 15 keys as `lumen/shared` (uniform-shape law); **filled here:** the 13 cms keys below — **empty here:** `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` (the jwt's value lives only in `shared`; the cms ESes pull `LUMEN_ADMIN_URL` from `lumen/shared`) | `environments/staging/lumen/externalsecret.yaml` |
-| `kv/lumen/production` | the same 15 keys with production values | `environments/production/lumen/externalsecret.yaml` |
+| `kv/lumen/staging` | the SAME 17 keys as `lumen/shared` (uniform-shape law); **filled here:** the 13 cms keys below — **empty here:** `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` (the jwt's value lives only in `shared`; the cms ESes pull `LUMEN_ADMIN_URL` from `lumen/shared`; the webauthn pair is admin-plane only) | `environments/staging/lumen/externalsecret.yaml` |
+| `kv/lumen/production` | the same 17 keys with production values | `environments/production/lumen/externalsecret.yaml` |
 
 ```bash
 # STAGING — note the THREE collapse-preventors: distinct DB, distinct index
 # names, distinct media prefix. The in-code index defaults (posts/photos)
 # belong to PRODUCTION; staging MUST use distinct names (posts-staging /
 # photos-staging) — sharing an index is exactly the failure these keys
-# exist to prevent. The TWO EMPTY keys (jwt secret, admin url) are the
-# uniform shape's placeholders — presence is structure, not consumption.
+# exist to prevent. The FOUR EMPTY keys (jwt secret, admin url, webauthn
+# pair) are the uniform shape's placeholders — presence is structure, not
+# consumption.
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/staging \
   LUMEN_DB_URL=postgres://db_user_staging:$STAGING_DB_PW@lumen-pg.db.svc:5432/lumen_staging \
   LUMEN_MEILI_URL=http://meilisearch.search.svc.cluster.local:7700 \
@@ -577,7 +617,8 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/staging \
   LUMEN_MEDIA_ACCESS_KEY=$R2_MEDIA_ACCESS_KEY LUMEN_MEDIA_SECRET_KEY=$R2_MEDIA_SECRET_KEY \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
   LUMEN_MEDIA_PREFIX=staging/ \
-  LUMEN_SESSION_JWT_SECRET= LUMEN_ADMIN_URL="
+  LUMEN_SESSION_JWT_SECRET= LUMEN_ADMIN_URL= \
+  LUMEN_WEBAUTHN_RP_ID= LUMEN_WEBAUTHN_ORIGIN="
 
 # PRODUCTION — the same shape, production's values.
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/production \
@@ -590,7 +631,8 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/production \
   LUMEN_MEDIA_ACCESS_KEY=$R2_MEDIA_ACCESS_KEY LUMEN_MEDIA_SECRET_KEY=$R2_MEDIA_SECRET_KEY \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
   LUMEN_MEDIA_PREFIX=production/ \
-  LUMEN_SESSION_JWT_SECRET= LUMEN_ADMIN_URL="
+  LUMEN_SESSION_JWT_SECRET= LUMEN_ADMIN_URL= \
+  LUMEN_WEBAUTHN_RP_ID= LUMEN_WEBAUTHN_ORIGIN="
 ```
 
 > **Media on one bucket is a choice, printed honestly:** both envs share
@@ -814,9 +856,11 @@ path in two places — which means the flip side is a *check*, not a chore:
 > don't let it talk you into seeding paths nobody renders.
 
 The only things invisible to the portal are precisely the hand-made
-bootstrap-paradox Secrets (§3.5, the k8s Secret `meilisearch-master-key`,
-and the Patroni-generated DB credentials — Git's CRs don't read those, the
-apps hold them as k8s Secrets). That's the correct shape: the portal can't
+Secrets (§3.5: the bootstrap-paradox pair family plus the OPTIONAL
+`lumen-notification-token` — env-only, no kv row by design), the k8s
+Secret `meilisearch-master-key`, and the Patroni-generated DB credentials
+— Git's CRs don't read those, the apps hold them as k8s Secrets. That's
+the correct shape: the portal can't
 show the keys that unlock the portal's own plumbing. The rehearsal-era
 recovery Secret `lumen-admin-password` (archived RUNBOOK.md) follows the
 same rule — offline note, not vault row.
@@ -883,9 +927,13 @@ annotate + sync):
 kubectl -n argocd annotate application lumen-admin argocd.argoproj.io/refresh=normal --overwrite
 ```
 
-The gate re-runs against the now-seeded vault (`--declared 0` = not yet
-under contract: passes iff no pin) and the sync is born post-seed — **it
-syncs on creation; NO delete, NO restart needed**. Verify:
+The gate re-runs against the now-seeded vault. A declaration of `0` is the
+not-yet-under-contract shape — it passes iff NO pin is set; a NUMBERED
+declaration passes only at the vault's head (`declared == head`), and a
+fresh seed's head is **v1**, so a hub carrying the live estate's number
+fails here until the env's trio is aligned ([06 §4](06-apps-first-release.md)'s
+fresh-cluster note). The sync is born post-seed — **it syncs on creation;
+NO delete, NO restart needed**. Verify:
 
 ```bash
 kubectl -n lumen get externalsecret,deploy,secret

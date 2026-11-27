@@ -1,6 +1,6 @@
 ---
 tags: [architecture, environments]
-updated: 2026-11-15
+updated: 2026-11-27
 ---
 
 # The environments model — one axis, any cluster shape
@@ -83,8 +83,9 @@ TLS secret names). The contract closes that gap two ways:
    `envFrom` secretRef/configMapRef, the migrate Job envFrom.
 
 **And vault values must name the suffixed Services.** The seeded
-`API_BASE` in `kv/lumen/production` is literally
-`http://lumen-http-server-production.lumen.svc.cluster.local` — the suffix
+`CMS_URL` in `kv/mellon/production` is literally
+`http://lumen-http-server-production.lumen.svc.cluster.local` (likewise
+`API_BASE` in `kv/earendil/production`) — the suffix
 is part of the SEEDED VALUE, not something manifests rewrite. The admin ES
 `LUMEN_ADMIN_URL` precedent: a service URL is a VALUE (it lives in Bao), not
 a manifest constant.

@@ -1,6 +1,6 @@
 ---
 tags: [runbook, mellon, portal]
-updated: 2026-11-25
+updated: 2026-11-27
 status: >-
   reference — the walkthrough matches the coordinate model as built
   (mellon 66ab9ed + the gutter and float fixes through b3842a1). Every
@@ -160,7 +160,10 @@ decision record in the vault's decisions tier, never manual SQL.
  rp-id lets console AND staging-console run the ceremony against the same
  credentials; a staging-registered passkey is offered on production too) and
  `LUMEN_WEBAUTHN_ORIGINS` (comma-separated browser origins, e.g.
- `https://console.gofar.id,https://staging-console.gofar.id`). BOTH unset =
+ `https://console.gofar.id,https://staging-console.gofar.id`; both are
+ seeded in `kv/lumen/shared` as `LUMEN_WEBAUTHN_RP_ID` +
+ `LUMEN_WEBAUTHN_ORIGIN` — singular vault property, mapped by the admin
+ ExternalSecret to the plural pod env; [ch. 05 §6.1](05-vault.md)). BOTH unset =
  the feature is OFF and the login page's button degrades gracefully (lumen's
  methods endpoint omits it). Local dev: `LUMEN_WEBAUTHN_RP_ID=localhost` +
  `LUMEN_WEBAUTHN_ORIGINS=http://localhost:5173` (the origin must include the
@@ -254,6 +257,8 @@ kubectl -n lumen rollout restart deploy/lumen-admin-http-server
 
 Unset = the route is not mounted (a POST answers 405 on the GET sibling).
 Rotate by replacing the Secret and restarting (read once at boot). The
+Secret joins the hand-made family in [ch. 05 §3.5](05-vault.md); it has no
+kv path, no ES property, and no epoch flip. The
 audit lines carry app/type/counts/ip — never the token, title or body.
 
 **Deploy.** The lumen release's `deploy-foundation` chain carries this to

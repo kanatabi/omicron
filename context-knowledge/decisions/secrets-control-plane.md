@@ -801,4 +801,21 @@ manual curl of every new endpoint against the live dev plane.
   undecided); the staging portal-policy extension in 05 is the agent's
   reasoned call pending owner confirmation; P3 epoch-agent remains
   backlog.
+- 2026-11-27 — **secret-surface deltas from the passkey + tasks/notifications
+  rounds.** (1) The admin render contract is now FOUR properties from
+  `kv/lumen/shared`: `LUMEN_DB_URL`, `LUMEN_SESSION_JWT_SECRET`,
+  `LUMEN_WEBAUTHN_RP_ID`, and `LUMEN_WEBAUTHN_ORIGINS` ← vault property
+  `LUMEN_WEBAUTHN_ORIGIN` (singular retained; vortex 976e510). This is the
+  one declared property→env translation; the earlier "property == secretKey,
+  no translations" line applies everywhere else. The lumen key SET grew
+  15→17 on ALL THREE paths (uniform-shape law): the pair is filled in
+  `shared`, EMPTY in `staging`/`production`. (2) The notification send token
+  (`LUMEN_NOTIFICATION_TOKEN`) is deliberately NOT a kv binding: it rides
+  the hand-made k8s Secret `lumen-notification-token` (env-only, read at
+  boot, absent = send door unmounted), so it has no ExternalSecret
+  property, no epoch flip, and no place in the portal matrix. Rotation =
+  replace Secret + restart. (3) The tasks/notifications migrations
+  (lumen 0014/0015) add NO kv keys and NO epoch movement. (4) The
+  scopes (`tasks:create|update|manage`) are DB rows seeded by 0014 and
+  granted through the portal — never a vault value.
 - — (append deltas here: contract changes, deviations, new rulings)

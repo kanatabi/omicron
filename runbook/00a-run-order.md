@@ -1,6 +1,6 @@
 ---
 tags: [runbook, index, checklist]
-updated: 2026-11-14
+updated: 2026-11-27
 status: >-
   execution map — Track A steps are the k3d-rehearsed path (the
   dual-environment shape is walked fresh this round); Track B is PROVEN only
@@ -108,7 +108,10 @@ same waves, the same vault bootstrap. See the why-box at the bottom.
   property** — every key the [05 §6](05-vault.md) tables name must exist
   BEFORE its hub syncs.
   ✅ after: `bao status` unsealed; ClusterSecretStore `bao` `Ready: True`;
-  foundation wave 2 (lumen-admin) rolls in its wake.
+  a fresh seed lands every path at **head v1** — the foundation wave-2
+  gate still declares the live estate's number, so align that env's trio
+  to the seeded head ([06 §4](06-apps-first-release.md)'s fresh-cluster
+  note) before expecting `lumen-admin` to roll.
 
 - [ ] **A8 · seeded-matrix check** (before any env hub opens) —
   [05 §6–§7](05-vault.md): prove the seed matches the contract: the

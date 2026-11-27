@@ -1,6 +1,6 @@
 ---
 tags: [decisions, rbac, auth, lumen, mellon]
-updated: 2026-11-24
+updated: 2026-11-27
 ---
 
 # DECISION — the RBAC spine: scopes replace roles, lumen stays the identity authority
@@ -99,6 +99,16 @@ ALTER TABLE users ADD CONSTRAINT users_username_key UNIQUE (username);
   Then `users.role` is DROPPED. TOFU (`InsertUser`) grants the full set.
 - Self-service routes (whoami, change-password) require AUTHENTICATION only —
   no scope. Public `/api/*` + media stay ANONYMOUS.
+
+> **Amended 2026-11-27 (tasks/notifications round):** the catalog is now
+> **SEVEN** — `0014_tasks.sql` seeds `tasks:create|update|manage` next to
+> the original four. The trio gates the admin-plane tasks workspace (reads
+> and invite acceptance need ANY of the three); project MEMBERSHIP and role
+> are the second key, enforced inside every query. No migration grants them:
+> they appear in the portal catalog and an admin grants them through
+> `users:manage` — the D3 "role=admin → all" rule was the one-time cutover,
+> not a standing auto-grant. `scopes.Seed` is the single source the catalog
+> goldens derive from.
 
 ### D4 — Scopes in the token, tv-bump on mutation (R7)
 - `session.Claims` gains `Scopes []string \`json:"scopes"\``.

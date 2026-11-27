@@ -943,8 +943,8 @@ never raw manifests in a hub dir (their prune would delete them).
 > with `images:`-stanza ∪ epoch-TRIO lines, moving an env's `name: lumen`
 > stanzas (the gate pins) in ONE commit. `workflow_dispatch`'s
 > `config-epoch` input is honored ONLY on a single-environment dispatch (the
-> trio's value is env-scoped: production's lumen trio is at `7`, the rest at
-> `0`).
+> trio's value is env-scoped: read it from that env's overlay — the values
+> legitimately differ and change per estate).
 > **Why gate-audit exists (incident record, 2026-11-13):** v3.0.0/v2.0.0
 > fired while the `deploy-*` environments did not exist — GitHub
 > AUTO-CREATES a referenced-but-missing environment UNPROTECTED, so the
@@ -1103,15 +1103,23 @@ them into workloads.
    2026-11-08 — was "no Ingress resource, ever"; the port-forward path stays as
    documented break-glass). DNS for the console record remains an owner action —
    external resource + **GATE #10**, apply-sequence item.
-4. **Seeds:** `kv/data/lumen/{env}` (API_BASE + **`SESSION_JWT_SECRET`** — 32 bytes,
-   generated at bootstrap, the only session-related secret, held by lumen alone +
-   **media: bucket, endpoint, CDN base URL, access keys** — schema in
-   `lumen/env.yaml.sample`, values here; provider itself is an open owner call, see
-   lumen §5) + `kv/data/mellon/{env}` (API_BASE — the portal holds no credentials, and
-   with JWTs it no longer holds even a session secret) + the owner's `users` row seeded
-   with an argon2id `passhash` (lumen-side one-time CLI at bootstrap — credentials live
-   in the DB hashed, per lumen §6) + the `fzr-portal` AppRole/policy added to the §5.6
-   manual bootstrap list.
+4. **Seeds:** `kv/data/lumen/shared` + `kv/data/lumen/{staging,production}` — the
+   **17-key uniform set**: the admin DSN, the session signing key (its VALUE lives
+   only in `shared`), `LUMEN_ADMIN_URL`, the passkey pair (`LUMEN_WEBAUTHN_RP_ID`
+   + property `LUMEN_WEBAUTHN_ORIGIN`, a comma list; both filled only in `shared`),
+   and each cms plane's Meili + media keys — schema in `lumen/env.yaml.sample`,
+   values here; the ExternalSecret CRs are the render contract (runbook ch. 05 §6)
+   + `kv/data/mellon/{staging,production}` (**4 keys each**: `CMS_URL`, `API_BASE`
+   transitional, `ADMIN_URL`, `EDITOR_AUTOSAVE_SECONDS` — the portal holds no
+   credentials, and with JWTs it no longer holds even a session secret; the old
+   `kv/mellon/shared` path was retired 2026-11-21) + the owner's `users` row seeded
+   with an argon2id `passhash` (lumen-side one-time CLI at bootstrap — credentials
+   live in the DB hashed, per lumen §6) + the hand-made Secret family
+   (`lumen-bao-credentials`; the OPTIONAL `lumen-notification-token` for the
+   app-to-app send door) from §5.6.
+   > The tasks/notifications migrations (lumen 0014/0015, 2026-11-27) add **no**
+   > kv keys and no epoch movement: the send token is env-only, the scopes are DB
+   > rows granted from the portal.
 5. **Media (D1, revised):** lumen relays uploads to the object store and returns
    absolute CDN URLs (lumen §5); browsers fetch media from the CDN directly —
    the previously planned `/media/*` SSR relay in earendil/mellon is **cancelled**
@@ -1169,7 +1177,9 @@ kv/ (KV-v2 mount, max_versions=20, check-and-set enabled)
 ├── lumen/
 │   ├── shared      # lumen-admin (Control Plane): LUMEN_DB_URL (lumen_admin DSN),
 │   │               # LUMEN_SESSION_JWT_SECRET (the ONLY home of the signing key),
-│   │               # LUMEN_ADMIN_URL (read by both cms ESes from here)
+│   │               # LUMEN_ADMIN_URL (read by both cms ESes from here),
+│   │               # LUMEN_WEBAUTHN_RP_ID + LUMEN_WEBAUTHN_ORIGIN (passkeys;
+│   │               #       admin-plane only — the cms copies stay empty)
 │   ├── staging     # v1..  cms plane: per-db DSN, LUMEN_MEILI_* (INDEX names MUST
 │   │               #       differ from production — posts-staging/photos-staging),
 │   │               #       LUMEN_MEDIA_* + LUMEN_MEDIA_PREFIX staging/
@@ -1188,6 +1198,13 @@ The **values** of `API_BASE`/`CMS_URL` must name the SUFFIXED Services
 (`lumen-http-server-staging…`, `…-production…`) — `nameSuffix` rewrites
 metadata.name only, so the suffixed name is a seeded string, guaranteed to
 exist by the Naming contract (vortex README).
+
+> **Not every secret is a kv binding.** The notification send token
+> (`LUMEN_NOTIFICATION_TOKEN`, tasks/notifications rounds 2026-11-27) is
+> deliberately env-only: it rides the hand-made k8s Secret
+> `lumen-notification-token` and has NO kv path, ES property, or epoch
+> flip. Unset = the send door is not mounted. The passkey pair IS a kv
+> binding (above); the notification token is not.
 
 - **App config set** = one path prefix per app; **environment** = leaf; **version** =
   native KV-v2 integer history (diff, rollback, soft-delete). Grouping by app reads
@@ -1233,10 +1250,14 @@ files.
 > box's original draft are retired — the equivalents live at
 > [`environments/production/`](vortex/environments/production/) and
 > [`environments/staging/`](vortex/environments/staging/) (+ the
-> `environments/foundation/` plane, where lumen-admin's ES binds ONLY
-> `LUMEN_DB_URL` + `LUMEN_SESSION_JWT_SECRET`: the admin render contract).
-> "Going production" was already the norm; the Application CRs now point at
-> the env trees per hub (`apps/foundation|staging|production/`).
+> `environments/foundation/` plane, where lumen-admin's ES binds FOUR
+> properties from `kv/lumen/shared` — `LUMEN_DB_URL`,
+> `LUMEN_SESSION_JWT_SECRET`, `LUMEN_WEBAUTHN_RP_ID`, and
+> `LUMEN_WEBAUTHN_ORIGINS` ← property `LUMEN_WEBAUTHN_ORIGIN`, the one
+> declared translation; `LUMEN_ADMIN_URL` is read from the same path by
+> the two cms ESes). "Going production" was already the norm; the
+> Application CRs now point at the env trees per hub
+> (`apps/foundation|staging|production/`).
 
 ### 5.4 Promotion flow (staging → prod)
 
@@ -1348,7 +1369,13 @@ render → everything above that is Git-synced.
   keys, the age key, and first-boot Argo admin credentials (deleted after login). Losing
   the unseal key = losing all config/secret values regardless of every backup below.
 - ESO's own credentials to reach Bao = one K8s Secret applied at bootstrap (§5.6 manual
-  step) — the only "seeded" object; everything downstream is templates.
+  step) — the only bootstrap-critical "seeded" object; everything downstream is templates.
+- **The optional second hand-made Secret:** `lumen-notification-token` (namespace
+  `lumen`) gates the app-to-app notification send door (`POST /admin/notifications`,
+  tasks/notifications rounds 2026-11-27). It is deliberately **env-only** — no kv
+  path, no ExternalSecret property, no epoch flip. Unset = the route is not mounted;
+  rotate by replacing the Secret and restarting the admin pod. The vortex envFrom
+  that lets the pod see it must land first.
 
 ### 5.7 Budget/dependency note
 

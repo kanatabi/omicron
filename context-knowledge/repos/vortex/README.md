@@ -1,6 +1,6 @@
 ---
 tags: [vortex, gitops]
-updated: 2026-11-15
+updated: 2026-11-27
 ---
 
 # vortex — the GitOps source of truth
@@ -85,8 +85,12 @@ new `bases/<name>/` + a CR in the folder its hub syncs — never a hub edit.
   tree (`$patch: delete` elsewhere). Deep-dive:
   [../architecture/environments-model.md](../../architecture/environments-model.md).
 - **The ES render contract** — every ExternalSecret's `data:` list mirrors
-  the role's real binds; `LUMEN_ROLE` stays inline on pods (identity, not
-  config).
+  the role's real binds (property == secretKey, with ONE declared
+  translation: `LUMEN_WEBAUTHN_ORIGINS` ← vault property
+  `LUMEN_WEBAUTHN_ORIGIN`); `LUMEN_ROLE` stays inline on pods (identity, not
+  config). Not every secret is an ES value: `LUMEN_NOTIFICATION_TOKEN` rides
+  the hand-made `lumen-notification-token` Secret — no kv path, no epoch
+  flip.
 - **The epoch TRIO + config-gate** — the PreSync Job (`components/
   config-gate`) decodes `omicron/config.epoch` from the rendered output and
   REFUSES the sync unless declared == rendered — and since the pin-as-lock
