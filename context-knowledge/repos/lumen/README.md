@@ -297,8 +297,17 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   inline-HTML policy, slug/payload/URL rules, 100-recipient cap, 120/min
   limiter, ONE env-only send token) + the five routes (four bell reads
   any-authenticated, the public token-gated SEND door unmounted when the
-  token is unset) + the mount/matrix/wiring. **M2.B (tasks service +
-  routes) is next.**
+  token is unset) + the mount/matrix/wiring.
+  **M2.B landed** (`779fed5`): the tasks service (validation, 24h
+  invites, best-effort invite/assignment notifications with escaped
+  names, the notifier seam) + 25 routes behind the `tasks:create|update|
+  manage` scope matrix and the project role, the grouped workspace
+  response, three-way PATCH presence, and the client timezone header
+  (with `time/tzdata` embedded — the alpine image has no zoneinfo).
+  `6571c76` then wired the C4 user-delete repair (promote the next
+  project admin; soft-delete an empty project) through an adminsvc
+  lifecycle seam, and derived the TOFU/verify/login catalog goldens from
+  `scopes.Seed`. **M3 (the two-user end-to-end walk) is next.**
 - **2026-11-15** — the observability round (`a9d71f9`): `internal/obs`
   (RED pairs + timeouts + `/metrics` on 9090 every shape), adapters
   wrapped, sample made loadable, `.gitignore` doctrine gap closed. The
