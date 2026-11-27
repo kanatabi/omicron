@@ -226,3 +226,34 @@ Working rules for every task (estate-wide, non-negotiable):
 - JWKS/asymmetric local verification (R8 — when an app wants zero-hop checks).
 - App namespaces actually enforced (R10 — the catalog carries examples; the first real app lands its own BE + scopes and proves the wall).
 - Per-app Patroni separation (R4 — the per-app DATABASE boundary is already the seam).
+
+
+## 6. Addendum (2026-11-27) — the last-manager gap, and the tasks precedent
+
+The passkey round's audit found a hole outside the passkey code: the
+`users:manage` guard lives on DELETE (a delete that would leave ZERO
+holders is `ErrLastManager`) but **not on `PATCH /admin/users/{u}/scopes`**.
+An admin can PATCH their own scope set to remove `users:manage` (or the
+last manager can be demoted by another holder) and leave the estate with
+no manager at all — every admin door 403s, and recovery is the `lumen
+user` bootstrap verb / manual SQL, not the portal. The portal's own UI
+copy ("the last manager cannot be removed") covers only the delete path.
+
+**Status: OPEN — owner decision required.** Two coherent closes:
+
+1. the delete guard's twin on the scopes PATCH: inside its transaction,
+   count `users:manage` holders EXCLUDING the target; if the resulting set
+   would be empty, `409` (the same voice as delete). Cheap and symmetric;
+   it also covers demoting *someone else* down to zero.
+2. an explicit break-glass workflow (a documented `lumen user` runbook
+   path) with the gap accepted as a recorded trade-off.
+
+The tasks round (0014/0015, 2026-11-27) applied the same invariant at its
+own layer, which is the precedent to copy: **every project-admin mutation
+locks the project row first, and demoting/removing the LAST project admin
+is a 409** — the invariant is enforced at the WRITE path, not only when a
+row disappears. Deleting a user promotes the earliest remaining member
+(the lifecycle hook), so a project can never be left adminless by an
+account deletion either. Lesson: any authority SET needs an
+"at-least-one-holder" predicate on every mutation that can shrink it —
+delete is only one of the shrink verbs.

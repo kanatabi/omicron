@@ -278,7 +278,18 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   scrape in.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
-- **2026-11-27** — **the tasks + notifications contract lands** (`4143579`):
+- **2026-11-27** — **the tasks app + notifications are COMPLETE in the
+  portal** (`0afa48c`): the `/tasks` workspace (client-rendered through
+  the relay: stats in the client zone, the three views, the projects
+  sub-sidebar with the sort control, the grouped list, the New-task
+  composer, the invite banner, project settings with members/roles/
+  invites, and the right-side Sheet drawer with details/checklist/
+  comments/activity + the `/tasks?task=` deep link), the topbar
+  notifications bell + pull-on-open sanitized panel (`934a4be`), and the
+  dashboard Tasks widget with any-of scope gating (`widgetHeld`). The
+  contract round (`4143579`) carries the 28 AdminApi methods, the mock
+  twin and the relay's local namespace.
+- **2026-11-27 earlier** — **the tasks + notifications contract lands** (`4143579`):
   13 domain types + 28 AdminApi methods (13 tasks types; the SEND door is
   app-to-app only and absent from the portal), both adapters (admin
   upstream, enumerated ops, the `X-Client-Timezone` day-math header, the
