@@ -278,16 +278,19 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   scrape in.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
-- **2026-11-27 (the Linear round + the tasks palette)** — the portal's
-  interactive furniture was squared: `rounded-full` retired for controls
-  (6px `rounded-md`), tags at 4px `rounded-sm`, surfaces 8px, full radius
-  only for avatars/count badges/status dots/swatches/switch tracks; the
-  content box stays 16px furniture. Buttons/chips/segmented/search/icon
-  buttons all moved; content tabs (diff, task drawer) are underline tabs,
-  mode switches are one bordered segmented group; `text-white` on brand
-  fills became `text-primary-foreground` (theme-correct on light-brand dark
+- **2026-11-27 (the Linear round + the tasks palette)** — shape became a
+  grammar: **8px** text buttons/inputs/segmented tracks (`rounded-lg`),
+  **6px** filter chips/segmented cells (`rounded-md`), **4px** tags
+  (`rounded-sm`), surfaces 8px, content box 16px furniture. **Full radius
+  is a meaning**: the ⌘K field and tag search (pill by doctrine), icon-only
+  controls (bell, theme toggle, close X, clear), avatars, count badges,
+  dots, swatches and switch tracks. The first pass over-squared (one 6px
+  radius everywhere) and the owner corrected it the same day — see
+  LEARNING; content tabs (diff, task drawer) are underline tabs, mode
+  switches are one bordered segmented group; `text-white` on brand fills
+  became `text-primary-foreground` (theme-correct on light-brand dark
   themes) and `hover:brightness-110` became a token hover. A shape-guard
-  test pins the `rounded-full` whitelist. **Same round:** the palette's
+  test pins the circle signatures. **Same round:** the palette's
   `go to` rows derive from `src/lib/destinations.ts` — the SAME table and
   `held()` gate as the rail, so Tasks appears with any of the tasks trio
   and scoped doors are never offered to 403 accounts (Users now points at
