@@ -322,7 +322,10 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   (muted icons at rest; active row = neutral fill + 2px hue bar + hue icon),
   upgraded the dashboard cards (sentence-case 13px titles, `see all ›`, 16px
   padding, hover border), and added one-line desk subtitles
-  (Dashboard/Posts/Photos). The auth gate was rebuilt as one shared `AuthShell`
+  (Dashboard/Posts/Photos). Tier 2/3 finish: users-table hover + right-aligned
+  dates, notification actions in product text, task-drawer tabs sans, global
+  brand-tinted selection, thin neutral scrollbars, `color-scheme` per mode,
+  and theme-color meta for the browser chrome. The auth gate was rebuilt as one shared `AuthShell`
   (login + setup): form right / visual left, a token-hued aurora with grain,
   ASCII glyphs, a floating invented-data glass postcard and Level-3 ambient
   motion (aurora drift, card bob, glyph drift, desktop pointer parallax;
