@@ -207,6 +207,61 @@ The three failures this round produced, in the order they bit:
   `request.json()` while the client sent form fields (the 415 fix moved
   only the client half). Both halves of a wire move in one commit.
 
+## The tasks application + notifications (the app-center, 2026-11-27)
+
+The first lumen-native application: projects → tasks, with invites,
+comments, a timeline and a stats rollup, plus the estate-generic
+notification bell. **Admin plane only** — the cms fleets never mount these
+routes and their databases never own the tables.
+
+**Scopes.** `0014` seeds `tasks:create|update|manage` into the portal's
+catalog. GRANT them through the portal (Users → scopes) — no migration
+grants privileges. Reads and invite acceptance require ANY of the three;
+creates need `create`; task edits/comments `update`; project settings,
+invites, members and roles `manage`. Inside a project the member ROLE is
+the second key: a `manage` holder who is not a project admin still gets
+403 on that project's settings.
+
+**The project rules the portal relies on.** Soft delete only
+(`deleted_at` on projects/tasks; live lists filter), completion is a flag
+(`completed_at`), there is no ordering column (the portal sorts), many
+admins per project with the last-admin 409 guard, member removal
+unassigns their tasks, an assignee must be a member, and deleting a user
+promotes the next member (or soft-deletes a memberless project) through
+the lifecycle hook after the user row is gone.
+
+**Time.** `GET /admin/tasks` and `/admin/task-stats` read
+`X-Client-Timezone` (IANA; UTC fallback). "My day" = due today + open
+overdue; "this week" is Monday-start in the client's zone. The binary
+embeds the zone database — the alpine image has none.
+
+**Notifications.** `expires_at` is the TTL (30 days; an invite's
+notification rides the invite's 24h). There is NO purge job yet (owner:
+hold): every read filters `expires_at > now()`, so expired rows are
+invisible but remain in the table. A future janitor will be in-process or
+a CronJob — never River-periodic here (the admin plane runs no worker).
+
+The SEND door (`POST /admin/notifications`) is app-to-app, in-cluster,
+and gated by ONE shared token from the MANUAL Secret
+`lumen-notification-token` (optional; env-only — not a config binding,
+not a Bao/ES value, so no epoch flip):
+
+```
+kubectl -n lumen create secret generic lumen-notification-token \
+  --from-literal=LUMEN_NOTIFICATION_TOKEN="$(openssl rand -base64 32)"
+kubectl -n lumen rollout restart deploy/lumen-admin-http-server
+```
+
+Unset = the route is not mounted (a POST answers 405 on the GET sibling).
+Rotate by replacing the Secret and restarting (read once at boot). The
+audit lines carry app/type/counts/ip — never the token, title or body.
+
+**Deploy.** The lumen release's `deploy-foundation` chain carries this to
+the admin plane; the cms chains are unaffected. The envFrom that lets the
+pod SEE the token lands with the vortex
+`feat/notifications-token-secret` branch — merge it before creating the
+Secret.
+
 ## Where the other docs live
 
 - **Contract** (field semantics, canvas geometry, invariants):
