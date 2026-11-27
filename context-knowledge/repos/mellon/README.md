@@ -303,7 +303,10 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   — the posts/photos architecture; the sidebar's sort control retired) with
   palette parity (Filter status / assignee / priority, Clear); assignee
   options derive from the loaded view, so a member with no task there is
-  absent by design. **Same round:** the palette's
+  absent by design. The voice pass followed: prose/help moved from 10px mono
+  to 12px Inter (`leading-relaxed`), while values/IDs/dates/counts/statuses
+  stay mono and uppercase stays a LABEL treatment; desk page gaps unified at
+  20px, tags/users rows at 40px, and tabular numerals extended. **Same round:** the palette's
   `go to` rows derive from `src/lib/destinations.ts` — the SAME table and
   `held()` gate as the rail, so Tasks appears with any of the tasks trio
   and scoped doors are never offered to 403 accounts (Users now points at
