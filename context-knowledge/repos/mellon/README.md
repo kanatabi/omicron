@@ -311,7 +311,12 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   `currentColor`, which painted the right drawer's edge near-white), bottom
   sheets wear the shadcn Drawer anatomy (rounded top + presentational handle),
   the task drawer renders bottom below md and right above it, and rail
-  footers are explicitly `order:999` so they stop landing mid-rail. **Same round:** the palette's
+  footers are explicitly `order:999` so they stop landing mid-rail. The type
+  pass then made page/entity/dialog titles Inter everywhere — Fraunces survives
+  only on the `mellon;` wordmark + login/setup — and the mobile headers were
+  normalized: Tasks title+New task on one row, Posts `Import`/`New Post` no-wrap,
+  Users' short copy + title-row button, Compare's labeled app/env + from/to +
+  view/content groups, and the vault app/env labels. **Same round:** the palette's
   `go to` rows derive from `src/lib/destinations.ts` — the SAME table and
   `held()` gate as the rail, so Tasks appears with any of the tasks trio
   and scoped doors are never offered to 403 accounts (Users now points at
