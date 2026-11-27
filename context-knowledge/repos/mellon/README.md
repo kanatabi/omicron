@@ -313,10 +313,16 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   the task drawer renders bottom below md and right above it, and rail
   footers are explicitly `order:999` so they stop landing mid-rail. The type
   pass then made page/entity/dialog titles Inter everywhere — Fraunces survives
-  only on the `mellon;` wordmark + login/setup — and the mobile headers were
+  only on the `mellon;` wordmark + login/setup. The mobile headers were
   normalized: Tasks title+New task on one row, Posts `Import`/`New Post` no-wrap,
   Users' short copy + title-row button, Compare's labeled app/env + from/to +
-  view/content groups. The auth gate was rebuilt as one shared `AuthShell`
+  view/content groups. The SaaS polish pass then moved the interactive chrome to
+  Inter (inputs, selects, text buttons/chips, table body text; mono stays for
+  keys, ids, dates, counts, statuses, shortcuts), neutralized the sidebar
+  (muted icons at rest; active row = neutral fill + 2px hue bar + hue icon),
+  upgraded the dashboard cards (sentence-case 13px titles, `see all ›`, 16px
+  padding, hover border), and added one-line desk subtitles
+  (Dashboard/Posts/Photos). The auth gate was rebuilt as one shared `AuthShell`
   (login + setup): form right / visual left, a token-hued aurora with grain,
   ASCII glyphs, a floating invented-data glass postcard and Level-3 ambient
   motion (aurora drift, card bob, glyph drift, desktop pointer parallax;
