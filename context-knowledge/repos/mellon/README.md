@@ -148,7 +148,7 @@ earendil so one mental model covers both SSR apps, and the same
 ```mermaid
 flowchart TB
     subgraph shell["the §11 shell (every route)"]
-        NAV["left nav (Content / Control Plane / Admin) + topbar (⌘K pill centered · account avatar menu)<br/>ONE chrome mass — no internal borders; content scrolls in the rounded box: flush top/left at lg, 12px ring right/bottom (§11.1, 2026-11-16/17)<br/>breadcrumbs IN-PAGE, sub-pages only, parent-naming (editor `posts ›`), Secrets kv-path above the title<br/>collapsed rail = centered icon column (36px squares, labels out of layout)<br/>dropdowns are the house Select (no native <select>); content-mode palette rows wear cast-hued type pills"]
+        NAV["left nav (Content / Control Plane / Admin) + topbar (⌘K search centered · account avatar menu)<br/>ONE chrome mass — no internal borders; content scrolls in the rounded box: flush top/left at lg, 12px ring right/bottom (§11.1, 2026-11-16/17)<br/>breadcrumbs IN-PAGE, sub-pages only, parent-naming (editor `posts ›`), Secrets kv-path above the title<br/>collapsed rail = centered icon column (36px squares, labels out of layout)<br/>dropdowns are the house Select (no native <select>); content-mode palette rows wear cast-hued type tags"]
     end
     subgraph app["src/routes/(app)/"]
         DASH["/ dashboard: the widget home — the registry's widgets on a coordinate canvas"]
@@ -278,6 +278,21 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   scrape in.
 - **2026-11-15** — `PLAN.md` became local-only; THREAT-NOTE moved to the
   vault archive; this vault note created.
+- **2026-11-27 (the Linear round + the tasks palette)** — the portal's
+  interactive furniture was squared: `rounded-full` retired for controls
+  (6px `rounded-md`), tags at 4px `rounded-sm`, surfaces 8px, full radius
+  only for avatars/count badges/status dots/swatches/switch tracks; the
+  content box stays 16px furniture. Buttons/chips/segmented/search/icon
+  buttons all moved; content tabs (diff, task drawer) are underline tabs,
+  mode switches are one bordered segmented group; `text-white` on brand
+  fills became `text-primary-foreground` (theme-correct on light-brand dark
+  themes) and `hover:brightness-110` became a token hover. A shape-guard
+  test pins the `rounded-full` whitelist. **Same round:** the palette's
+  `go to` rows derive from `src/lib/destinations.ts` — the SAME table and
+  `held()` gate as the rail, so Tasks appears with any of the tasks trio
+  and scoped doors are never offered to 403 accounts (Users now points at
+  `/admin/users`); the tasks page registers its verbs and one flat row per
+  visible task. DESIGN §7 and §11.3 carry both contracts.
 - **2026-11-27** — **the tasks app + notifications are COMPLETE in the
   portal** (`0afa48c`): the `/tasks` workspace (client-rendered through
   the relay: stats in the client zone, the three views, the projects

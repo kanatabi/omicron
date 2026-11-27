@@ -9,6 +9,36 @@ The standing doctrine lives in the repo's
 [DESIGN.md §2](https://github.com/kanatabi/mellon/blob/main/DESIGN.md) and its
 [AGENTS.md](https://github.com/kanatabi/mellon/blob/main/AGENTS.md). This
 
+- **2026-11-27 (later) — the palette is a CONSUMER of the nav table, not a
+  copy of it.** The rail had `SCOPED_NAV`; the palette kept its own route
+  list and drifted twice: Users pointed at `/settings/users` (the page is
+  `/admin/users`), and Vault/Compare/Users were offered to principals the
+  rail correctly hid (they 403'd). The fix is structural:
+  `src/lib/destinations.ts` owns the table, `visibleDestinationGroups(held)`
+  is the ONE scope gate, the rail renders it and `destinationCommands`
+  derives the palette's `go to` rows from the same filtered groups. Tasks
+  joined as a destination at the same time. Corollary: the tasks page
+  registers its own verbs through `setPageCommands` (New task/project,
+  View/Project/Sort submenus, one flat row per visible task, invitations) —
+  the page is the only place that knows its data, and the 403 panel
+  registers nothing. Tests: `destinations.dom.test.ts`,
+  `tasks/commands.test.ts`.
+
+- **2026-11-27 — radius utilities are ordered by SCALE, not by class order
+  in the markup.** Moving the button cast from `rounded-full` to
+  `rounded-md` looked like a variant-only edit — but the base class still
+  carried `rounded-lg`, and Tailwind emits radius utilities in scale order
+  (sm before md before lg), so the base's `lg` would have beaten the
+  variant's `md` regardless of the class attribute's order (the same class
+  of bug the cast's `tv` definition order already taught once). The fix:
+  the base carries NO radius; the SIZE (always present) carries exactly one
+  radius class — `rounded-md` for controls, `rounded-sm` for xs/keycap
+  sizes. One radius class per element makes the shape deterministic.
+  Second lesson from the same round: `text-white` on `bg-brand` is a theme
+  bug, not a style — on light-brand dark themes (catppuccin mocha, tokyonight)
+  white-on-lavender fails contrast; `text-primary-foreground`
+  (`var(--background)`) is the theme-correct ink and flips with the mode.
+
 - **2026-11-27 (later) — the browser client speaks the RELAY's namespace,
   not lumen's wire paths.** The tasks contract was first written with
   `/admin/tasks`-style URLs in `#lib/api/client.ts`; the same-origin relay
