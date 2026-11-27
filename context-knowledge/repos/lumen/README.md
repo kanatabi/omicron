@@ -307,7 +307,16 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   `6571c76` then wired the C4 user-delete repair (promote the next
   project admin; soft-delete an empty project) through an adminsvc
   lifecycle seam, and derived the TOFU/verify/login catalog goldens from
-  `scopes.Seed`. **M3 (the two-user end-to-end walk) is next.**
+  `scopes.Seed`.
+  **M3 landed** (`7360eb2`): the two-user walk over the real router —
+  invite → notification (TTL equal to the invite) → accept → assign →
+  notification → comment/activity → toggle → exact Jakarta stats →
+  complete → soft delete → the send door + mark-read/read-all — plus
+  the denial matrix (404 non-member read/write, 409 assignee/last-admin,
+  410 expired invite consumed, expired notifications invisible, the
+  unmounted send door) and the C4 promotion proven through the real
+  user-delete door. **M4 (mellon: workspace, drawer, bell, widget) is
+  the last build milestone.**
 - **2026-11-15** — the observability round (`a9d71f9`): `internal/obs`
   (RED pairs + timeouts + `/metrics` on 9090 every shape), adapters
   wrapped, sample made loadable, `.gitignore` doctrine gap closed. The
