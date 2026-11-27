@@ -306,7 +306,12 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   absent by design. The voice pass followed: prose/help moved from 10px mono
   to 12px Inter (`leading-relaxed`), while values/IDs/dates/counts/statuses
   stay mono and uppercase stays a LABEL treatment; desk page gaps unified at
-  20px, tags/users rows at 40px, and tabular numerals extended. **Same round:** the palette's
+  20px, tags/users rows at 40px, and tabular numerals extended. The overlay
+  pass followed: sheets gain `border-border` (Tailwind v4 defaults to
+  `currentColor`, which painted the right drawer's edge near-white), bottom
+  sheets wear the shadcn Drawer anatomy (rounded top + presentational handle),
+  the task drawer renders bottom below md and right above it, and rail
+  footers are explicitly `order:999` so they stop landing mid-rail. **Same round:** the palette's
   `go to` rows derive from `src/lib/destinations.ts` — the SAME table and
   `held()` gate as the rail, so Tasks appears with any of the tasks trio
   and scoped doors are never offered to 403 accounts (Users now points at
