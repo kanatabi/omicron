@@ -1,6 +1,6 @@
 ---
 tags: [docs, doctrine]
-updated: 2026-11-25
+updated: 2026-11-29
 ---
 
 # Doc map — which document lives where, and why
@@ -29,6 +29,22 @@ The estate has a doc tier. Knowing it answers "where do I record this?" and
 | [mellon](https://github.com/kanatabi/mellon) | ✔ (refreshed 2026-11-15) | ✔ (new 2026-11-15) | ✔ | local-only (2026-11-15) |
 | [vortex](https://github.com/kanatabi/vortex) | ✔ (slimmed 2026-11-15) | ✔ (new 2026-11-15; absorbed the README conventions) | — (INFRA doc) | — |
 | [anvil](https://github.com/kanatabi/anvil) | ✔ (slimmed 2026-11-15) | ✔ (new 2026-11-15; absorbed the README depth) | — (release contract lives in AGENTS) | — |
+
+## App-level docs (2026-11-29)
+
+A feature that spans repos (lumen API + mellon UI + vortex wiring) gets an
+app folder under `apps/<app>/`:
+
+- `PRD.md` — product requirements and scope;
+- `TECH_SPEC.md` — schema/API/UX contract;
+- `PLAN.md` — milestone breakdown (this is an app plan, not the owner's
+  local-only repo journal);
+- the binding architecture decision/ADR lives in `decisions/<app>.md`, because
+  it is the cross-repo decision record;
+- `README.md` — the app index and current open decisions.
+
+First: [finance](apps/finance/README.md) /
+[ADR](decisions/finance-app.md).
 
 ## Superseded docs go to the vault archive, not to oblivion
 

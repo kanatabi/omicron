@@ -1,6 +1,6 @@
 ---
 tags: [index, vault]
-updated: 2026-11-15
+updated: 2026-11-29
 ---
 
 # context-knowledge — the omicron vault
@@ -32,6 +32,7 @@ decision records, and the walked-lessons ledger.
 | [decisions/](decisions/README.md) | tracked decision records (the binding-contract kind) |
 | [architecture/](architecture/README.md) | detailed system explainers, one concern each (mermaid throughout, runbook pointers) |
 | [repos/](repos/omicron/README.md) | detailed learning notes + lesson ledgers — learn a repo from here alone; extra focused files (API surfaces, subsystem walkthroughs) as sections outgrow their note |
+| [apps/](apps/finance/README.md) | app-level PRDs, tech specs and plans for features spanning repos (finance first; the binding ADR lives in decisions/) |
 | [archive/](archive/earendil-ARCHITECTURE.md) | verbatim snapshots of removed docs, provenance headers on |
 
 ## Conventions

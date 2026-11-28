@@ -353,6 +353,15 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   shared inbox). The relay stamps the deployment's server-only `PORTAL_ENV`
   onto the bell reads so staging and production task notifications never
   cross consoles; the browser cannot choose the tenant.
+- **2026-11-29 (later, finance M0)** — the finance app's shell: a `/finance`
+  rail row in Tools gated by ANY of the eleven `finance:*` scopes (the Tools
+  group now gates each row independently — Tasks and Finance never bleed),
+  `/admin/finance` routed to `CMS_URL`, `financeMeta()` in both adapters and
+  the mock twin, and a server-gated page that confirms
+  `/admin/finance/v1` (app · apiVersion · defaultCurrency) through the
+  same-origin relay. A missing finance scope is a 403 in the load; an
+  unmounted cms app answers its honest status instead of a 500. The
+  workspace/plan/budget surfaces land with M1–M7.
 - **2026-11-29 (later)** — tasks show **display names**: the assignee pickers
   (drawer + composer) and the project roster label with `TaskMember.name`,
   appending `(@username)` only when display names collide; selections still

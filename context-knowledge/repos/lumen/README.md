@@ -315,6 +315,19 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   The shared notifications bell stays on admin; task rows are env-tagged
   (`0017_notification_env.sql`) and the cms sender uses the existing send
   door (`toIds` + `env`; optional `LUMEN_NOTIFICATION_TOKEN`).
+- **2026-11-29 (later, finance M0)** — finance became code (the second native
+  app): `0019_finance_scope.sql` (admin-only: the eleven `finance:*` scopes;
+  `finance:read` is the broad read, writes are granular only) and
+  `0020_finance_cms.sql` (cms-only: workspaces/members/invites, accounts,
+  plans/periods/categories, independent versioned budget lines, expenses +
+  basket items, the signed ledger, plan links and contributions — **no users
+  FKs**, no new DB/DSN). `internal/finance` is the module skeleton and
+  `GET /admin/finance/v1` is mounted on the cms plane behind ANY finance
+  scope; the cms composition refuses to mount finance without
+  `LUMEN_IDENTITY_TOKEN` (no partial app). The scope grammar now admits
+  dotted verbs (`finance:plan.read`). Concurrency/caching contracts are the
+  vault ADR; no Redis/in-process finance cache, balances are a Postgres
+  projection.
 - **2026-11-27 (later)** — the tasks application's **M0** landed
   (`efb2928`): `0014_tasks.sql` (projects/members/invites/tasks/
   subtasks/comments/activity — soft delete + completion flags, many
