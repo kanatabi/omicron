@@ -126,22 +126,27 @@ migrations, scopes and auth.
 
 ## M1 — Workspaces, members, invites, permissions
 
+**Status:** merged to `main` on 2026-11-29 — lumen `0c48186`, mellon `db523a8`;
+approved by the independent review gate (three rounds, final `APPROVE`).
+Pending-invite list/revoke UI and workspace rename are deferred to the M7 UI
+pass; the APIs exist.
+
 **Goal:** a user can create a workspace, invite a portal user, accept/decline,
 and see the correct role/permissions.
 
 **Tasks**
 
-- [ ] Tables: workspaces, members, invites (already in 0020; add store queries).
-- [ ] Service: create/rename/archive; invite by username (identity door);
+- [x] Tables: workspaces, members, invites (already in 0020; add store queries).
+- [x] Service: create/rename/archive; invite by username (identity door);
       accept/decline/revoke; role update; remove; last-admin guard.
-- [ ] Authorization: membership join on every workspace query; role admin
+- [x] Authorization: membership join on every workspace query; role admin
       required for `finance:workspace.manage`.
-- [ ] Effective permissions object; `finance:read` implication.
-- [ ] API: workspace list/detail, members, invites, roles.
-- [ ] Identity hydration for member names; anonymous/email never in payloads.
-- [ ] UI data plumbing: workspace switcher, members page/sheet; invite search
+- [x] Effective permissions object; `finance:read` implication.
+- [x] API: workspace list/detail, members, invites, roles.
+- [x] Identity hydration for member names; anonymous/email never in payloads.
+- [x] UI data plumbing: workspace switcher, members page/sheet; invite search
       (reuse the tasks people search pattern).
-- [ ] Tests: non-member 404; member/admin 403 matrix; last-admin 409; invite TTL
+- [x] Tests: non-member 404; member/admin 403 matrix; last-admin 409; invite TTL
       410; duplicate invite upsert; identity unavailable maps 503.
 
 **Acceptance**

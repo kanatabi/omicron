@@ -328,6 +328,19 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   dotted verbs (`finance:plan.read`). Concurrency/caching contracts are the
   vault ADR; no Redis/in-process finance cache, balances are a Postgres
   projection.
+- **2026-11-29 (later, finance M1)** — workspaces/members/invites are live:
+  membership is the authorization join on every query (non-member 404, member
+  attempting an admin verb 403); creation requires
+  `finance:workspace.manage` (no role exists yet), and
+  update/archive/invites/roles require the scope + the workspace `admin` role,
+  with the workspace row locked before the last-admin count (409). Invites are 7-day,
+  `(workspace_id, invitee_id)`-unique and upsert on re-invite; accept consumes
+  the row (410 expired then 404). Workspace PATCH is versioned (`If-Match`,
+  409 carries `currentVersion`). Member names and the invite typeahead ride the
+  identity door; a missing identity is repaired lazily (orphans removed,
+  adminless workspaces promote the earliest member, memberless ones archive).
+  The effective-permissions object projects `finance:read` into every read and
+  requires scope+admin for workspaceManage.
 - **2026-11-27 (later)** — the tasks application's **M0** landed
   (`efb2928`): `0014_tasks.sql` (projects/members/invites/tasks/
   subtasks/comments/activity — soft delete + completion flags, many

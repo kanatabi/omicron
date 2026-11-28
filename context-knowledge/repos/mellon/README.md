@@ -362,6 +362,16 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   same-origin relay. A missing finance scope is a 403 in the load; an
   unmounted cms app answers its honest status instead of a 500. The
   workspace/plan/budget surfaces land with M1–M7.
+- **2026-11-29 (later, finance M1)** — the finance page becomes usable: a
+  workspace switcher column (create form when the caller holds
+  `finance:workspace.manage`), the selected workspace's roster with role
+  badges, one-click promote/demote, remove/archive behind the house
+  `Confirm`, and invite-by-username with a debounced `@` typeahead over
+  `/workspaces/{id}/people` (new in both adapters + the mock twin). Pending
+  invites render in a banner with accept/decline; workspace archive uses the
+  same confirm. The page reads role/permissions from the workspace payload
+  (never cookie folklore) and renders lumen's 409 copy verbatim. Fourteen
+  relay branches + the typed client methods mirror the M1 API.
 - **2026-11-29 (later)** — tasks show **display names**: the assignee pickers
   (drawer + composer) and the project roster label with `TaskMember.name`,
   appending `(@username)` only when display names collide; selections still

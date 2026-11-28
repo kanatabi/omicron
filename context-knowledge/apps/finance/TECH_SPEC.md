@@ -101,7 +101,8 @@ No `kind` column: a one-member workspace is private by fact.
 | invited_by | uuid | nullable |
 | joined_at | timestamptz | |
 
-PK `(workspace_id, user_id)`, index `(user_id)`. Last-admin guard in service.
+PK `(workspace_id, user_id)`, index `(user_id)`. Last-admin guard in the
+store transaction, under the workspace row lock.
 
 ### 3.3 `finance_workspace_invites`
 
@@ -590,7 +591,9 @@ Workspace responses include:
 | GET/PATCH | `/workspaces/{id}` | workspace settings |
 | POST | `/workspaces/{id}/archive` | archive |
 | GET | `/workspaces/{id}/members` | roster (names via identity) |
-| POST | `/workspaces/{id}/invites` | invite by username |
+| GET | `/workspaces/{id}/people?q=` | admin invite typeahead (members excluded) |
+| POST | `/workspaces/{id}/invites` | invite by username (7-day TTL; re-invite upserts) |
+| DELETE | `/workspaces/{id}/invites/{iid}` | admin revoke a pending invitation |
 | PATCH | `/workspaces/{id}/members/{uid}` | role |
 | DELETE | `/workspaces/{id}/members/{uid}` | remove (last admin 409) |
 | GET | `/invites` | caller's inbox |
@@ -631,8 +634,9 @@ with the existing row. Concurrency: mutable aggregates carry `version`; writes
 send `If-Match: "<version>"` (or `expectedVersion`) and a mismatch is
 `409 {error, currentVersion}`; the client refetches. Statuses: 200/201/204; 400
 invalid; 401; 403 scope/role; 404 non-member/foreign; 409 last admin/duplicate/
-version conflict/contribution state; 410 expired invite. Finance responses are
-`Cache-Control: no-store`.
+version conflict/contribution state; 410 expired invite; 428 a versioned write
+without `If-Match`/`expectedVersion`. Finance responses are
+`Cache-Control: no-store` at BOTH hops (lumen and the mellon relay/SSR load).
 
 ### 6.3 Plan/period selectors
 
