@@ -819,7 +819,8 @@ manual curl of every new endpoint against the live dev plane.
   scopes (`tasks:create|update|manage`) are DB rows seeded by 0014 and
   granted through the portal — never a vault value.
 - 2026-11-29 — **the app-plane split (tasks on the cms plane).** (1) The
-  admin render contract is now FIVE properties from `kv/lumen/shared`:
+  admin render contract is now FIVE properties from `kv/lumen/shared`
+  (**SUPERSEDED below — the notification token made it SIX**):
   `LUMEN_DB_URL`, `LUMEN_SESSION_JWT_SECRET`, `LUMEN_IDENTITY_TOKEN`, the
   passkey pair (`LUMEN_WEBAUTHN_RP_ID` + `LUMEN_WEBAUTHN_ORIGINS` ←
   `LUMEN_WEBAUTHN_ORIGIN`). The lumen key SET grew 17→18 on ALL THREE paths
@@ -836,4 +837,15 @@ manual curl of every new endpoint against the live dev plane.
   adds a kv key. (5) `LUMEN_NOTIFICATION_TOKEN` remains env-only (manual
   Secret / own-path value); absent = task notifications off, mutations still
   commit.
+- 2026-11-29 (supersedes the 2026-11-27 notification-token ruling) — **the
+  send token is an ordinary ES value.** `LUMEN_NOTIFICATION_TOKEN` now rides
+  `kv/lumen/shared` and each `kv/lumen/{staging,production}` path (filled on
+  every path, ONE value per estate), rendered into `lumen-admin-secrets` and
+  the two `lumen-secrets-{env}` Secrets. The admin ES binds SIX properties
+  (`DB`, `JWT`, `IDENTITY`, `NOTIFICATION`, `RP_ID`, `ORIGINS`); the cms
+  ESes read `IDENTITY`/`NOTIFICATION` from their own path and `ADMIN_URL`
+  from `shared`. The hand-made `lumen-notification-token` Secret and its
+  envFrom are RETIRED. It is a secret, not config: no epoch flip. Absent =
+  the send door is unmounted / task notifications are off; the env is read
+  at boot, so a value change needs a pod restart.
 - — (append deltas here: contract changes, deviations, new rulings)

@@ -228,14 +228,14 @@ make worker / make server   # the prod-split processes
 | `LUMEN_WEBAUTHN_RP_ID` | admin plane: the REGISTRABLE DOMAIN (`gofar.id`) — passkey ceremonies, one value for every portal origin |
 | `LUMEN_WEBAUTHN_ORIGINS` | admin plane: comma list of browser origins (ES maps vault property `LUMEN_WEBAUTHN_ORIGIN` to this name) |
 | `LUMEN_MEILI_URL` / `LUMEN_MEILI_INDEX_*` | search engine + per-env index names |
-| `LUMEN_NOTIFICATION_TOKEN` | OPTIONAL app-to-app send token — env-only (the hand-made `lumen-notification-token` Secret on admin; the cms may receive the SAME value from its own env path); absent = the send door is not mounted / task notifications are off. Never an epoch flip |
+| `LUMEN_NOTIFICATION_TOKEN` | the ONE app-to-app send token — an ordinary ES key since 2026-11-29 (`kv/lumen/shared` for admin, each env path for cms; one value per estate); absent = the send door is not mounted / task notifications are off. Not config: no epoch flip |
 
 `env.yaml.sample` is the schema; real values never leave Bao/dev-plane.env.
-The passkey pair and `LUMEN_IDENTITY_TOKEN` are part of the admin render
-contract (`kv/lumen/shared`; the identity token is filled on every path
-under the uniform-shape law, the passkey pair only in `shared`). The
-notification token joins the hand-made Secret family next to
-`lumen-bao-credentials` — see runbook ch. 05 §3.5 and ch. 15's ops section.
+The passkey pair, `LUMEN_IDENTITY_TOKEN` and `LUMEN_NOTIFICATION_TOKEN` are
+part of the admin render contract (`kv/lumen/shared`; the two tokens are
+filled on every path under the uniform-shape law, the passkey pair only in
+`shared`). The old manual `lumen-notification-token` Secret is retired —
+see runbook ch. 05 §3.5 and ch. 15's ops section.
 
 ## 8. Testing (the battery, strictness order)
 

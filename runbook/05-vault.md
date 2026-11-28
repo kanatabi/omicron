@@ -325,24 +325,28 @@ kubectl -n external-secrets get clustersecretstore bao   # → READY: True
 > events name the real cause: auth denied = the pair in the Secret is
 > wrong (re-mint block 1 above); connection refused = store/server check.
 
-**The optional notification token — the second hand-made Secret (added
-2026-11-27).** The tasks/notifications send door (`POST
-/admin/notifications`, app-to-app) is gated by ONE shared token that is
-deliberately **NOT** a Bao/ES value: no kv key, no render, no epoch flip.
-It rides a plain k8s Secret in `lumen`, consumed as an env var — absent,
-the route is simply not mounted:
+**The notification token — an ordinary ES key (amended 2026-11-29).** The
+tasks/notifications send door (`POST /admin/notifications`, app-to-app) is
+gated by ONE shared token. It used to ride the hand-made
+`lumen-notification-token` Secret; it now lives in Bao and is rendered by
+the same ES as every other lumen secret (`kv/lumen/shared` for admin,
+`kv/lumen/{env}` for each cms). No epoch flip — it is a secret, not config.
 
 ```bash
-kubectl -n lumen create secret generic lumen-notification-token \
-  --from-literal=LUMEN_NOTIFICATION_TOKEN="$(openssl rand -base64 32)"
+# seed once per estate, then reuse in every lumen path:
+NOTIFICATION_TOKEN=$(openssl rand -hex 32)
+bao kv put kv/lumen/shared ... LUMEN_NOTIFICATION_TOKEN=$NOTIFICATION_TOKEN
+bao kv put kv/lumen/staging ... LUMEN_NOTIFICATION_TOKEN=$NOTIFICATION_TOKEN
+bao kv put kv/lumen/production ... LUMEN_NOTIFICATION_TOKEN=$NOTIFICATION_TOKEN
+# ESO updates the Secret; the env is read at boot, so restart:
 kubectl -n lumen rollout restart deploy/lumen-admin-http-server
+kubectl -n lumen rollout restart deploy/lumen-http-server-staging
+kubectl -n lumen rollout restart deploy/lumen-http-server-production
 ```
 
-Rotate by replacing the Secret and restarting (the token is read once at
-boot). The vortex envFrom that lets the admin pod see it rides the
-`feat/notifications-token-secret` branch — merge it (and re-sync the app)
-before creating the Secret, or the Secret exists unseen. Full ops notes:
-[ch. 15](15-portal-widgets.md).
+If an old `lumen-notification-token` Secret exists, delete it — the
+manifests no longer mount it, and a stale copy would only confuse rotation.
+Full ops notes: [ch. 15](15-portal-widgets.md).
 
 ## 4. Variant B — `port-forward` + plain `curl` (no pod shell needed)
 
@@ -546,19 +550,22 @@ done
 > inside `X` blocks, values arrive as exported variables — the table
 > above — never as pasted angle brackets.
 
-### 6.1 `kv/lumen/shared` — the Control Plane's identity (18 keys, 6 filled)
+### 6.1 `kv/lumen/shared` — the Control Plane's identity (19 keys, 7 filled)
 
 | kv path | Keys | Declared by |
 |---|---|---|
-| `kv/lumen/shared` | the 18-key lumen set (below); **filled here:** `LUMEN_DB_URL` `LUMEN_SESSION_JWT_SECRET` `LUMEN_IDENTITY_TOKEN` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` — **empty here:** the 12 cms-only keys | `environments/foundation/lumen/externalsecret.yaml` (five bindings: DB, JWT, IDENTITY, RP_ID, ORIGINS←`_ORIGIN`) + the two cms ESes read `LUMEN_ADMIN_URL` FROM this path |
+| `kv/lumen/shared` | the 19-key lumen set (below); **filled here:** `LUMEN_DB_URL` `LUMEN_SESSION_JWT_SECRET` `LUMEN_IDENTITY_TOKEN` `LUMEN_NOTIFICATION_TOKEN` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` — **empty here:** the 12 cms-only keys | `environments/foundation/lumen/externalsecret.yaml` (six bindings: DB, JWT, IDENTITY, NOTIFICATION, RP_ID, ORIGINS←`_ORIGIN`) + the two cms ESes read `LUMEN_ADMIN_URL` FROM this path |
 
 ```bash
-# ONE identity token per estate — reuse this exact value in every lumen path.
+# ONE identity token + ONE notification token per estate — reuse these exact
+# values in every lumen path.
 IDENTITY_TOKEN=$(openssl rand -hex 32)
+NOTIFICATION_TOKEN=$(openssl rand -hex 32)
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
   LUMEN_DB_URL=postgres://db_user_admin:$ADMIN_DB_PW@lumen-pg.db.svc:5432/lumen_admin \
   LUMEN_SESSION_JWT_SECRET=$(openssl rand -hex 32) \
   LUMEN_IDENTITY_TOKEN=$IDENTITY_TOKEN \
+  LUMEN_NOTIFICATION_TOKEN=$NOTIFICATION_TOKEN \
   LUMEN_ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local \
   LUMEN_WEBAUTHN_RP_ID=gofar.id \
   LUMEN_WEBAUTHN_ORIGIN=https://console.gofar.id,https://staging-console.gofar.id \
@@ -583,15 +590,13 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
 > invite searches. One value per estate (shared with every cms path); it is
 > NOT a user credential and never reaches a browser.
 >
-> **`LUMEN_NOTIFICATION_TOKEN` is NOT a key here** (tasks/notifications
-> rounds, 2026-11-27): the notification send door reads it straight from
-> the pod env, fed by the hand-made k8s Secret `lumen-notification-token`
-> (§3.5) — env-only by design, deliberately outside Bao/ES/epoch. When the
-> cms planes send task notifications they must receive the SAME value
-> (pending `feat/notifications-token-secret`); empty = notifications off,
-> mutations still commit. `0014_tasks.sql` stays the frozen admin-era
-> migration; `0018_tasks_cms.sql` is the cms DB's tasks bootstrap (no users
-> FKs). `0017_notification_env.sql` adds no kv key.
+> **`LUMEN_NOTIFICATION_TOKEN`** (amended 2026-11-29): the ONE app-to-app
+> send token now rides the ordinary ES feed on every path — the manual
+> `lumen-notification-token` Secret is retired. It is a SECRET, not config:
+> no epoch flip. Absent/invalid = the send door is unmounted and task
+> notifications are off; mutations still commit. `0014_tasks.sql` stays the
+> frozen admin-era migration; `0018_tasks_cms.sql` is the cms DB's tasks
+> bootstrap (no users FKs). `0017_notification_env.sql` adds no kv key.
 
 > **`LUMEN_SESSION_JWT_SECRET`'s VALUE has exactly ONE home:** this path
 > (amended 2026-11-21: the uniform-shape contract puts the KEY on every
@@ -606,12 +611,12 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
 > — and it must name the UNSUFFIXED Service `lumen-admin` (foundation owns
 > it; the Naming contract guarantees the name).
 
-### 6.2 `kv/lumen/{staging,production}` — each cms plane (18 keys, identical shape)
+### 6.2 `kv/lumen/{staging,production}` — each cms plane (19 keys, identical shape)
 
 | kv path | Keys | Declared by |
 |---|---|---|
-| `kv/lumen/staging` | the SAME 18 keys as `lumen/shared` (uniform-shape law); **filled here:** the 14 cms keys below — **empty here:** `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` (the jwt's value lives only in `shared`; the cms ESes pull `LUMEN_ADMIN_URL` from `lumen/shared`; the webauthn pair is admin-plane only) | `environments/staging/lumen/externalsecret.yaml` |
-| `kv/lumen/production` | the same 18 keys with production values | `environments/production/lumen/externalsecret.yaml` |
+| `kv/lumen/staging` | the SAME 19 keys as `lumen/shared` (uniform-shape law); **filled here:** the 15 cms keys below — **empty here:** `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` (the jwt's value lives only in `shared`; the cms ESes pull `LUMEN_ADMIN_URL` from `lumen/shared`; the webauthn pair is admin-plane only) | `environments/staging/lumen/externalsecret.yaml` |
+| `kv/lumen/production` | the same 19 keys with production values | `environments/production/lumen/externalsecret.yaml` |
 
 ```bash
 # STAGING — note the THREE collapse-preventors: distinct DB, distinct index
@@ -632,6 +637,7 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/staging \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
   LUMEN_MEDIA_PREFIX=staging/ \
   LUMEN_IDENTITY_TOKEN=$IDENTITY_TOKEN \
+  LUMEN_NOTIFICATION_TOKEN=$NOTIFICATION_TOKEN \
   LUMEN_SESSION_JWT_SECRET= LUMEN_ADMIN_URL= \
   LUMEN_WEBAUTHN_RP_ID= LUMEN_WEBAUTHN_ORIGIN="
 
@@ -647,6 +653,7 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/production \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
   LUMEN_MEDIA_PREFIX=production/ \
   LUMEN_IDENTITY_TOKEN=$IDENTITY_TOKEN \
+  LUMEN_NOTIFICATION_TOKEN=$NOTIFICATION_TOKEN \
   LUMEN_SESSION_JWT_SECRET= LUMEN_ADMIN_URL= \
   LUMEN_WEBAUTHN_RP_ID= LUMEN_WEBAUTHN_ORIGIN="
 ```
@@ -872,8 +879,7 @@ path in two places — which means the flip side is a *check*, not a chore:
 > don't let it talk you into seeding paths nobody renders.
 
 The only things invisible to the portal are precisely the hand-made
-Secrets (§3.5: the bootstrap-paradox pair family plus the OPTIONAL
-`lumen-notification-token` — env-only, no kv row by design), the k8s
+Secrets (§3.5: the bootstrap-paradox pair family), the k8s
 Secret `meilisearch-master-key`, and the Patroni-generated DB credentials
 — Git's CRs don't read those, the apps hold them as k8s Secrets. That's
 the correct shape: the portal can't

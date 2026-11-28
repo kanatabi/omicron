@@ -245,20 +245,23 @@ invisible but remain in the table. A future janitor will be in-process or
 a CronJob — never River-periodic here (the admin plane runs no worker).
 
 The SEND door (`POST /admin/notifications`) is app-to-app, in-cluster,
-and gated by ONE shared token from the MANUAL Secret
-`lumen-notification-token` (optional; env-only — not a config binding,
-not a Bao/ES value, so no epoch flip):
+and gated by ONE shared token, `LUMEN_NOTIFICATION_TOKEN`. Since
+2026-11-29 it is an ordinary ES value (Bao `kv/lumen/shared` + each env
+path; one value per estate), not the old manual Secret — no epoch flip
+(it is a secret, not config):
 
 ```
-kubectl -n lumen create secret generic lumen-notification-token \
-  --from-literal=LUMEN_NOTIFICATION_TOKEN="$(openssl rand -base64 32)"
+bao kv put kv/lumen/shared ... LUMEN_NOTIFICATION_TOKEN=<one value>
+bao kv put kv/lumen/staging ... LUMEN_NOTIFICATION_TOKEN=<same value>
+bao kv put kv/lumen/production ... LUMEN_NOTIFICATION_TOKEN=<same value>
 kubectl -n lumen rollout restart deploy/lumen-admin-http-server
+kubectl -n lumen rollout restart deploy/lumen-http-server-staging
+kubectl -n lumen rollout restart deploy/lumen-http-server-production
 ```
 
 Unset = the route is not mounted (a POST answers 405 on the GET sibling).
-Rotate by replacing the Secret and restarting (read once at boot). The
-Secret joins the hand-made family in [ch. 05 §3.5](05-vault.md); it has no
-kv path, no ES property, and no epoch flip. The
+The env is read at boot, so rotate in Bao and restart. If the old
+`lumen-notification-token` Secret still exists, delete it. The
 audit lines carry app/type/counts/ip — never the token, title or body.
 
 **Deploy.** The lumen release's `deploy-foundation` chain carries this to

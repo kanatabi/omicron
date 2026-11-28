@@ -1104,11 +1104,12 @@ them into workloads.
    documented break-glass). DNS for the console record remains an owner action —
    external resource + **GATE #10**, apply-sequence item.
 4. **Seeds:** `kv/data/lumen/shared` + `kv/data/lumen/{staging,production}` — the
-   **18-key uniform set**: the admin DSN, the session signing key (its VALUE lives
+   **19-key uniform set**: the admin DSN, the session signing key (its VALUE lives
    only in `shared`), the internal `LUMEN_IDENTITY_TOKEN` (the app planes' door
-   into the users lineage; filled on every path), `LUMEN_ADMIN_URL`, the passkey
-   pair (`LUMEN_WEBAUTHN_RP_ID` + property `LUMEN_WEBAUTHN_ORIGIN`, a comma list;
-   both filled only in `shared`),
+   into the users lineage; filled on every path), `LUMEN_NOTIFICATION_TOKEN`
+   (the ONE app-to-app send token; filled on every path), `LUMEN_ADMIN_URL`, the
+   passkey pair (`LUMEN_WEBAUTHN_RP_ID` + property `LUMEN_WEBAUTHN_ORIGIN`, a
+   comma list; both filled only in `shared`),
    and each cms plane's Meili + media keys — schema in `lumen/env.yaml.sample`,
    values here; the ExternalSecret CRs are the render contract (runbook ch. 05 §6)
    + `kv/data/mellon/{staging,production}` (**4 keys each**: `CMS_URL`, `API_BASE`
@@ -1117,14 +1118,15 @@ them into workloads.
    `kv/mellon/shared` path was retired 2026-11-21) + the owner's `users` row seeded
    with an argon2id `passhash` (lumen-side one-time CLI at bootstrap — credentials
    live in the DB hashed, per lumen §6) + the hand-made Secret family
-   (`lumen-bao-credentials`; the OPTIONAL `lumen-notification-token` for the
-   app-to-app send door) from §5.6.
+   (`lumen-bao-credentials`) from §5.6. The notification send token is NOT in
+   that family: it is an ordinary ES key (`LUMEN_NOTIFICATION_TOKEN` on every
+   path, one value per estate).
    > The tasks app moved to the **cms plane** on 2026-11-29 (app-plane ruling:
-   > `lumen-admin` is control + identity only): `0014_tasks.sql` now classifies
-   > under each env's DB, and the internal `LUMEN_IDENTITY_TOKEN` is the one new
-   > kv key. `0017_notification_env.sql` adds an env column, no key. The send
-   > token stays env-only; a cms plane that wants task notifications receives the
-   > SAME `lumen-notification-token` value (empty = notifications off).
+   > `lumen-admin` is control + identity only). `0014_tasks.sql` stays the frozen
+   > admin-era migration; the new cms-classified `0018_tasks_cms.sql` is the env
+   > DB's tasks bootstrap (same tables, no users FKs). `0017_notification_env.sql`
+   > adds an env column, no key. `LUMEN_NOTIFICATION_TOKEN` joined the ES feed as
+   > a normal secret (no epoch flip).
 5. **Media (D1, revised):** lumen relays uploads to the object store and returns
    absolute CDN URLs (lumen §5); browsers fetch media from the CDN directly —
    the previously planned `/media/*` SSR relay in earendil/mellon is **cancelled**
@@ -1204,12 +1206,12 @@ The **values** of `API_BASE`/`CMS_URL` must name the SUFFIXED Services
 metadata.name only, so the suffixed name is a seeded string, guaranteed to
 exist by the Naming contract (vortex README).
 
-> **Not every secret is a kv binding.** The notification send token
-> (`LUMEN_NOTIFICATION_TOKEN`, tasks/notifications rounds 2026-11-27) is
-> deliberately env-only: it rides the hand-made k8s Secret
-> `lumen-notification-token` and has NO kv path, ES property, or epoch
-> flip. Unset = the send door is not mounted. The passkey pair IS a kv
-> binding (above); the notification token is not.
+> **Every lumen secret is a kv binding.** The notification send token
+> (`LUMEN_NOTIFICATION_TOKEN`) moved from the hand-made k8s Secret to the
+> ordinary ES feed on 2026-11-29 (`kv/lumen/shared` + each env path; one
+> value per estate). It is a secret, not config: no epoch flip. Unset = the
+> send door is not mounted. The passkey pair and the two in-cluster tokens
+> are all kv bindings.
 
 - **App config set** = one path prefix per app; **environment** = leaf; **version** =
   native KV-v2 integer history (diff, rollback, soft-delete). Grouping by app reads
@@ -1375,12 +1377,12 @@ render → everything above that is Git-synced.
   the unseal key = losing all config/secret values regardless of every backup below.
 - ESO's own credentials to reach Bao = one K8s Secret applied at bootstrap (§5.6 manual
   step) — the only bootstrap-critical "seeded" object; everything downstream is templates.
-- **The optional second hand-made Secret:** `lumen-notification-token` (namespace
-  `lumen`) gates the app-to-app notification send door (`POST /admin/notifications`,
-  tasks/notifications rounds 2026-11-27). It is deliberately **env-only** — no kv
-  path, no ExternalSecret property, no epoch flip. Unset = the route is not mounted;
-  rotate by replacing the Secret and restarting the admin pod. The vortex envFrom
-  that lets the pod see it must land first.
+- **Notification send token:** `LUMEN_NOTIFICATION_TOKEN` gates the app-to-app
+  send door (`POST /admin/notifications`). Since 2026-11-29 it is an ordinary
+  ExternalSecret value (Bao `kv/lumen/shared` + each env path, one value per
+  estate) — the old hand-made `lumen-notification-token` Secret is retired.
+  Unset = the route is not mounted; rotate in Bao and restart the pods (the env
+  is read at boot).
 
 ### 5.7 Budget/dependency note
 

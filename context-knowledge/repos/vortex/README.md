@@ -88,9 +88,9 @@ new `bases/<name>/` + a CR in the folder its hub syncs — never a hub edit.
   the role's real binds (property == secretKey, with ONE declared
   translation: `LUMEN_WEBAUTHN_ORIGINS` ← vault property
   `LUMEN_WEBAUTHN_ORIGIN`); `LUMEN_ROLE` stays inline on pods (identity, not
-  config). Not every secret is an ES value: `LUMEN_NOTIFICATION_TOKEN` rides
-  the hand-made `lumen-notification-token` Secret — no kv path, no epoch
-  flip.
+  config). The notification send token is an ordinary ES key too
+  (`LUMEN_NOTIFICATION_TOKEN` on `lumen/shared` + each env path, 2026-11-29);
+  the old manual `lumen-notification-token` Secret is retired.
 - **The epoch TRIO + config-gate** — the PreSync Job (`components/
   config-gate`) decodes `omicron/config.epoch` from the rendered output and
   REFUSES the sync unless declared == rendered — and since the pin-as-lock
