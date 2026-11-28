@@ -546,16 +546,19 @@ done
 > inside `X` blocks, values arrive as exported variables — the table
 > above — never as pasted angle brackets.
 
-### 6.1 `kv/lumen/shared` — the Control Plane's identity (17 keys, 5 filled)
+### 6.1 `kv/lumen/shared` — the Control Plane's identity (18 keys, 6 filled)
 
 | kv path | Keys | Declared by |
 |---|---|---|
-| `kv/lumen/shared` | the 17-key lumen set (below); **filled here:** `LUMEN_DB_URL` `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` — **empty here:** the 12 cms-only keys | `environments/foundation/lumen/externalsecret.yaml` (four bindings: DB, JWT, RP_ID, ORIGINS←`_ORIGIN`) + the two cms ESes read `LUMEN_ADMIN_URL` FROM this path |
+| `kv/lumen/shared` | the 18-key lumen set (below); **filled here:** `LUMEN_DB_URL` `LUMEN_SESSION_JWT_SECRET` `LUMEN_IDENTITY_TOKEN` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` — **empty here:** the 12 cms-only keys | `environments/foundation/lumen/externalsecret.yaml` (four bindings: DB, JWT, RP_ID, ORIGINS←`_ORIGIN`) + the two cms ESes read `LUMEN_ADMIN_URL` FROM this path |
 
 ```bash
+# ONE identity token per estate — reuse this exact value in every lumen path.
+IDENTITY_TOKEN=$(openssl rand -hex 32)
 X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
   LUMEN_DB_URL=postgres://db_user_admin:$ADMIN_DB_PW@lumen-pg.db.svc:5432/lumen_admin \
   LUMEN_SESSION_JWT_SECRET=$(openssl rand -hex 32) \
+  LUMEN_IDENTITY_TOKEN=$IDENTITY_TOKEN \
   LUMEN_ADMIN_URL=http://lumen-admin.lumen.svc.cluster.local \
   LUMEN_WEBAUTHN_RP_ID=gofar.id \
   LUMEN_WEBAUTHN_ORIGIN=https://console.gofar.id,https://staging-console.gofar.id \
@@ -575,11 +578,19 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
 > (ESO), while the old 15-key seed left them empty and silently shipped a
 > passkey-less estate.
 >
+> **`LUMEN_IDENTITY_TOKEN`** (2026-11-29 app-plane split): the internal,
+> token-gated identity door the cms app planes call for display names and
+> invite searches. One value per estate (shared with every cms path); it is
+> NOT a user credential and never reaches a browser.
+>
 > **`LUMEN_NOTIFICATION_TOKEN` is NOT a key here** (tasks/notifications
 > rounds, 2026-11-27): the notification send door reads it straight from
 > the pod env, fed by the hand-made k8s Secret `lumen-notification-token`
-> (§3.5) — env-only by design, deliberately outside Bao/ES/epoch. The
-> tasks/notifications migrations (0014/0015) add **no** kv keys.
+> (§3.5) — env-only by design, deliberately outside Bao/ES/epoch. When the
+> cms planes send task notifications they must receive the SAME value
+> (pending `feat/notifications-token-secret`); empty = notifications off,
+> mutations still commit. `0014_tasks.sql` now classifies under the cms
+> database (app-plane ruling); `0017_notification_env.sql` adds no kv key.
 
 > **`LUMEN_SESSION_JWT_SECRET`'s VALUE has exactly ONE home:** this path
 > (amended 2026-11-21: the uniform-shape contract puts the KEY on every
@@ -594,12 +605,12 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
 > — and it must name the UNSUFFIXED Service `lumen-admin` (foundation owns
 > it; the Naming contract guarantees the name).
 
-### 6.2 `kv/lumen/{staging,production}` — each cms plane (17 keys, identical shape)
+### 6.2 `kv/lumen/{staging,production}` — each cms plane (18 keys, identical shape)
 
 | kv path | Keys | Declared by |
 |---|---|---|
-| `kv/lumen/staging` | the SAME 17 keys as `lumen/shared` (uniform-shape law); **filled here:** the 13 cms keys below — **empty here:** `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` (the jwt's value lives only in `shared`; the cms ESes pull `LUMEN_ADMIN_URL` from `lumen/shared`; the webauthn pair is admin-plane only) | `environments/staging/lumen/externalsecret.yaml` |
-| `kv/lumen/production` | the same 17 keys with production values | `environments/production/lumen/externalsecret.yaml` |
+| `kv/lumen/staging` | the SAME 18 keys as `lumen/shared` (uniform-shape law); **filled here:** the 14 cms keys below — **empty here:** `LUMEN_SESSION_JWT_SECRET` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` (the jwt's value lives only in `shared`; the cms ESes pull `LUMEN_ADMIN_URL` from `lumen/shared`; the webauthn pair is admin-plane only) | `environments/staging/lumen/externalsecret.yaml` |
+| `kv/lumen/production` | the same 18 keys with production values | `environments/production/lumen/externalsecret.yaml` |
 
 ```bash
 # STAGING — note the THREE collapse-preventors: distinct DB, distinct index
@@ -619,6 +630,7 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/staging \
   LUMEN_MEDIA_ACCESS_KEY=$R2_MEDIA_ACCESS_KEY LUMEN_MEDIA_SECRET_KEY=$R2_MEDIA_SECRET_KEY \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
   LUMEN_MEDIA_PREFIX=staging/ \
+  LUMEN_IDENTITY_TOKEN=$IDENTITY_TOKEN \
   LUMEN_SESSION_JWT_SECRET= LUMEN_ADMIN_URL= \
   LUMEN_WEBAUTHN_RP_ID= LUMEN_WEBAUTHN_ORIGIN="
 
@@ -633,6 +645,7 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/production \
   LUMEN_MEDIA_ACCESS_KEY=$R2_MEDIA_ACCESS_KEY LUMEN_MEDIA_SECRET_KEY=$R2_MEDIA_SECRET_KEY \
   LUMEN_MEDIA_CDN_BASE=https://img.gofar.id LUMEN_MEDIA_FORCE_PATH=false \
   LUMEN_MEDIA_PREFIX=production/ \
+  LUMEN_IDENTITY_TOKEN=$IDENTITY_TOKEN \
   LUMEN_SESSION_JWT_SECRET= LUMEN_ADMIN_URL= \
   LUMEN_WEBAUTHN_RP_ID= LUMEN_WEBAUTHN_ORIGIN="
 ```

@@ -1104,9 +1104,11 @@ them into workloads.
    documented break-glass). DNS for the console record remains an owner action —
    external resource + **GATE #10**, apply-sequence item.
 4. **Seeds:** `kv/data/lumen/shared` + `kv/data/lumen/{staging,production}` — the
-   **17-key uniform set**: the admin DSN, the session signing key (its VALUE lives
-   only in `shared`), `LUMEN_ADMIN_URL`, the passkey pair (`LUMEN_WEBAUTHN_RP_ID`
-   + property `LUMEN_WEBAUTHN_ORIGIN`, a comma list; both filled only in `shared`),
+   **18-key uniform set**: the admin DSN, the session signing key (its VALUE lives
+   only in `shared`), the internal `LUMEN_IDENTITY_TOKEN` (the app planes' door
+   into the users lineage; filled on every path), `LUMEN_ADMIN_URL`, the passkey
+   pair (`LUMEN_WEBAUTHN_RP_ID` + property `LUMEN_WEBAUTHN_ORIGIN`, a comma list;
+   both filled only in `shared`),
    and each cms plane's Meili + media keys — schema in `lumen/env.yaml.sample`,
    values here; the ExternalSecret CRs are the render contract (runbook ch. 05 §6)
    + `kv/data/mellon/{staging,production}` (**4 keys each**: `CMS_URL`, `API_BASE`
@@ -1117,9 +1119,12 @@ them into workloads.
    live in the DB hashed, per lumen §6) + the hand-made Secret family
    (`lumen-bao-credentials`; the OPTIONAL `lumen-notification-token` for the
    app-to-app send door) from §5.6.
-   > The tasks/notifications migrations (lumen 0014/0015, 2026-11-27) add **no**
-   > kv keys and no epoch movement: the send token is env-only, the scopes are DB
-   > rows granted from the portal.
+   > The tasks app moved to the **cms plane** on 2026-11-29 (app-plane ruling:
+   > `lumen-admin` is control + identity only): `0014_tasks.sql` now classifies
+   > under each env's DB, and the internal `LUMEN_IDENTITY_TOKEN` is the one new
+   > kv key. `0017_notification_env.sql` adds an env column, no key. The send
+   > token stays env-only; a cms plane that wants task notifications receives the
+   > SAME `lumen-notification-token` value (empty = notifications off).
 5. **Media (D1, revised):** lumen relays uploads to the object store and returns
    absolute CDN URLs (lumen §5); browsers fetch media from the CDN directly —
    the previously planned `/media/*` SSR relay in earendil/mellon is **cancelled**

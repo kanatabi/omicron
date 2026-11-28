@@ -300,13 +300,26 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   pending invitees and disabled accounts excluded; email is never returned).
   Every reference stays a `users.id` UUID; comments/activity/invite copy stay
   handles by scope.
+- **2026-11-29 (later, architecture)** — **tasks moved to the cms plane**
+  (owner ruling: `lumen-admin` is control + identity only, never an app
+  surface). `0014_tasks.sql` is now cms-classified and its `users` FKs are
+  gone — tasks tables live in each env's existing DB (`lumen_staging` /
+  `lumen_production`), so no new database or DSN exists. The module hydrates
+  people through the admin's token-gated internal identity door
+  (`LUMEN_IDENTITY_TOKEN`: people search incl. exact email, batch names;
+  email never returns) and self-heals deleted accounts on the next hydration
+  (memberships/invites removed, refs nulled, adminless projects repaired).
+  The shared notifications bell stays on admin; task rows are env-tagged
+  (`0017_notification_env.sql`) and the cms sender uses the existing send
+  door (`toIds` + `env`; optional `LUMEN_NOTIFICATION_TOKEN`).
 - **2026-11-27 (later)** — the tasks application's **M0** landed
   (`efb2928`): `0014_tasks.sql` (projects/members/invites/tasks/
   subtasks/comments/activity — soft delete + completion flags, many
   admins per project, 24h invites, no ordering) and
   `0015_notifications.sql` (the estate-generic table: plain title,
-  sanitized-HTML body, JSONB payload, TTL). Both ADMIN-classified; the
-  scope trio `tasks:create|update|manage` seeded. The module code (M1+)
+  sanitized-HTML body, JSONB payload, TTL). 0014 is CMS-classified since
+  the 2026-11-29 app-plane move, 0015 stays ADMIN; the scope trio
+  `tasks:create|update|manage` seeded. The module code (M1+)
   follows the approved plan in `/home/fzr/.opencode/plan/tasks-notifications.md`.
 - **2026-11-27 (later)** — the tasks application's **M1 stores** landed:
   `internal/notifications` (`9890f80`: batch send, TTL-filtered reads,

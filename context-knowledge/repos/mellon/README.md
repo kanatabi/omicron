@@ -347,6 +347,12 @@ layering; HUMAN-GATE #10 is the go-live checklist.
   and scoped doors are never offered to 403 accounts (Users now points at
   `/admin/users`); the tasks page registers its verbs and one flat row per
   visible task. DESIGN §7 and §11.3 carry both contracts.
+- **2026-11-29 (later, architecture)** — the relay routes every
+  `/admin/task-*` path to `CMS_URL` (tasks is a cms-plane app now; its tables
+  live in the env DB), while `/admin/notifications` stays on `ADMIN_URL` (one
+  shared inbox). The relay stamps the deployment's server-only `PORTAL_ENV`
+  onto the bell reads so staging and production task notifications never
+  cross consoles; the browser cannot choose the tenant.
 - **2026-11-29 (later)** — tasks show **display names**: the assignee pickers
   (drawer + composer) and the project roster label with `TaskMember.name`,
   appending `(@username)` only when display names collide; selections still
