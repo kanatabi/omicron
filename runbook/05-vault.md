@@ -589,8 +589,9 @@ X "export VAULT_TOKEN=$ROOT; bao kv put kv/lumen/shared \
 > (§3.5) — env-only by design, deliberately outside Bao/ES/epoch. When the
 > cms planes send task notifications they must receive the SAME value
 > (pending `feat/notifications-token-secret`); empty = notifications off,
-> mutations still commit. `0014_tasks.sql` now classifies under the cms
-> database (app-plane ruling); `0017_notification_env.sql` adds no kv key.
+> mutations still commit. `0014_tasks.sql` stays the frozen admin-era
+> migration; `0018_tasks_cms.sql` is the cms DB's tasks bootstrap (no users
+> FKs). `0017_notification_env.sql` adds no kv key.
 
 > **`LUMEN_SESSION_JWT_SECRET`'s VALUE has exactly ONE home:** this path
 > (amended 2026-11-21: the uniform-shape contract puts the KEY on every

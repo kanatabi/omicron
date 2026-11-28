@@ -829,8 +829,9 @@ manual curl of every new endpoint against the live dev plane.
   `LUMEN_ADMIN_URL` from `lumen/shared`; the admin ES never reads the cms
   content keys. (3) `LUMEN_ENV` (staging|production) is inline deployment
   identity on the cms pods, like `LUMEN_ROLE` — never a Bao value. (4)
-  `0014_tasks.sql` reclassifies to the cms database (its `users` FKs are
-  gone; tasks reference users.id only as UUIDs through the identity door);
+  `0014_tasks.sql` stays the frozen admin-era migration; a NEW cms-classified
+  `0018_tasks_cms.sql` is the env DB's initial tasks schema (same tables, no
+  `users` FKs; users.id stays a plain UUID through the identity door).
   `0017_notification_env.sql` adds the notification `env` column — neither
   adds a kv key. (5) `LUMEN_NOTIFICATION_TOKEN` remains env-only (manual
   Secret / own-path value); absent = task notifications off, mutations still

@@ -1,6 +1,6 @@
 ---
 tags: [lumen, lessons]
-updated: 2026-11-26
+updated: 2026-11-29
 ---
 
 # lumen — lesson ledger
@@ -10,6 +10,32 @@ The standing rulings live in the repo's
 contract in its DESIGN.md. This ledger records walked events that minted
 them. Newest first.
 
+- **2026-11-29 — never edit an applied migration; the role map is the
+  executable scope.** Moving the tasks app to the cms plane, I edited
+  `0014_tasks.sql` to drop its `users` FKs and intended to flip its
+  classification to `PlaneCMS`. The edit shipped in v5.8.0; the one-line map
+  flip silently missed (a string replace that no longer matched after
+  gofmt realigned the map). Result: the staging migrate Job ran correctly
+  (`LUMEN_ROLE=cms`, exit 0) and reported **7 files**; `_migrations` had no
+  0014; the tasks routes were live against a DB with no `task_*` tables.
+  The tests could not catch it — `MigrationCountForRole` is DERIVED from
+  the same map (a wrong role just changes the number), and the manifest
+  test only proves every file is classified, not where. Two standing rules
+  came out of it: (1) an applied migration is immutable — new schema is a
+  new file; when the target DB never had the table, an `ALTER` is not even
+  possible, so the correct tool is a new initial-schema migration (here
+  `0018_tasks_cms.sql`, same tables, no cross-plane FKs, `IF NOT EXISTS`
+  for the legacy `role=all` dev DB). (2) A migration file carries NO role
+  marker; `migrationRoles` in `internal/store/migrate.go` is the only
+  scope, and the migrate Job's `LUMEN_ROLE` selects the subset — a
+  mis-mapped file is a silent skip. The fix: 0014 restored byte-for-byte
+  and frozen as admin, 0018 cms, plus an exact role-boundary test and a
+  real cms-schema repair test (no FKs) that proves the lazy C4 cleanup.
+  Lesson: test the boundary by ROLE and by an actual `MigrateForRole`
+  run; derived counts and "every file is mapped" cannot see a wrong
+  destination. v5.8.0 keeps the bad edit as history, but no deployed DB
+  ever applied it (the admin ledger held the original; the cms subset
+  skipped it).
 - **2026-11-27 (later) — persist every credential field the validator
   COMPARES; a synced passkey is BE=1.** The first real passkey login on
   staging-console answered 401 with the browser showing only "invalid

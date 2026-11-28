@@ -304,9 +304,10 @@ and the **epoch TRIO** gate pins the config/render agreement. Detail:
   handles by scope.
 - **2026-11-29 (later, architecture)** — **tasks moved to the cms plane**
   (owner ruling: `lumen-admin` is control + identity only, never an app
-  surface). `0014_tasks.sql` is now cms-classified and its `users` FKs are
-  gone — tasks tables live in each env's existing DB (`lumen_staging` /
-  `lumen_production`), so no new database or DSN exists. The module hydrates
+  surface). `0014_tasks.sql` stays the FROZEN admin-era migration (never
+  edited); a new cms-classified `0018_tasks_cms.sql` creates the same tables
+  without `users` FKs — tasks tables live in each env's existing DB
+  (`lumen_staging` / `lumen_production`), so no new database or DSN exists. The module hydrates
   people through the admin's token-gated internal identity door
   (`LUMEN_IDENTITY_TOKEN`: people search incl. exact email, batch names;
   email never returns) and self-heals deleted accounts on the next hydration
