@@ -61,8 +61,8 @@ deployed role actually reads. For lumen this truth is machine-checkable
 
 | Plane | ES carries | Never |
 | :-- | :-- | :-- |
-| `lumen-admin` (admin) | `LUMEN_DB_URL` + `LUMEN_SESSION_JWT_SECRET` (the signing key has exactly ONE home) | anything else |
-| `lumen cms` (each env) | the content keys + `LUMEN_ADMIN_URL` (source `kv/lumen/shared` — a service URL is a VALUE) | the JWT secret |
+| `lumen-admin` (admin) | `LUMEN_DB_URL` + `LUMEN_SESSION_JWT_SECRET` (the signing key has exactly ONE home) + `LUMEN_IDENTITY_TOKEN` (the app planes' identity door) | anything else |
+| `lumen cms` (each env) | the content keys + `LUMEN_IDENTITY_TOKEN` (source its own env path) + `LUMEN_ADMIN_URL` (source `kv/lumen/shared` — a service URL is a VALUE) | the JWT secret |
 | earendil / mellon | `API_BASE` / `ADMIN_URL` / `CMS_URL` (suffixed service URLs are seeded VALUES), per-env index names | any credential |
 
 **`LUMEN_ROLE` stays inline on the pods** — deployment IDENTITY, not
@@ -74,8 +74,8 @@ re-role a fleet; inline means only a Git commit (and a bump PR) can.
 | Path | Holds |
 | :-- | :-- |
 | `kv/{app}/{env}` | app + env values (earendil, mellon: `API_BASE`, `ADMIN_URL`, `CMS_URL`, media keys…) |
-| `kv/lumen/{staging,production}` | each cms's DB URL + Meili keys + index names |
-| `kv/lumen/shared` | the admin identity: `LUMEN_DB_URL` (→ `lumen_admin` DB), `LUMEN_SESSION_JWT_SECRET`, `LUMEN_ADMIN_URL` |
+| `kv/lumen/{staging,production}` | each cms's DB URL + Meili keys + index names + `LUMEN_IDENTITY_TOKEN` |
+| `kv/lumen/shared` | the admin identity: `LUMEN_DB_URL` (→ `lumen_admin` DB), `LUMEN_SESSION_JWT_SECRET`, `LUMEN_IDENTITY_TOKEN`, `LUMEN_ADMIN_URL` |
 | `kv/grafana/production` | the grafana feed — FOUR keys, verified before the observability hub may apply |
 | `kv/cert-manager/production` | the Cloudflare DNS-01 credential |
 

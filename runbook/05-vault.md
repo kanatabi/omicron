@@ -550,7 +550,7 @@ done
 
 | kv path | Keys | Declared by |
 |---|---|---|
-| `kv/lumen/shared` | the 18-key lumen set (below); **filled here:** `LUMEN_DB_URL` `LUMEN_SESSION_JWT_SECRET` `LUMEN_IDENTITY_TOKEN` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` — **empty here:** the 12 cms-only keys | `environments/foundation/lumen/externalsecret.yaml` (four bindings: DB, JWT, RP_ID, ORIGINS←`_ORIGIN`) + the two cms ESes read `LUMEN_ADMIN_URL` FROM this path |
+| `kv/lumen/shared` | the 18-key lumen set (below); **filled here:** `LUMEN_DB_URL` `LUMEN_SESSION_JWT_SECRET` `LUMEN_IDENTITY_TOKEN` `LUMEN_ADMIN_URL` `LUMEN_WEBAUTHN_RP_ID` `LUMEN_WEBAUTHN_ORIGIN` — **empty here:** the 12 cms-only keys | `environments/foundation/lumen/externalsecret.yaml` (five bindings: DB, JWT, IDENTITY, RP_ID, ORIGINS←`_ORIGIN`) + the two cms ESes read `LUMEN_ADMIN_URL` FROM this path |
 
 ```bash
 # ONE identity token per estate — reuse this exact value in every lumen path.

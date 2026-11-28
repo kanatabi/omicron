@@ -818,4 +818,21 @@ manual curl of every new endpoint against the live dev plane.
   (lumen 0014/0015) add NO kv keys and NO epoch movement. (4) The
   scopes (`tasks:create|update|manage`) are DB rows seeded by 0014 and
   granted through the portal — never a vault value.
+- 2026-11-29 — **the app-plane split (tasks on the cms plane).** (1) The
+  admin render contract is now FIVE properties from `kv/lumen/shared`:
+  `LUMEN_DB_URL`, `LUMEN_SESSION_JWT_SECRET`, `LUMEN_IDENTITY_TOKEN`, the
+  passkey pair (`LUMEN_WEBAUTHN_RP_ID` + `LUMEN_WEBAUTHN_ORIGINS` ←
+  `LUMEN_WEBAUTHN_ORIGIN`). The lumen key SET grew 17→18 on ALL THREE paths
+  (uniform-shape law); `LUMEN_IDENTITY_TOKEN` is FILLED everywhere (one
+  value per estate), while the passkey pair stays filled only in `shared`.
+  (2) Each cms ES reads `LUMEN_IDENTITY_TOKEN` from its OWN env path and
+  `LUMEN_ADMIN_URL` from `lumen/shared`; the admin ES never reads the cms
+  content keys. (3) `LUMEN_ENV` (staging|production) is inline deployment
+  identity on the cms pods, like `LUMEN_ROLE` — never a Bao value. (4)
+  `0014_tasks.sql` reclassifies to the cms database (its `users` FKs are
+  gone; tasks reference users.id only as UUIDs through the identity door);
+  `0017_notification_env.sql` adds the notification `env` column — neither
+  adds a kv key. (5) `LUMEN_NOTIFICATION_TOKEN` remains env-only (manual
+  Secret / own-path value); absent = task notifications off, mutations still
+  commit.
 - — (append deltas here: contract changes, deviations, new rulings)
